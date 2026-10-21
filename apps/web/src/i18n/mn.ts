@@ -98,6 +98,7 @@ const mn: typeof en = {
     downloadTemplate: 'CSV загвар татах',
   },
   editor: {
+    readOnlyAdmins: 'Энд зөвхөн админ квиз засна. Та үүнийг хөтлөх боломжтой.',
     readOnlyOwned: 'Энэ квиз өөр хэрэглэгчийнх. Хуулбарлаад өөрийн болгоорой.',
     newTitle: 'Шинэ квиз',
     titlePlaceholder: 'Нэргүй квиз',

@@ -111,6 +111,8 @@ No personal data or credentials from the documents are used. Re-seeding updates 
 | `API_PORT` | `3000` | HTTP and Socket.IO port |
 | `CORS_ORIGINS` | `http://localhost:5173` | Comma-separated origins of the web app |
 | `JWT_SECRET` | dev value | Signs login tokens; **required in production** (32+ characters) |
+| `ADMIN_EMAILS` | — | Comma-separated emails of admin accounts (they register normally) |
+| `RESTRICT_QUIZ_EDITING` | `false` | `true`: only admins create, edit, import or delete quizzes; everyone can still host and play |
 | `TRUST_PROXY` | `false` | Use `X-Forwarded-For` behind a reverse proxy |
 | `UPLOAD_DIR`, `PUBLIC_API_URL` | `./uploads`, `http://localhost:3000` | Uploaded images |
 

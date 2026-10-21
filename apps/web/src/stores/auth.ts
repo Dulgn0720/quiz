@@ -1,4 +1,4 @@
-import type { LoginRequest, RegisterRequest, UpdateProfileRequest, UserProfile, UserPublic } from '@quiz/shared';
+import type { AppSettings, LoginRequest, RegisterRequest, UpdateProfileRequest, UserProfile, UserPublic } from '@quiz/shared';
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 import { authApi } from '@/api/auth';
@@ -12,9 +12,17 @@ export const useAuthStore = defineStore('auth', () => {
   /** True until the saved token has been checked. */
   const restoring = ref(authToken() !== null);
 
+  const settings = ref<AppSettings>({ restrictQuizEditing: false });
+
   const signedIn = computed(() => user.value !== null);
+  /** False when the server only lets admins create or change quizzes and this user is not one. */
+  const canEditQuizzes = computed(() => !settings.value.restrictQuizEditing || user.value?.isAdmin === true);
 
   async function restore(): Promise<void> {
+    void authApi
+      .settings()
+      .then((value) => (settings.value = value))
+      .catch(() => undefined);
     if (!authToken()) {
       restoring.value = false;
       return;
@@ -61,5 +69,5 @@ export const useAuthStore = defineStore('auth', () => {
     profile.value = null;
   }
 
-  return { user, profile, restoring, signedIn, restore, refresh, login, register, update, logout };
+  return { user, profile, restoring, settings, signedIn, canEditQuizzes, restore, refresh, login, register, update, logout };
 });

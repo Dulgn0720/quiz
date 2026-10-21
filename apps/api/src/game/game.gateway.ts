@@ -98,11 +98,15 @@ export class GameGateway
 
   @SubscribeMessage('room:join')
   async join(@ConnectedSocket() socket: GameSocket, @MessageBody() body: unknown) {
-    if (!(await this.limiter.consume(this.clientAddress(socket)))) return failure(GAME_ERRORS.rateLimited);
+    const address = this.clientAddress(socket);
+    if (!(await this.limiter.allowed(address))) return failure(GAME_ERRORS.rateLimited);
     const parsed = joinRoomSchema.safeParse(body);
     if (!parsed.success) return failure(GAME_ERRORS.invalidPayload);
     const engine = this.games.get(parsed.data.pin);
-    if (!engine) return failure(GAME_ERRORS.notFound);
+    if (!engine) {
+      await this.limiter.recordFailure(address);
+      return failure(GAME_ERRORS.notFound);
+    }
 
     const result = engine.join({ ...parsed.data, userId: socket.data.userId });
     if (!result.ok) return failure(result.error);

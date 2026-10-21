@@ -1,4 +1,5 @@
 import type {
+  AppSettings,
   AuthResponse,
   GameHistoryEntry,
   LoginRequest,
@@ -16,6 +17,9 @@ export const authApi = {
   },
   login(body: LoginRequest): Promise<AuthResponse> {
     return request('/auth/login', { method: 'POST', body: JSON.stringify(body) });
+  },
+  settings(): Promise<AppSettings> {
+    return request('/settings');
   },
   me(): Promise<UserProfile> {
     return request('/me');

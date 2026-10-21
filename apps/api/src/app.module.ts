@@ -16,7 +16,8 @@ import { RedisModule } from './redis/redis.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, cache: true, validate: validateEnv }),
-    ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 300 }]),
+    // Per client address. Generous because an office shares one address; sensitive routes set their own limits.
+    ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 1200 }]),
     PrismaModule,
     RedisModule,
     AuthModule,

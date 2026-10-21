@@ -25,9 +25,10 @@ const auth = useAuthStore();
 const mine = ref(false);
 watch(mine, () => void load(true));
 
-/** Sample quizzes and other people's quizzes can only be duplicated. */
+/** Sample quizzes and other people's quizzes can only be duplicated (admins may change any non-sample quiz). */
 function canEdit(quiz: QuizSummary): boolean {
-  return !quiz.isSample && (!quiz.ownerId || quiz.ownerId === auth.user?.id);
+  if (!auth.canEditQuizzes || quiz.isSample) return false;
+  return !quiz.ownerId || quiz.ownerId === auth.user?.id || auth.user?.isAdmin === true;
 }
 const loading = ref(false);
 const loadError = ref('');
@@ -103,8 +104,10 @@ function onImported(quiz: QuizDetail): void {
   <section class="mx-auto max-w-6xl px-4 py-8">
     <div class="flex flex-wrap items-center gap-3">
       <h1 class="mr-auto text-3xl font-bold">{{ t('quizList.title') }}</h1>
-      <button type="button" class="btn-secondary" @click="importOpen = true">{{ t('quizList.import') }}</button>
-      <RouterLink to="/quizzes/new" class="btn-primary">{{ t('nav.create') }}</RouterLink>
+      <template v-if="auth.canEditQuizzes">
+        <button type="button" class="btn-secondary" @click="importOpen = true">{{ t('quizList.import') }}</button>
+        <RouterLink to="/quizzes/new" class="btn-primary">{{ t('nav.create') }}</RouterLink>
+      </template>
     </div>
 
     <label class="mt-6 block">
@@ -173,7 +176,7 @@ function onImported(quiz: QuizDetail): void {
           <RouterLink v-if="canEdit(quiz)" :to="{ name: 'quiz-edit', params: { id: quiz.id } }" class="btn-ghost">
             {{ t('common.edit') }}
           </RouterLink>
-          <button type="button" class="btn-ghost" @click="duplicate(quiz)">{{ t('common.duplicate') }}</button>
+          <button v-if="auth.canEditQuizzes" type="button" class="btn-ghost" @click="duplicate(quiz)">{{ t('common.duplicate') }}</button>
           <a :href="quizzesApi.exportUrl(quiz.id, 'json')" class="btn-ghost" :title="t('quizList.exportJson')">JSON</a>
           <a :href="quizzesApi.exportUrl(quiz.id, 'csv')" class="btn-ghost" :title="t('quizList.exportCsv')">CSV</a>
           <button v-if="canEdit(quiz)" type="button" class="btn-danger ml-auto" @click="remove(quiz)">

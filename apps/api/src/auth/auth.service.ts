@@ -4,11 +4,12 @@ import { Prisma, type User } from '@prisma/client';
 import type { AuthResponse, LoginRequest, RegisterRequest, UserPublic } from '@quiz/shared';
 import type { Env } from '../config/env';
 import { PrismaService } from '../prisma/prisma.service';
+import { AccessPolicy } from './access-policy';
 import { hashPassword, signToken, verifyPassword, verifyToken } from './crypto';
 
 const TOKEN_TTL_SECONDS = 30 * 24 * 60 * 60;
 
-export function toUserPublic(user: User): UserPublic {
+export function toUserPublic(user: User, isAdmin = false): UserPublic {
   return {
     id: user.id,
     email: user.email,
@@ -16,6 +17,7 @@ export function toUserPublic(user: User): UserPublic {
     avatar: user.avatar ?? undefined,
     xp: user.xp,
     level: user.level,
+    isAdmin,
     createdAt: user.createdAt.toISOString(),
   };
 }
@@ -26,6 +28,7 @@ export class AuthService {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly access: AccessPolicy,
     config: ConfigService<Env, true>,
   ) {
     this.secret = config.get('JWT_SECRET', { infer: true });
@@ -66,7 +69,7 @@ export class AuthService {
   }
 
   private issue(user: User): AuthResponse {
-    return { token: signToken(user.id, this.secret, TOKEN_TTL_SECONDS), user: toUserPublic(user) };
+    return { token: signToken(user.id, this.secret, TOKEN_TTL_SECONDS), user: toUserPublic(user, this.access.isAdminEmail(user.email)) };
   }
 }
 

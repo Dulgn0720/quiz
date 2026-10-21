@@ -6,9 +6,11 @@ import { useRouter } from 'vue-router';
 import { quizzesApi } from '@/api/quizzes';
 import { quizTheme, shortTitle } from '@/brand/topics';
 import HostGameDialog from '@/components/game/HostGameDialog.vue';
+import { useAuthStore } from '@/stores/auth';
 
 const { t } = useI18n();
 const router = useRouter();
+const auth = useAuthStore();
 
 const pin = ref('');
 const pinValid = computed(() => new RegExp(`^\\d{${PIN_LENGTH}}$`).test(pin.value));
@@ -55,7 +57,7 @@ onMounted(async () => {
         <p class="mt-6 max-w-xl text-lg text-ink-600 dark:text-ink-300">{{ $t('home.subtitle') }}</p>
         <div class="mt-8 flex flex-wrap gap-3">
           <RouterLink to="/quizzes" class="btn-primary px-7 py-3.5 text-base">▶ {{ $t('home.hostCta') }}</RouterLink>
-          <RouterLink to="/quizzes/new" class="btn-secondary px-7 py-3.5 text-base">{{ $t('home.createCta') }}</RouterLink>
+          <RouterLink v-if="auth.canEditQuizzes" to="/quizzes/new" class="btn-secondary px-7 py-3.5 text-base">{{ $t('home.createCta') }}</RouterLink>
         </div>
         <dl v-if="quizzes.length" class="mt-10 flex gap-8 text-sm">
           <div>

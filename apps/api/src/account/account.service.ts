@@ -9,12 +9,16 @@ import {
   type UserProfile,
   type UserPublic,
 } from '@quiz/shared';
+import { AccessPolicy } from '../auth/access-policy';
 import { toUserPublic } from '../auth/auth.service';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class AccountService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly access: AccessPolicy,
+  ) {}
 
   async profile(userId: string): Promise<UserProfile> {
     const user = await this.prisma.user.findUnique({
@@ -32,7 +36,7 @@ export class AccountService {
       this.prisma.gamePlayer.aggregate({ where: finished, _max: { score: true } }),
     ]);
     return {
-      ...toUserPublic(user),
+      ...toUserPublic(user, this.access.isAdminEmail(user.email)),
       progress: levelProgress(user.xp),
       badges: user.badges.map((b) => ({
         code: b.badge.code as BadgeCode,
@@ -48,7 +52,7 @@ export class AccountService {
       where: { id: userId },
       data: { displayName: input.displayName, avatar: input.avatar },
     });
-    return toUserPublic(user);
+    return toUserPublic(user, this.access.isAdminEmail(user.email));
   }
 
   async history(userId: string, page: number, pageSize: number): Promise<Paginated<GameHistoryEntry>> {

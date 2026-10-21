@@ -1,7 +1,7 @@
 // Visual QA: drives the built web app in Chromium and saves screenshots of every screen.
 // Needs the API on API_URL (migrated + seeded) and the built web app on WEB_URL (`vite preview`).
 // Usage: node e2e/screenshots.mjs [outDir]
-import { mkdir } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { chromium, devices } from 'playwright';
 
 const WEB = process.env.WEB_URL ?? 'http://localhost:5173';
@@ -16,9 +16,9 @@ await mkdir(OUT, { recursive: true });
 const browser = await chromium.launch();
 
 async function shot(page, name, fullPage = false) {
-  const file = `${OUT}/${String(shots.length + 1).padStart(2, '0')}-${name}.png`;
+  const file = `${OUT}/${String(shots.length + 1).padStart(2, '0')}-${name}.jpg`;
   await page.waitForTimeout(400); // let transitions settle
-  await page.screenshot({ path: file, fullPage });
+  await page.screenshot({ path: file, fullPage, type: 'jpeg', quality: 72 });
   shots.push(file);
   console.log('📸', file);
 }
@@ -224,6 +224,10 @@ for (let step = 0; step < 60; step++) {
   }
   if (!clicked) {
     if (await host.getByText('Эцсийн үр дүн').first().isVisible().catch(() => false)) break;
+    if (step % 5 === 0) {
+      const names = await host.getByRole('button').allInnerTexts();
+      console.log(`step ${step}: host buttons: ${names.map((n) => n.trim()).filter(Boolean).join(' | ')}`);
+    }
     await host.waitForTimeout(700);
   }
 }
@@ -234,7 +238,6 @@ await checkOverflow(players[0], 'player podium');
 
 await browser.close();
 console.log(`\n${shots.length} screenshots in ${OUT}`);
-if (problems.length) {
-  console.log(`\n${problems.length} problem(s):`);
-  for (const p of [...new Set(problems)]) console.log(' -', p);
-}
+const report = problems.length ? [...new Set(problems)].map((p) => `- ${p}`).join('\n') : 'No problems found.';
+console.log(report);
+await writeFile(`${OUT}/problems.txt`, report + '\n');

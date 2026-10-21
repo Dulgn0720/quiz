@@ -43,7 +43,15 @@ export interface UserPublic {
   avatar?: string;
   xp: number;
   level: number;
+  /** Listed in the server's ADMIN_EMAILS. */
+  isAdmin: boolean;
   createdAt: string;
+}
+
+/** Public server settings the web app adapts to. */
+export interface AppSettings {
+  /** Only admins may create, edit, import or delete quizzes. */
+  restrictQuizEditing: boolean;
 }
 
 export interface AuthResponse {

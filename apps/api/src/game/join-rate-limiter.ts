@@ -3,19 +3,30 @@ import type Redis from 'ioredis';
 import { REDIS } from '../redis/redis.module';
 
 const WINDOW_SECONDS = 60;
-/** Join attempts per client address per minute; also slows down PIN guessing. */
-const MAX_ATTEMPTS = 20;
+/** Wrong-PIN attempts per client address per minute before further lookups are refused. */
+const MAX_FAILURES = 30;
 
-/** Fixed-window counter in Redis, shared by every API instance. */
+/**
+ * Slows down PIN guessing. Only failed lookups count: a whole office behind
+ * one public address can join a real game at once without being refused.
+ * Fixed-window counter in Redis, shared by every API instance.
+ */
 @Injectable()
 export class JoinRateLimiter {
   constructor(@Inject(REDIS) private readonly redis: Redis) {}
 
-  /** Records an attempt; false when the address is over the limit. */
-  async consume(address: string): Promise<boolean> {
-    const key = `quiz:rl:join:${address}`;
-    const results = await this.redis.multi().incr(key).expire(key, WINDOW_SECONDS, 'NX').exec();
-    const count = results?.[0]?.[1];
-    return typeof count === 'number' && count <= MAX_ATTEMPTS;
+  private key(address: string): string {
+    return `quiz:rl:join-fail:${address}`;
+  }
+
+  /** False when the address has guessed wrong too often recently. */
+  async allowed(address: string): Promise<boolean> {
+    const count = Number(await this.redis.get(this.key(address)));
+    return !(count >= MAX_FAILURES);
+  }
+
+  async recordFailure(address: string): Promise<void> {
+    const key = this.key(address);
+    await this.redis.multi().incr(key).expire(key, WINDOW_SECONDS, 'NX').exec();
   }
 }

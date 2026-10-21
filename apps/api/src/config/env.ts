@@ -25,6 +25,21 @@ const envSchema = z.object({
     .url()
     .default('http://localhost:3000')
     .transform((url) => url.replace(/\/+$/, '')),
+  /** Accounts with these emails are admins (comma-separated). */
+  ADMIN_EMAILS: z
+    .string()
+    .default('')
+    .transform((value) =>
+      value
+        .split(',')
+        .map((email) => email.trim().toLowerCase())
+        .filter(Boolean),
+    ),
+  /** When true, only admins may create, edit, import or delete quizzes. Hosting and playing stay open to everyone. */
+  RESTRICT_QUIZ_EDITING: z
+    .enum(['true', 'false', '1', '0'])
+    .default('false')
+    .transform((v) => v === 'true' || v === '1'),
   /** Signs login tokens. Required in production; development falls back to a fixed, public value. */
   JWT_SECRET: z.string().min(32, 'must be at least 32 characters').optional(),
 });

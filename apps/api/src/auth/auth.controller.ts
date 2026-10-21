@@ -4,8 +4,8 @@ import { loginSchema, registerSchema, type AuthResponse, type LoginRequest, type
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { AuthService } from './auth.service';
 
-/** Throttled hard: these endpoints are what password guessing would target. */
-@Throttle({ default: { limit: 10, ttl: 60_000 } })
+/** Throttled: password guessing targets these. 30/min per address leaves room for an office signing up at once. */
+@Throttle({ default: { limit: 30, ttl: 60_000 } })
 @Controller('auth')
 export class AuthController {
   constructor(private readonly auth: AuthService) {}

@@ -15,6 +15,7 @@ import {
   type QuizSummary,
 } from '@quiz/shared';
 import { ProgressionService } from '../account/progression.service';
+import { AccessPolicy } from '../auth/access-policy';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   QUIZ_WITH_CONTENT,
@@ -42,13 +43,15 @@ export interface QuizFile {
 /**
  * Quizzes created while signed in belong to that account: only the owner may
  * edit or delete them (everyone may play and duplicate them). Quizzes made
- * by guests have no owner and stay editable by anyone.
+ * by guests have no owner and stay editable by anyone. With RESTRICT_QUIZ_EDITING
+ * only admins (ADMIN_EMAILS) may create or change quizzes, and admins may change any.
  */
 @Injectable()
 export class QuizzesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly progression: ProgressionService,
+    private readonly access: AccessPolicy,
   ) {}
 
   async list({ search, mine, userId, page, pageSize }: ListQuizzesParams): Promise<Paginated<QuizSummary>> {
@@ -81,7 +84,9 @@ export class QuizzesService {
     return toQuizDetail(row);
   }
 
+  /** Also the path for duplicating and importing, so the editing policy applies to those too. */
   async create(content: QuizContent, ownerId?: string): Promise<QuizDetail> {
+    await this.access.assertCanEditQuizzes(ownerId);
     const row = await this.prisma.quiz.create({
       data: { ...contentToCreateData(content), ownerId: ownerId ?? null },
       include: QUIZ_WITH_CONTENT,
@@ -146,7 +151,9 @@ export class QuizzesService {
     if (quiz.isSample) {
       throw new ForbiddenException('Sample quizzes are read-only. Duplicate it to make changes.');
     }
-    if (quiz.ownerId && quiz.ownerId !== userId) {
+    await this.access.assertCanEditQuizzes(userId);
+    // Admins may change any quiz except the read-only samples.
+    if (quiz.ownerId && quiz.ownerId !== userId && !(await this.access.isAdmin(userId))) {
       throw new ForbiddenException('Only the owner can change this quiz. Duplicate it to make your own copy.');
     }
   }

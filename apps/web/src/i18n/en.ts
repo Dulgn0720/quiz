@@ -96,6 +96,7 @@ export default {
     downloadTemplate: 'Download CSV template',
   },
   editor: {
+    readOnlyAdmins: 'Only admins can change quizzes here. You can still host this one.',
     readOnlyOwned: 'This quiz belongs to another account. Duplicate it to make your own copy.',
     newTitle: 'New quiz',
     titlePlaceholder: 'Untitled quiz',

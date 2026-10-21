@@ -23,7 +23,7 @@ const navActive = 'bg-ink-900/5 text-ink-950 dark:bg-white/10 dark:text-white';
         <RouterLink to="/join" class="btn-ghost px-3" :active-class="navActive">{{ $t('nav.join') }}</RouterLink>
         <RouterLink to="/rooms" class="btn-ghost hidden px-3 md:inline-flex" :active-class="navActive">{{ $t('nav.rooms') }}</RouterLink>
         <RouterLink to="/quizzes" class="btn-ghost hidden px-3 sm:inline-flex" :active-class="navActive">{{ $t('nav.quizzes') }}</RouterLink>
-        <RouterLink to="/quizzes/new" class="btn-primary ml-1 px-4">
+        <RouterLink v-if="auth.canEditQuizzes" to="/quizzes/new" class="btn-primary ml-1 px-4">
           <span aria-hidden="true">＋</span>
           <span class="hidden lg:inline">{{ $t('nav.create') }}</span>
           <span class="sr-only lg:hidden">{{ $t('nav.create') }}</span>

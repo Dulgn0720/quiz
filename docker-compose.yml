@@ -46,6 +46,9 @@ services:
       PUBLIC_API_URL: http://localhost:3000
       # Signs login tokens. Set your own (32+ characters) for any real deployment.
       JWT_SECRET: ${JWT_SECRET:-local-docker-secret-change-me-0123456789abcdef}
+      # Comma-separated admin emails; with RESTRICT_QUIZ_EDITING=true only they can create or change quizzes.
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-}
+      RESTRICT_QUIZ_EDITING: ${RESTRICT_QUIZ_EDITING:-false}
     ports:
       - '3000:3000'
     volumes:

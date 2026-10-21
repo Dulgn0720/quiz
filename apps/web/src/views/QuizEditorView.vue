@@ -25,8 +25,10 @@ const loading = ref(false);
 const loadError = ref<'not-found' | 'error' | null>(null);
 const auth = useAuthStore();
 /** Samples and other accounts' quizzes are read-only; duplicating makes an editable copy. */
-const ownedByOther = computed(() => !!editor.ownerId && editor.ownerId !== auth.user?.id);
-const readOnly = computed(() => editor.isSample || ownedByOther.value);
+const ownedByOther = computed(
+  () => !!editor.ownerId && editor.ownerId !== auth.user?.id && auth.user?.isAdmin !== true,
+);
+const readOnly = computed(() => !auth.canEditQuizzes || editor.isSample || ownedByOther.value);
 /** Set after creating a quiz, so swapping the URL to /quizzes/:id/edit does not reload it. */
 let justCreatedId: string | null = null;
 
@@ -195,8 +197,10 @@ const statusText = computed(() => {
       class="mt-4 flex flex-wrap items-center gap-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 p-4 text-amber-900 dark:text-amber-200"
       role="status"
     >
-      <p class="mr-auto font-semibold">{{ editor.isSample ? t('editor.readOnly') : t('editor.readOnlyOwned') }}</p>
-      <button type="button" class="btn-primary" @click="duplicateToEdit">{{ t('editor.duplicateToEdit') }}</button>
+      <p class="mr-auto font-semibold">
+        {{ !auth.canEditQuizzes ? t('editor.readOnlyAdmins') : editor.isSample ? t('editor.readOnly') : t('editor.readOnlyOwned') }}
+      </p>
+      <button v-if="auth.canEditQuizzes" type="button" class="btn-primary" @click="duplicateToEdit">{{ t('editor.duplicateToEdit') }}</button>
     </div>
 
     <div class="mt-6 grid gap-6 lg:grid-cols-[18rem_1fr]">
