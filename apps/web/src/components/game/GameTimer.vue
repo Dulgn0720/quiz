@@ -37,7 +37,7 @@ watch(seconds, (s, before) => {
     :aria-label="$t('game.question.secondsLeft', { n: seconds })"
   >
     <svg viewBox="0 0 100 100" class="absolute inset-0 -rotate-90" aria-hidden="true">
-      <circle cx="50" cy="50" :r="RADIUS" class="fill-white dark:fill-slate-900 stroke-slate-200 dark:stroke-slate-700" stroke-width="8" />
+      <circle cx="50" cy="50" :r="RADIUS" class="fill-white stroke-slate-200 dark:fill-white/5 dark:stroke-white/10" stroke-width="8" />
       <circle
         cx="50"
         cy="50"
@@ -45,12 +45,13 @@ watch(seconds, (s, before) => {
         fill="none"
         stroke-width="8"
         stroke-linecap="round"
-        :class="urgent ? 'stroke-rose-500' : 'stroke-brand-600'"
+        :class="urgent ? 'stroke-rose-500' : 'stroke-brand-500'"
+        style="transition: stroke-dashoffset 250ms linear"
         :stroke-dasharray="CIRCUMFERENCE"
         :stroke-dashoffset="CIRCUMFERENCE * (1 - fraction)"
       />
     </svg>
-    <span class="relative font-black tabular-nums" :class="urgent ? 'text-rose-600' : 'text-slate-800 dark:text-slate-100'">
+    <span class="relative font-display font-bold tabular-nums" :class="urgent ? 'text-rose-600' : 'text-slate-800 dark:text-slate-100'">
       {{ pausedRemainingMs !== undefined ? '❚❚' : seconds }}
     </span>
   </div>

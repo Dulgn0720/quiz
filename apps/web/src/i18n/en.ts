@@ -1,7 +1,7 @@
 export default {
   app: {
-    name: 'Quiz Pro',
-    tagline: 'Live quizzes for friends, classrooms and teams.',
+    name: 'Agula Quiz',
+    tagline: 'Live quiz battles for the Agula team',
   },
   nav: {
     rooms: 'Open rooms',
@@ -36,12 +36,28 @@ export default {
     networkError: 'Cannot reach the server. Check your connection.',
   },
   home: {
-    title: 'Make a quiz. Play it live.',
+    titleLead: 'Know the rules.',
+    titleAccent: 'Win the round.',
     subtitle:
-      'Build quizzes with rounds, images and six question types, then host them for everyone in the room.',
+      'Quizzes built from Agula’s own policies, procedures and systems. Host one on the big screen and everyone plays from their phone.',
+    hostCta: 'Host a quiz',
     createCta: 'Create a quiz',
     browseCta: 'My quizzes',
-    joinCta: 'Join a game',
+    joinCta: 'Join',
+    joinTitle: 'Got a PIN?',
+    joinSubtitle: 'Enter the 6-digit code from the host screen.',
+    browseRooms: 'or browse open rooms',
+    statQuizzes: 'Quizzes',
+    statQuestions: 'Questions',
+    libraryTitle: 'Agula quiz library',
+    librarySubtitle: 'IT and information security, ethics, labour rules, safety, claims, risk and our systems.',
+    seeAll: 'All quizzes',
+    preview: 'Preview',
+    steps: {
+      host: { title: 'Host', text: 'Pick a quiz and open it on a projector or TV. A room PIN and QR code appear.' },
+      join: { title: 'Join', text: 'Everyone scans the QR code or enters the PIN on their phone. No account needed.' },
+      play: { title: 'Play', text: 'Answer fast, keep your streak and climb the leaderboard. The top three get the podium.' },
+    },
   },
   quizList: {
     filter: 'Show',
@@ -52,7 +68,7 @@ export default {
     empty: 'No quizzes yet. Create one or import a file.',
     noResults: 'No quizzes match “{query}”.',
     import: 'Import',
-    sample: 'Sample',
+    sample: 'Agula',
     rounds: '{n} round | {n} rounds',
     questions: '{n} question | {n} questions',
     updated: 'Updated {date}',

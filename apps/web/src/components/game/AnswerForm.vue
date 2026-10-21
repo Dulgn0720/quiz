@@ -67,8 +67,13 @@ function submitOrder(): void {
           v-for="(option, i) in question.options"
           :key="option.id"
           type="button"
-          class="flex min-h-24 flex-col items-center justify-center gap-2 rounded-2xl p-3 text-lg font-black text-white shadow transition active:scale-95 focus-visible:outline-none focus-visible:ring-4 disabled:opacity-60"
-          :class="[tileStyle(i).bg, tileStyle(i).ring, selected.includes(option.id) ? 'ring-4 ring-offset-2 ring-slate-900' : '']"
+          class="flex min-h-28 flex-col items-center justify-center gap-2 rounded-3xl p-3 text-lg font-extrabold shadow-lg transition duration-150 hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-4 disabled:opacity-60"
+          :class="[
+            tileStyle(i).bg,
+            tileStyle(i).fg,
+            tileStyle(i).ring,
+            selected.includes(option.id) ? 'scale-[0.97] ring-4 ring-white ring-offset-4 ring-offset-ink-950' : '',
+          ]"
           :aria-pressed="isMultiple ? selected.includes(option.id) : undefined"
           :disabled="disabled"
           @click="pick(option.id)"
@@ -88,8 +93,8 @@ function submitOrder(): void {
         v-for="value in [true, false]"
         :key="String(value)"
         type="button"
-        class="flex min-h-28 items-center justify-center gap-3 rounded-2xl text-3xl font-black text-white shadow transition active:scale-95 focus-visible:outline-none focus-visible:ring-4 disabled:opacity-60"
-        :class="value ? 'bg-sky-500 ring-sky-300' : 'bg-rose-500 ring-rose-300'"
+        class="flex min-h-32 items-center justify-center gap-3 rounded-3xl text-3xl font-extrabold text-white shadow-lg transition duration-150 hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-4 disabled:opacity-60"
+        :class="value ? 'bg-gradient-to-br from-sky-500 to-blue-600 ring-sky-300' : 'bg-gradient-to-br from-rose-500 to-pink-600 ring-rose-300'"
         :disabled="disabled"
         @click="emit('submit', { type: 'true_false', value })"
       >

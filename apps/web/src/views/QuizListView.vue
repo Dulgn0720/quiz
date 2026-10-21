@@ -7,6 +7,7 @@ import { ApiError } from '@/api/client';
 import { quizzesApi } from '@/api/quizzes';
 import ImportQuizDialog from '@/components/ImportQuizDialog.vue';
 import HostGameDialog from '@/components/game/HostGameDialog.vue';
+import { quizTheme, shortTitle } from '@/brand/topics';
 import { useToast } from '@/composables/useToast';
 import { useAuthStore } from '@/stores/auth';
 
@@ -101,7 +102,7 @@ function onImported(quiz: QuizDetail): void {
 <template>
   <section class="mx-auto max-w-6xl px-4 py-8">
     <div class="flex flex-wrap items-center gap-3">
-      <h1 class="mr-auto text-3xl font-black">{{ t('quizList.title') }}</h1>
+      <h1 class="mr-auto text-3xl font-bold">{{ t('quizList.title') }}</h1>
       <button type="button" class="btn-secondary" @click="importOpen = true">{{ t('quizList.import') }}</button>
       <RouterLink to="/quizzes/new" class="btn-primary">{{ t('nav.create') }}</RouterLink>
     </div>
@@ -134,28 +135,32 @@ function onImported(quiz: QuizDetail): void {
     </p>
 
     <ul class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <li v-for="quiz in items" :key="quiz.id" class="card flex flex-col p-5">
+      <li v-for="quiz in items" :key="quiz.id" class="card group flex flex-col overflow-hidden transition duration-300 hover:-translate-y-1 hover:shadow-xl">
+        <div class="relative h-24 bg-gradient-to-br p-4" :class="quizTheme(quiz.title).gradient">
+          <span class="absolute -bottom-3 right-4 text-6xl drop-shadow-lg transition duration-300 group-hover:-rotate-6 group-hover:scale-110" aria-hidden="true">
+            {{ quizTheme(quiz.title).icon }}
+          </span>
+          <div class="flex gap-1.5">
+            <span v-if="quiz.isSample" class="chip bg-black/25 text-white backdrop-blur">{{ t('quizList.sample') }}</span>
+            <span class="chip bg-black/25 uppercase text-white backdrop-blur">{{ quiz.language }}</span>
+          </div>
+        </div>
+        <div class="flex flex-1 flex-col p-5">
         <div class="flex items-start gap-2">
           <RouterLink
             :to="{ name: 'quiz-edit', params: { id: quiz.id } }"
-            class="mr-auto text-lg font-black leading-tight hover:text-brand-700"
+            class="mr-auto font-display text-base font-bold leading-snug hover:text-brand-600"
           >
-            {{ quiz.title }}
+            {{ shortTitle(quiz.title) }}
           </RouterLink>
-          <span v-if="quiz.isSample" class="rounded-full bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 text-xs font-bold text-amber-800 dark:text-amber-200">
-            {{ t('quizList.sample') }}
-          </span>
-          <span class="rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-xs font-bold uppercase text-slate-600 dark:text-slate-300">
-            {{ quiz.language }}
-          </span>
         </div>
         <p v-if="quiz.description" class="mt-2 line-clamp-2 text-sm text-slate-600 dark:text-slate-300">{{ quiz.description }}</p>
         <p class="mt-3 text-sm font-semibold text-slate-500 dark:text-slate-400">
           {{ t('quizList.rounds', { n: quiz.roundCount }, quiz.roundCount) }} ·
           {{ t('quizList.questions', { n: quiz.questionCount }, quiz.questionCount) }}
         </p>
-        <p class="text-xs text-slate-400">{{ t('quizList.updated', { date: formatDate(quiz.updatedAt) }) }}</p>
-        <div class="mt-4 flex flex-wrap gap-1 border-t border-slate-100 dark:border-slate-800 pt-3">
+        <p class="mb-4 text-xs text-slate-400">{{ t('quizList.updated', { date: formatDate(quiz.updatedAt) }) }}</p>
+        <div class="mt-auto flex flex-wrap gap-1 border-t border-slate-100 pt-3 dark:border-white/10">
           <button
             type="button"
             class="btn-primary"
@@ -174,6 +179,7 @@ function onImported(quiz: QuizDetail): void {
           <button v-if="canEdit(quiz)" type="button" class="btn-danger ml-auto" @click="remove(quiz)">
             {{ t('common.delete') }}
           </button>
+        </div>
         </div>
       </li>
     </ul>

@@ -16,7 +16,6 @@ import RevealedAnswer from '@/components/game/RevealedAnswer.vue';
 import LevelBar from '@/components/LevelBar.vue';
 import RoundSummaryPanel from '@/components/game/RoundSummaryPanel.vue';
 import SoundToggles from '@/components/SoundToggles.vue';
-import ThemeToggle from '@/components/ThemeToggle.vue';
 import { useGameSounds } from '@/game/useGameSounds';
 import { useToast } from '@/composables/useToast';
 import { useAuthStore } from '@/stores/auth';
@@ -74,6 +73,7 @@ function leave(): void {
 </script>
 
 <template>
+  <div class="dark stage min-h-dvh">
   <section class="mx-auto flex min-h-dvh max-w-xl flex-col px-4 pb-6">
     <ConnectionBanner />
 
@@ -94,14 +94,13 @@ function leave(): void {
     <p v-else-if="!phase || !me" class="mt-16 text-center text-slate-500 dark:text-slate-400">{{ t('common.loading') }}</p>
 
     <template v-else>
-      <header class="sticky top-0 z-10 -mx-4 mb-4 flex items-center gap-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50/95 dark:bg-slate-950/95 px-4 py-3 backdrop-blur">
-        <span class="text-3xl leading-none" aria-hidden="true">{{ me.avatar }}</span>
-        <span class="mr-auto truncate font-black">{{ me.nickname }}</span>
-        <span class="rounded-full bg-brand-600 px-3 py-1 font-black tabular-nums text-white" :aria-label="t('game.player.score')">
+      <header class="sticky top-0 z-10 -mx-4 mb-4 flex items-center gap-3 bg-ink-950/70 px-4 py-3 backdrop-blur-xl">
+        <span class="grid h-10 w-10 place-items-center rounded-full bg-white/10 text-2xl leading-none" aria-hidden="true">{{ me.avatar }}</span>
+        <span class="mr-auto truncate font-bold">{{ me.nickname }}</span>
+        <span class="rounded-full bg-brand-500 px-3 py-1 font-display font-bold tabular-nums text-ink-950" :aria-label="t('game.player.score')">
           {{ myScore }}
         </span>
         <SoundToggles />
-        <ThemeToggle />
         <button type="button" class="btn-icon" :aria-label="t('game.player.leave')" @click="leave">✕</button>
       </header>
 
@@ -206,4 +205,5 @@ function leave(): void {
       </Transition>
     </template>
   </section>
+  </div>
 </template>

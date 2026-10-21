@@ -52,8 +52,8 @@ const trueFalseAnswer = computed(() =>
       <li
         v-for="(option, i) in question.options"
         :key="option.id"
-        class="flex min-h-20 items-center gap-4 rounded-2xl px-5 py-4 text-xl font-black text-white shadow transition sm:text-2xl"
-        :class="[tileStyle(i).bg, reveal && !correctIds.has(option.id) ? 'opacity-30' : '']"
+        class="flex min-h-24 items-center gap-4 rounded-3xl px-6 py-4 text-xl font-extrabold shadow-xl transition duration-500 sm:text-2xl"
+        :class="[tileStyle(i).bg, tileStyle(i).fg, reveal && !correctIds.has(option.id) ? 'scale-[0.98] opacity-25 saturate-50' : '']"
       >
         <span class="text-3xl" aria-hidden="true">{{ tileStyle(i).shape }}</span>
         <img v-if="option.imageUrl" :src="option.imageUrl" alt="" class="h-16 w-16 rounded-lg bg-white dark:bg-slate-900 object-contain" />
@@ -68,7 +68,7 @@ const trueFalseAnswer = computed(() =>
         v-for="value in [true, false]"
         :key="String(value)"
         class="flex min-h-24 items-center justify-center gap-3 rounded-2xl text-3xl font-black text-white shadow"
-        :class="[value ? 'bg-sky-500' : 'bg-rose-500', trueFalseAnswer !== undefined && trueFalseAnswer !== value ? 'opacity-30' : '']"
+        :class="[value ? 'bg-gradient-to-br from-sky-500 to-blue-600' : 'bg-gradient-to-br from-rose-500 to-pink-600', trueFalseAnswer !== undefined && trueFalseAnswer !== value ? 'opacity-30' : '']"
       >
         <span aria-hidden="true">{{ value ? '✓' : '✕' }}</span>
         {{ value ? $t('question.true') : $t('question.false') }}

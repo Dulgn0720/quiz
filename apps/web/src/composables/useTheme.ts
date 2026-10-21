@@ -21,7 +21,7 @@ const theme = ref<Theme>(readTheme());
 function apply(): void {
   const dark = theme.value === 'dark' || (theme.value === 'system' && (media?.matches ?? false));
   document.documentElement.classList.toggle('dark', dark);
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#020617' : '#7c3aed');
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#0a0e20' : '#f57c14');
 }
 
 watch(theme, (value) => {

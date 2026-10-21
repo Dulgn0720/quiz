@@ -13,7 +13,9 @@ import RevealChart from '@/components/game/RevealChart.vue';
 import RevealedAnswer from '@/components/game/RevealedAnswer.vue';
 import RoundSummaryPanel from '@/components/game/RoundSummaryPanel.vue';
 import ShareRoom from '@/components/game/ShareRoom.vue';
+import BrandMark from '@/components/BrandMark.vue';
 import SoundToggles from '@/components/SoundToggles.vue';
+import { shortTitle } from '@/brand/topics';
 import { useGameSounds } from '@/game/useGameSounds';
 import { useToast } from '@/composables/useToast';
 import { useGameStore, type Ack } from '@/stores/game';
@@ -92,7 +94,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
 </script>
 
 <template>
-  <section class="mx-auto flex min-h-[calc(100dvh-4rem)] max-w-6xl flex-col px-4 py-6">
+  <div class="dark stage min-h-dvh">
+  <section class="mx-auto flex min-h-dvh max-w-6xl flex-col px-4 py-5">
     <ConnectionBanner />
 
     <div v-if="fatalError" class="card mx-auto mt-16 max-w-md p-8 text-center" role="alert">
@@ -108,12 +111,13 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
     <p v-else-if="!room || !phase" class="mt-16 text-center text-slate-500 dark:text-slate-400">{{ t('common.loading') }}</p>
 
     <template v-else>
-      <header class="mb-6 flex flex-wrap items-center gap-3">
-        <h1 class="mr-auto text-xl font-black">{{ room.quizTitle }}</h1>
-        <span class="rounded-full bg-slate-100 dark:bg-slate-800 px-3 py-1 text-sm font-bold text-slate-700 dark:text-slate-200">
-          PIN {{ room.pin }}
+      <header class="mb-6 flex flex-wrap items-center gap-3 rounded-full bg-white/5 py-2 pl-2 pr-3 ring-1 ring-white/10 backdrop-blur">
+        <RouterLink to="/" :aria-label="t('nav.home')"><BrandMark :size="40" /></RouterLink>
+        <h1 class="mr-auto truncate font-display text-lg font-bold">{{ shortTitle(room.quizTitle) }}</h1>
+        <span class="chip bg-white/10 px-3 py-1 text-sm tracking-widest">
+          PIN <span class="font-display">{{ room.pin }}</span>
         </span>
-        <span class="rounded-full bg-slate-100 dark:bg-slate-800 px-3 py-1 text-sm font-bold text-slate-700 dark:text-slate-200">
+        <span class="chip bg-white/10 px-3 py-1 text-sm">
           👥 {{ players.length }}
         </span>
         <SoundToggles music />
@@ -199,4 +203,5 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
       </nav>
     </template>
   </section>
+  </div>
 </template>

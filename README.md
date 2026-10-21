@@ -1,4 +1,4 @@
-# Quiz Pro
+# Agula Quiz
 
 A real-time multiplayer quiz platform in the style of Kahoot / Quizizz. See [`docs/spec.md`](docs/spec.md) for the full product spec and roadmap.
 
@@ -76,6 +76,22 @@ Useful scripts (from the repo root):
 - Question types: single choice, multiple choice, true/false, type-the-answer, ordering and image questions. Every question can have an image; choice answers can have images too.
 - Images are uploaded to the API (`POST /api/media/images`, PNG/JPEG/WebP/GIF up to 5 MB, verified by file signature) and served from `/uploads`.
 - Sample quizzes are read-only; duplicate one to edit it.
+
+### Agula quiz library
+
+The seeded quizzes (`apps/api/src/database/sample-quizzes.ts`) are written from Agula's own documents in `raw-sources/`: 20 quizzes with 373 questions. Every answer's explanation cites the clause it comes from.
+
+| Area | Quizzes | Sources |
+| --- | --- | --- |
+| Ethics and conduct | Ethics code; disciplinary penalties; customer service and workplace standard | Ёс зүйн дүрэм, Сахилгын шийтгэл, Харилцагчийн үйлчилгээний бодлого, Ажлын байрны стандарт |
+| Labour | Internal labour regulations; Labour Law essentials | Хөдөлмөрийн дотоод журам №1–3, Хөдөлмөрийн тухай хууль |
+| Safety | Fire safety; electrical and occupational safety | Галын / Цахилгааны аюулгүй байдлын зааварчилгаа, Эрүүл аюулгүй байдлын бодлого |
+| IT and information security | Six quizzes | IT-00 … IT-16, Мэдээллийн аюулгүй ажиллагааны заавар |
+| Business processes | Performance management; claims | Гүйцэтгэлийн удирдлагын журам ба гарын авлага, Нөхөн төлбөрийн журам №1–2 |
+| Governance | Compliance and risk; records, archive and management committee; finance and accounting | Комплайнс, Эрсдэлийн удирдлага, Албан хэрэг хөтлөлт, Удирдлагын хороо, Санхүү, Нягтлан бодох бүртгэл |
+| Systems | Systems and architecture (tech team); Aisys user guide | handover/ техникийн баримтууд, Aisys гарын авлага |
+
+No personal data or credentials from the documents are used. Re-seeding updates these quizzes in place and removes sample quizzes that are no longer in the list.
 
 ### Import / export
 

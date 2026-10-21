@@ -32,7 +32,14 @@ export const router = createRouter({
       // Phones need every pixel: the player screen has its own header.
       meta: { fullscreen: true },
     },
-    { path: '/host/:pin(\\d{6})', name: 'host', component: () => import('@/views/HostView.vue'), props: true },
+    {
+      path: '/host/:pin(\\d{6})',
+      name: 'host',
+      component: () => import('@/views/HostView.vue'),
+      props: true,
+      // The host screen is shown on a projector: an immersive stage with its own header.
+      meta: { fullscreen: true },
+    },
     { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('@/views/NotFoundView.vue') },
   ],
   scrollBehavior: () => ({ top: 0 }),

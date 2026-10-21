@@ -3,7 +3,7 @@ import { quizInputSchema } from '@quiz/shared';
 import { contentToCreateData } from '../quizzes/quiz.mapper';
 import { SAMPLE_QUIZZES } from './sample-quizzes';
 
-/** Idempotent: inserts or refreshes the sample quizzes. Run with `pnpm db:seed`. */
+/** Idempotent: inserts or refreshes the sample quizzes and removes retired ones. Run with `pnpm db:seed`. */
 async function main(): Promise<void> {
   const prisma = new PrismaClient();
   try {
@@ -19,6 +19,11 @@ async function main(): Promise<void> {
       });
       console.log(`Seeded sample quiz "${sample.quiz.title}"`);
     }
+    // Retire sample quizzes that are no longer shipped. Past games keep their results (quizId becomes null).
+    const removed = await prisma.quiz.deleteMany({
+      where: { isSample: true, id: { notIn: SAMPLE_QUIZZES.map((s) => s.id) } },
+    });
+    if (removed.count > 0) console.log(`Removed ${removed.count} retired sample quiz(zes)`);
   } finally {
     await prisma.$disconnect();
   }

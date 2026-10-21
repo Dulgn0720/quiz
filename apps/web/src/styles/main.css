@@ -10,55 +10,109 @@
     color-scheme: dark;
   }
   body {
-    @apply bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
+    @apply min-h-dvh bg-ink-50 text-ink-900 antialiased dark:bg-ink-950 dark:text-ink-50;
+    font-feature-settings: 'ss01', 'cv11';
+  }
+  /* Soft brand glows behind every page. */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: -20vmax;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(40vmax 40vmax at 15% 10%, rgb(245 124 20 / 0.16), transparent 60%),
+      radial-gradient(35vmax 35vmax at 85% 15%, rgb(99 102 241 / 0.12), transparent 60%),
+      radial-gradient(45vmax 45vmax at 60% 95%, rgb(236 72 153 / 0.08), transparent 60%);
+    animation: float 24s ease-in-out infinite;
+  }
+  html.dark body::before {
+    background:
+      radial-gradient(40vmax 40vmax at 15% 10%, rgb(245 124 20 / 0.18), transparent 60%),
+      radial-gradient(35vmax 35vmax at 85% 15%, rgb(99 102 241 / 0.2), transparent 60%),
+      radial-gradient(45vmax 45vmax at 60% 95%, rgb(236 72 153 / 0.1), transparent 60%);
+  }
+  h1,
+  h2,
+  .font-display {
+    @apply font-display tracking-tight;
   }
   dialog {
-    @apply bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100;
+    @apply bg-white text-ink-900 dark:bg-ink-900 dark:text-ink-50;
+  }
+  dialog::backdrop {
+    @apply bg-ink-950/60 backdrop-blur-sm;
   }
   :focus-visible {
     @apply outline-brand-500;
+  }
+  ::selection {
+    @apply bg-brand-200 text-ink-950;
   }
 }
 
 @layer components {
   .btn {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition
-      focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-300 disabled:cursor-not-allowed disabled:opacity-50
-      active:scale-[0.98];
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full px-5 py-2 text-sm font-bold transition duration-200
+      focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-300/70 disabled:cursor-not-allowed disabled:opacity-50
+      active:scale-[0.97];
   }
+  /* Bright Agula orange with dark text: vivid and readable (7:1 contrast). */
   .btn-primary {
-    @apply btn bg-brand-600 text-white shadow-sm hover:bg-brand-700 active:bg-brand-800;
+    @apply btn bg-brand-500 text-ink-950 shadow-glow hover:-translate-y-0.5 hover:bg-brand-400 active:bg-brand-600 disabled:hover:translate-y-0;
   }
   .btn-secondary {
-    @apply btn border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 active:bg-slate-100
-      dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 dark:active:bg-slate-700;
+    @apply btn bg-white/80 text-ink-800 shadow-soft ring-1 ring-ink-200 backdrop-blur hover:bg-white hover:ring-ink-300
+      dark:bg-white/5 dark:text-ink-100 dark:ring-white/10 dark:hover:bg-white/10;
   }
   .btn-ghost {
-    @apply btn text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800;
+    @apply btn text-ink-600 hover:bg-ink-900/5 hover:text-ink-900 dark:text-ink-300 dark:hover:bg-white/10 dark:hover:text-white;
   }
   .btn-danger {
     @apply btn text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40;
   }
   .btn-icon {
-    @apply btn min-h-9 min-w-9 px-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800
-      dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100;
+    @apply btn min-h-10 min-w-10 px-2 text-ink-500 hover:bg-ink-900/5 hover:text-ink-900
+      dark:text-ink-400 dark:hover:bg-white/10 dark:hover:text-white;
   }
   .input {
-    @apply block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-base shadow-sm outline-none transition
-      placeholder:text-slate-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-100
-      dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:ring-brand-900;
+    @apply block w-full rounded-2xl border-0 bg-white/90 px-4 py-3 text-base text-ink-900 shadow-soft outline-none ring-1 ring-ink-200 transition
+      placeholder:text-ink-400 focus:ring-2 focus:ring-brand-500
+      dark:bg-white/5 dark:text-ink-50 dark:ring-white/10 dark:placeholder:text-ink-500 dark:focus:ring-brand-400;
   }
   .input-error {
-    @apply border-red-400 focus:border-red-500 focus:ring-red-100 dark:focus:ring-red-900;
+    @apply ring-red-400 focus:ring-red-500;
   }
   .label {
-    @apply mb-1 block text-sm font-bold text-slate-700 dark:text-slate-200;
+    @apply mb-1.5 block text-sm font-bold text-ink-700 dark:text-ink-200;
   }
+  /* Frosted glass panel. */
   .card {
-    @apply rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900;
+    @apply rounded-3xl bg-white/75 shadow-soft ring-1 ring-ink-900/5 backdrop-blur-xl
+      dark:bg-white/[0.04] dark:shadow-none dark:ring-white/10;
   }
   .field-error {
     @apply mt-1 text-sm font-semibold text-red-600 dark:text-red-400;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold;
+  }
+  .text-gradient {
+    @apply bg-gradient-to-r from-brand-500 via-orange-500 to-pink-500 bg-clip-text text-transparent;
+  }
+  /* Full-bleed dark stage for the game screens. */
+  .stage {
+    @apply relative isolate bg-ink-950 text-white;
+  }
+  .stage::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      radial-gradient(60% 50% at 10% 0%, rgb(245 124 20 / 0.28), transparent 70%),
+      radial-gradient(50% 45% at 100% 10%, rgb(99 102 241 / 0.3), transparent 70%),
+      radial-gradient(60% 50% at 50% 100%, rgb(236 72 153 / 0.18), transparent 70%);
   }
 }
 
@@ -66,12 +120,12 @@
 .page-enter-active,
 .page-leave-active {
   transition:
-    opacity 180ms ease,
-    transform 180ms ease;
+    opacity 200ms ease,
+    transform 200ms ease;
 }
 .page-enter-from {
   opacity: 0;
-  transform: translateY(8px);
+  transform: translateY(10px);
 }
 .page-leave-to {
   opacity: 0;

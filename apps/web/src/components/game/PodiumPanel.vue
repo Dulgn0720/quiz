@@ -13,9 +13,9 @@ onMounted(() => {
 const steps = computed(() => {
   const [first, second, third] = props.results;
   return [
-    { player: second, place: 2, height: 'h-32', order: 2, color: 'bg-slate-300' },
-    { player: first, place: 1, height: 'h-44', order: 3, color: 'bg-amber-400' },
-    { player: third, place: 3, height: 'h-24', order: 1, color: 'bg-orange-300' },
+    { player: second, place: 2, height: 'h-32', order: 2, color: 'bg-gradient-to-b from-slate-100 to-slate-300' },
+    { player: first, place: 1, height: 'h-44', order: 3, color: 'bg-gradient-to-b from-amber-300 to-brand-500 shadow-glow' },
+    { player: third, place: 3, height: 'h-24', order: 1, color: 'bg-gradient-to-b from-orange-200 to-orange-400' },
   ].filter((s) => s.player);
 });
 const medals = ['', '🥇', '🥈', '🥉'];
@@ -33,7 +33,7 @@ const medals = ['', '🥇', '🥈', '🥉'];
           <span class="font-bold tabular-nums text-slate-600 dark:text-slate-300">{{ step.player!.score }}</span>
         </div>
       </Transition>
-      <div class="grid w-full place-items-center rounded-t-2xl text-4xl font-black shadow-inner" :class="[step.height, step.color]">
+      <div class="grid w-full place-items-center rounded-t-3xl text-4xl font-black" :class="[step.height, step.color]">
         <span :aria-label="$t('game.podium.place', { n: step.place })">{{ medals[step.place] }}</span>
       </div>
     </div>
