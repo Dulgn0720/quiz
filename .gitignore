@@ -14,3 +14,4 @@ apps/api/uploads/
 deploy/backups/
 deploy/portal/backups/
 deploy/portal/.env
+agula-quiz-*.tar.gz
