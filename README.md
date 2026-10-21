@@ -40,6 +40,12 @@ If a port is already in use on your machine (for example a local Redis on 6379 o
 REDIS_PORT=6380 POSTGRES_PORT=5433 docker compose up --build
 ```
 
+To join from phones on the same Wi-Fi, pass your computer's local IP (on a Mac: `ipconfig getifaddr en0`), then open `http://<IP>:5173` on the host computer so the QR code points there too:
+
+```bash
+LAN_HOST=192.168.1.23 docker compose up --build
+```
+
 ## Local development
 
 Requirements: Node.js 20+ and pnpm 10 (`corepack enable`).
