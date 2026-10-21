@@ -45,7 +45,14 @@ const showForm = ref(false);
 
 async function loadQuizzes(): Promise<void> {
   try {
-    quizzes.value = (await quizzesApi.list({ page: 1, pageSize: 100 })).items.filter((q) => q.questionCount > 0);
+    // The API pages by 50; a company library fits in a few pages.
+    const all: QuizSummary[] = [];
+    for (let page = 1; page <= 6; page++) {
+      const res = await quizzesApi.list({ page, pageSize: 50 });
+      all.push(...res.items);
+      if (all.length >= res.total || res.items.length === 0) break;
+    }
+    quizzes.value = all.filter((q) => q.questionCount > 0);
   } catch {
     quizzes.value = [];
   }
