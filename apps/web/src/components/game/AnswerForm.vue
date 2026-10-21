@@ -59,7 +59,7 @@ function submitOrder(): void {
 <template>
   <form class="flex flex-1 flex-col gap-3" @submit.prevent>
     <template v-if="'options' in question">
-      <p v-if="isMultiple" class="text-center text-sm font-bold text-slate-600 dark:text-slate-300">
+      <p v-if="isMultiple" class="mx-auto w-fit rounded-full bg-amber-400/15 px-4 py-1.5 text-center text-base font-bold text-amber-700 dark:text-amber-200">
         {{ $t('game.question.selectAll', { n: question.correctCount }) }}
       </p>
       <div class="grid flex-1 grid-cols-2 gap-3">
@@ -94,7 +94,7 @@ function submitOrder(): void {
         :key="String(value)"
         type="button"
         class="flex min-h-32 items-center justify-center gap-3 rounded-3xl text-3xl font-extrabold text-white shadow-lg transition duration-150 hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-4 disabled:opacity-60"
-        :class="value ? 'bg-gradient-to-br from-sky-500 to-blue-600 ring-sky-300' : 'bg-gradient-to-br from-rose-500 to-pink-600 ring-rose-300'"
+        :class="value ? 'bg-gradient-to-br from-sky-600 to-blue-700 ring-sky-300' : 'bg-gradient-to-br from-rose-600 to-pink-700 ring-rose-300'"
         :disabled="disabled"
         @click="emit('submit', { type: 'true_false', value })"
       >
@@ -123,13 +123,13 @@ function submitOrder(): void {
     </div>
 
     <div v-else-if="question.type === 'ordering'" class="flex flex-col gap-3">
-      <p class="text-center text-sm font-bold text-slate-600 dark:text-slate-300">{{ $t('game.question.orderHint') }}</p>
+      <p class="text-center text-base font-bold text-slate-600 dark:text-slate-300">{{ $t('game.question.orderHint') }}</p>
       <TransitionGroup tag="ol" class="flex flex-col gap-2" move-class="transition-transform duration-200">
-        <li v-for="(item, i) in order" :key="item.id" class="flex items-center gap-2 rounded-xl bg-white dark:bg-slate-900 p-2 pl-4 shadow-sm ring-1 ring-slate-200 dark:ring-slate-700">
-          <span class="font-black tabular-nums text-slate-400">{{ i + 1 }}</span>
-          <span class="flex-1 font-bold">{{ item.text }}</span>
-          <button type="button" class="btn-icon" :disabled="disabled || i === 0" :aria-label="$t('common.moveUp')" @click="move(i, -1)">↑</button>
-          <button type="button" class="btn-icon" :disabled="disabled || i === order.length - 1" :aria-label="$t('common.moveDown')" @click="move(i, 1)">↓</button>
+        <li v-for="(item, i) in order" :key="item.id" class="flex items-center gap-2 rounded-2xl bg-white py-1 pl-4 pr-1 shadow-sm ring-1 ring-slate-200 dark:bg-white/[0.06] dark:ring-white/10">
+          <span class="font-display font-bold tabular-nums text-slate-400">{{ i + 1 }}</span>
+          <span class="flex-1 text-lg font-bold">{{ item.text }}</span>
+          <button type="button" class="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-slate-100 text-2xl font-black text-slate-700 transition active:scale-95 disabled:opacity-20 dark:bg-white/10 dark:text-white dark:active:bg-white/20" :disabled="disabled || i === 0" :aria-label="$t('common.moveUp')" @click="move(i, -1)">↑</button>
+          <button type="button" class="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-slate-100 text-2xl font-black text-slate-700 transition active:scale-95 disabled:opacity-20 dark:bg-white/10 dark:text-white dark:active:bg-white/20" :disabled="disabled || i === order.length - 1" :aria-label="$t('common.moveDown')" @click="move(i, 1)">↓</button>
         </li>
       </TransitionGroup>
       <button type="button" class="btn-primary py-4 text-lg" :disabled="disabled" @click="submitOrder">

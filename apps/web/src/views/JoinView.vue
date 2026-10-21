@@ -8,6 +8,7 @@ import { gamesApi } from '@/api/games';
 import { session } from '@/game/session';
 import { useAuthStore } from '@/stores/auth';
 import { useGameStore } from '@/stores/game';
+import { shortTitle } from '@/brand/topics';
 
 const props = defineProps<{ pin?: string }>();
 
@@ -99,16 +100,18 @@ watch(
 <template>
   <section class="mx-auto flex min-h-[calc(100dvh-4rem)] max-w-md flex-col justify-center px-4 py-10">
     <form v-if="!room" class="card flex flex-col gap-4 p-6" @submit.prevent="submitPin">
-      <h1 class="text-center text-3xl font-black">{{ t('game.join.title') }}</h1>
+      <h1 class="text-center text-3xl font-bold">{{ t('game.join.title') }}</h1>
       <label class="block">
         <span class="label text-center">{{ t('game.join.pin') }}</span>
         <input
           v-model="pinInput"
-          class="input text-center text-4xl font-black tracking-[0.3em]"
+          class="input text-center font-display text-4xl font-bold tracking-[0.3em] placeholder:text-ink-300 dark:placeholder:text-white/20"
           inputmode="numeric"
+          pattern="[0-9]*"
+          enterkeyhint="go"
           autocomplete="off"
           :maxlength="PIN_LENGTH"
-          :placeholder="'0'.repeat(PIN_LENGTH)"
+          placeholder="••••••"
           :aria-invalid="message ? true : undefined"
           aria-describedby="join-message"
           autofocus
@@ -123,8 +126,10 @@ watch(
     <form v-else class="card flex flex-col gap-5 p-6" @submit.prevent="submitJoin">
       <div class="text-center">
         <p class="text-sm font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">PIN {{ room.pin }}</p>
-        <h1 class="text-2xl font-black">{{ room.quizTitle }}</h1>
-        <p class="text-sm font-semibold text-slate-500 dark:text-slate-400">{{ t('game.lobby.players', { n: room.playerCount }, room.playerCount) }}</p>
+        <h1 class="text-balance font-display text-2xl font-bold">{{ shortTitle(room.quizTitle) }}</h1>
+        <p v-if="room.playerCount > 0" class="text-sm font-semibold text-slate-500 dark:text-slate-400">
+          {{ t('game.join.alreadyIn', { n: room.playerCount }) }}
+        </p>
       </div>
 
       <label class="block">
@@ -135,18 +140,24 @@ watch(
           :maxlength="LIMITS.nicknameMax"
           :placeholder="t('game.join.nicknamePlaceholder')"
           autocomplete="nickname"
+          enterkeyhint="go"
           aria-describedby="join-message"
           autofocus
         />
       </label>
 
+      <button type="submit" class="btn-primary py-4 text-lg" :disabled="!nicknameValid || joining">
+        {{ joining ? t('game.join.joining') : t('game.join.submit') }}
+      </button>
+      <p v-if="message" id="join-message" class="text-center font-bold text-red-600 dark:text-red-400" role="alert">{{ message }}</p>
+
       <fieldset>
         <legend class="label">{{ t('game.join.avatar') }}</legend>
-        <div class="grid grid-cols-6 gap-2" role="radiogroup">
+        <div class="grid grid-cols-8 gap-1.5" role="radiogroup">
           <label
             v-for="emoji in AVATARS"
             :key="emoji"
-            class="grid aspect-square cursor-pointer place-items-center rounded-xl text-2xl ring-1 ring-slate-200 dark:ring-slate-700 transition has-[:checked]:bg-brand-100 dark:has-[:checked]:bg-brand-900/40 has-[:checked]:ring-2 has-[:checked]:ring-brand-500 has-[:focus-visible]:ring-4"
+            class="grid h-11 cursor-pointer place-items-center rounded-xl text-2xl ring-1 ring-slate-200 dark:ring-slate-700 transition has-[:checked]:bg-brand-100 dark:has-[:checked]:bg-brand-900/40 has-[:checked]:ring-2 has-[:checked]:ring-brand-500 has-[:focus-visible]:ring-4"
           >
             <input v-model="avatar" type="radio" name="avatar" :value="emoji" class="sr-only" />
             <span aria-hidden="true">{{ emoji }}</span>
@@ -154,11 +165,6 @@ watch(
           </label>
         </div>
       </fieldset>
-
-      <button type="submit" class="btn-primary py-4 text-lg" :disabled="!nicknameValid || joining">
-        {{ joining ? t('game.join.joining') : t('game.join.submit') }}
-      </button>
-      <p v-if="message" id="join-message" class="text-center font-bold text-red-600 dark:text-red-400" role="alert">{{ message }}</p>
       <p v-if="!auth.user" class="text-center text-sm text-slate-500 dark:text-slate-400">
         {{ t('game.join.guestHint') }}
         <RouterLink :to="{ name: 'login', query: { redirect: `/join/${room.pin}` } }" class="font-bold text-brand-700 dark:text-brand-300 underline">

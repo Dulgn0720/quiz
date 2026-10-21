@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { PlayerStats } from '@quiz/shared';
 
-defineProps<{ results: PlayerStats[] }>();
+withDefaults(defineProps<{ results: PlayerStats[]; size?: 'md' | 'lg' }>(), { size: 'md' });
 
 function seconds(ms: number | null): string {
   return ms === null ? '—' : (ms / 1000).toFixed(1);
@@ -10,7 +10,7 @@ function seconds(ms: number | null): string {
 
 <template>
   <div class="card overflow-x-auto">
-    <table class="w-full min-w-[32rem] text-left">
+    <table class="w-full min-w-[32rem] text-left" :class="size === 'lg' ? 'text-xl' : ''">
       <caption class="sr-only">{{ $t('game.podium.results') }}</caption>
       <thead class="border-b border-slate-200 dark:border-slate-700 text-sm text-slate-500 dark:text-slate-400">
         <tr>
@@ -24,12 +24,12 @@ function seconds(ms: number | null): string {
       </thead>
       <tbody>
         <tr v-for="r in results" :key="r.playerId" class="border-b border-slate-100 dark:border-slate-800 last:border-0">
-          <td class="px-4 py-3 font-black tabular-nums">{{ r.rank }}</td>
-          <td class="px-4 py-3 font-bold"><span aria-hidden="true">{{ r.avatar }}</span> {{ r.nickname }}</td>
-          <td class="px-4 py-3 text-right font-black tabular-nums">{{ r.score }}</td>
-          <td class="px-4 py-3 text-right tabular-nums">{{ r.correctCount }}/{{ r.questionCount }}</td>
-          <td class="px-4 py-3 text-right tabular-nums">{{ r.bestStreak }}</td>
-          <td class="px-4 py-3 text-right tabular-nums">{{ seconds(r.avgResponseMs) }} {{ $t('common.seconds') }}</td>
+          <td :class="size === 'lg' ? 'py-4' : ''" class="px-4 py-3 font-black tabular-nums">{{ r.rank }}</td>
+          <td :class="size === 'lg' ? 'py-4' : ''" class="px-4 py-3 font-bold"><span aria-hidden="true">{{ r.avatar }}</span> {{ r.nickname }}</td>
+          <td :class="size === 'lg' ? 'py-4' : ''" class="px-4 py-3 text-right font-black tabular-nums">{{ r.score }}</td>
+          <td :class="size === 'lg' ? 'py-4' : ''" class="px-4 py-3 text-right tabular-nums">{{ r.correctCount }}/{{ r.questionCount }}</td>
+          <td :class="size === 'lg' ? 'py-4' : ''" class="px-4 py-3 text-right tabular-nums">{{ r.bestStreak }}</td>
+          <td :class="size === 'lg' ? 'py-4' : ''" class="px-4 py-3 text-right tabular-nums">{{ seconds(r.avgResponseMs) }} {{ $t('common.seconds') }}</td>
         </tr>
       </tbody>
     </table>

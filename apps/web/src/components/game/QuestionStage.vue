@@ -22,11 +22,16 @@ const trueFalseAnswer = computed(() =>
 </script>
 
 <template>
-  <div class="flex flex-col gap-6">
+  <div class="flex flex-col" :class="reveal ? 'gap-4' : 'gap-6'">
     <QuestionHeader :question="question" />
     <div class="flex items-start gap-4">
-      <h2 class="flex-1 text-center text-3xl font-black leading-tight sm:text-5xl">{{ question.prompt }}</h2>
+      <h2 class="flex-1 text-balance text-center text-3xl font-bold leading-tight" :class="reveal ? 'sm:text-4xl' : 'sm:text-5xl'">
+        {{ question.prompt }}
+      </h2>
     </div>
+    <p v-if="question.type === 'multiple' && !reveal" class="text-center text-2xl font-bold text-amber-300">
+      <span aria-hidden="true">☑</span> {{ $t('game.question.selectAll', { n: question.correctCount }) }}
+    </p>
 
     <div class="flex items-center justify-center gap-6">
       <GameTimer
@@ -52,14 +57,23 @@ const trueFalseAnswer = computed(() =>
       <li
         v-for="(option, i) in question.options"
         :key="option.id"
-        class="flex min-h-24 items-center gap-4 rounded-3xl px-6 py-4 text-xl font-extrabold shadow-xl transition duration-500 sm:text-2xl"
-        :class="[tileStyle(i).bg, tileStyle(i).fg, reveal && !correctIds.has(option.id) ? 'scale-[0.98] opacity-25 saturate-50' : '']"
+        class="flex items-center gap-4 rounded-3xl px-6 text-xl font-extrabold shadow-xl transition duration-500 sm:text-2xl"
+        :class="[
+          tileStyle(i).bg,
+          tileStyle(i).fg,
+          reveal ? 'min-h-16 py-3' : 'min-h-24 py-4',
+          reveal && !correctIds.has(option.id) ? 'scale-[0.98] opacity-25 saturate-50' : '',
+        ]"
       >
         <span class="text-3xl" aria-hidden="true">{{ tileStyle(i).shape }}</span>
         <img v-if="option.imageUrl" :src="option.imageUrl" alt="" class="h-16 w-16 rounded-lg bg-white dark:bg-slate-900 object-contain" />
         <span class="flex-1">{{ option.text }}</span>
-        <span v-if="reveal && correctIds.has(option.id)" class="text-3xl" :aria-label="$t('game.reveal.correct')">✔</span>
-        <span v-if="reveal" class="text-lg tabular-nums opacity-90">{{ reveal.distribution[option.id] ?? 0 }}</span>
+        <span v-if="reveal && correctIds.has(option.id)" class="text-3xl">
+          <span aria-hidden="true">✔</span><span class="sr-only">{{ $t('game.reveal.correct') }}</span>
+        </span>
+        <span v-if="reveal" class="min-w-10 rounded-full bg-black/20 px-3 py-1 text-center font-display text-xl tabular-nums">
+          {{ reveal.distribution[option.id] ?? 0 }}
+        </span>
       </li>
     </ul>
 
@@ -67,8 +81,11 @@ const trueFalseAnswer = computed(() =>
       <li
         v-for="value in [true, false]"
         :key="String(value)"
-        class="flex min-h-24 items-center justify-center gap-3 rounded-2xl text-3xl font-black text-white shadow"
-        :class="[value ? 'bg-gradient-to-br from-sky-500 to-blue-600' : 'bg-gradient-to-br from-rose-500 to-pink-600', trueFalseAnswer !== undefined && trueFalseAnswer !== value ? 'opacity-30' : '']"
+        class="flex min-h-24 items-center justify-center gap-3 rounded-3xl text-3xl font-extrabold text-white shadow-xl"
+        :class="[
+          value ? 'bg-gradient-to-br from-sky-600 to-blue-700' : 'bg-gradient-to-br from-rose-600 to-pink-700',
+          trueFalseAnswer !== undefined && trueFalseAnswer !== value ? 'opacity-25 saturate-50' : '',
+        ]"
       >
         <span aria-hidden="true">{{ value ? '✓' : '✕' }}</span>
         {{ value ? $t('question.true') : $t('question.false') }}
@@ -76,7 +93,7 @@ const trueFalseAnswer = computed(() =>
     </ul>
 
     <ol v-else-if="question.type === 'ordering' && !reveal" class="mx-auto flex w-full max-w-xl flex-col gap-2">
-      <li v-for="item in question.items" :key="item.id" class="rounded-xl bg-white dark:bg-slate-900 px-5 py-3 text-xl font-bold shadow-sm ring-1 ring-slate-200 dark:ring-slate-700">
+      <li v-for="item in question.items" :key="item.id" class="rounded-2xl bg-white px-6 py-4 text-2xl font-bold shadow-sm ring-1 ring-slate-200 dark:bg-white/[0.06] dark:ring-white/10">
         {{ item.text }}
       </li>
     </ol>

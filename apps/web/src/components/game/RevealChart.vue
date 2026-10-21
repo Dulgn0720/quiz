@@ -34,13 +34,13 @@ const bars = computed<Bar[]>(() => {
   if (reveal.answer.type === 'true_false') {
     const value = reveal.answer.value;
     return [
-      { key: 'true', label: t('question.true'), count: d.true ?? 0, correct: value, color: 'bg-sky-500', shape: '✓' },
-      { key: 'false', label: t('question.false'), count: d.false ?? 0, correct: !value, color: 'bg-rose-500', shape: '✕' },
+      { key: 'true', label: t('question.true'), count: d.true ?? 0, correct: value, color: 'bg-sky-600', shape: '✓' },
+      { key: 'false', label: t('question.false'), count: d.false ?? 0, correct: !value, color: 'bg-rose-600', shape: '✕' },
     ];
   }
   return [
-    { key: 'correct', label: t('game.reveal.correct'), count: d.correct ?? 0, correct: true, color: 'bg-emerald-500' },
-    { key: 'incorrect', label: t('game.reveal.incorrect'), count: d.incorrect ?? 0, correct: false, color: 'bg-rose-500' },
+    { key: 'correct', label: t('game.reveal.correct'), count: d.correct ?? 0, correct: true, color: 'bg-emerald-600' },
+    { key: 'incorrect', label: t('game.reveal.incorrect'), count: d.incorrect ?? 0, correct: false, color: 'bg-rose-600' },
   ];
 });
 
@@ -59,7 +59,7 @@ const max = computed(() => Math.max(1, ...bars.value.map((b) => b.count)));
       <span class="mt-2 flex items-center gap-1 text-center text-sm font-bold leading-tight">
         <span v-if="bar.shape" aria-hidden="true">{{ bar.shape }}</span>
         <span class="line-clamp-2">{{ bar.label }}</span>
-        <span v-if="bar.correct" class="text-emerald-600" :aria-label="t('game.reveal.correct')">✔</span>
+        <span v-if="bar.correct" class="text-emerald-500"><span aria-hidden="true">✔</span><span class="sr-only">{{ t('game.reveal.correct') }}</span></span>
       </span>
     </div>
   </div>

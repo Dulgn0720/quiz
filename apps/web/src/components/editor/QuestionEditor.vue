@@ -9,7 +9,7 @@ import ChoiceOptionsEditor from './ChoiceOptionsEditor.vue';
 import ImageField from './ImageField.vue';
 import OrderingItemsEditor from './OrderingItemsEditor.vue';
 
-const props = defineProps<{ roundIndex: number; questionIndex: number }>();
+const props = defineProps<{ roundIndex: number; questionIndex: number; readOnly?: boolean }>();
 const editor = useEditorStore();
 const { fieldError } = useFieldErrors();
 const { t } = useI18n();
@@ -40,7 +40,8 @@ function removeAcceptedAnswer(index: number): void {
 <template>
   <section class="card space-y-6 p-5" :aria-label="t('editor.questionN', { n: questionIndex + 1 })">
     <div class="flex flex-wrap items-center gap-1">
-      <h2 class="mr-auto text-lg font-black">{{ t('editor.questionN', { n: questionIndex + 1 }) }}</h2>
+      <h2 class="mr-auto text-lg font-bold">{{ t('editor.questionN', { n: questionIndex + 1 }) }}</h2>
+      <template v-if="!readOnly">
       <button
         type="button"
         class="btn-icon"
@@ -72,9 +73,10 @@ function removeAcceptedAnswer(index: number): void {
       <button type="button" class="btn-danger" @click="editor.removeQuestion(roundIndex, questionIndex)">
         {{ t('editor.deleteQuestion') }}
       </button>
+      </template>
     </div>
 
-    <fieldset>
+    <fieldset v-if="!readOnly">
       <legend class="label">{{ t('question.type') }}</legend>
       <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
         <label

@@ -95,7 +95,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
 
 <template>
   <div class="dark stage min-h-dvh">
-  <section class="mx-auto flex min-h-dvh max-w-6xl flex-col px-4 py-5">
+  <section class="mx-auto flex min-h-dvh max-w-6xl flex-col px-4 pb-28 pt-5">
     <ConnectionBanner />
 
     <div v-if="fatalError" class="card mx-auto mt-16 max-w-md p-8 text-center" role="alert">
@@ -114,25 +114,29 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
       <header class="mb-6 flex flex-wrap items-center gap-3 rounded-full bg-white/5 py-2 pl-2 pr-3 ring-1 ring-white/10 backdrop-blur">
         <RouterLink to="/" :aria-label="t('nav.home')"><BrandMark :size="40" /></RouterLink>
         <h1 class="mr-auto truncate font-display text-lg font-bold">{{ shortTitle(room.quizTitle) }}</h1>
-        <span class="chip bg-white/10 px-3 py-1 text-sm tracking-widest">
-          PIN <span class="font-display">{{ room.pin }}</span>
-        </span>
-        <span class="chip bg-white/10 px-3 py-1 text-sm">
-          👥 {{ players.length }}
-        </span>
+        <template v-if="phase.phase !== 'lobby'">
+          <span class="chip bg-white/10 px-3 py-1 text-base tracking-widest">
+            PIN <span class="font-display">{{ room.pin }}</span>
+          </span>
+          <span class="chip bg-white/10 px-3 py-1 text-base">
+            <span aria-hidden="true">👥</span> {{ players.length }}
+          </span>
+        </template>
         <SoundToggles music />
       </header>
 
-      <div class="flex flex-1 flex-col justify-center">
+      <div class="flex flex-1 flex-col" :class="phase.phase === 'lobby' ? 'justify-start' : 'justify-center'">
         <Transition name="phase" mode="out-in">
         <!-- Lobby -->
         <div v-if="phase.phase === 'lobby'" class="flex flex-col gap-6">
           <ShareRoom :pin="room.pin" />
           <div class="text-center">
-            <h2 class="text-2xl font-black">{{ t('game.lobby.players', { n: players.length }, players.length) }}</h2>
-            <p v-if="players.length === 0" class="mt-2 animate-pulse font-semibold text-slate-500 dark:text-slate-400">{{ t('game.lobby.waiting') }}</p>
+            <h2 :key="players.length" class="animate-pop text-3xl font-bold">
+              {{ t('game.lobby.players', { n: players.length }, players.length) }}
+            </h2>
+            <p v-if="players.length === 0" class="mt-2 animate-pulse text-lg font-semibold text-slate-400">{{ t('game.lobby.waiting') }}</p>
           </div>
-          <PlayerChips :players="players" kickable @kick="kick" />
+          <PlayerChips :players="players" kickable size="lg" @kick="kick" />
         </div>
 
         <CountdownCard v-else-if="phase.phase === 'countdown'" :countdown="phase" />
@@ -144,36 +148,43 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
           :total="game.answerCount.total"
         />
 
-        <div v-else-if="phase.phase === 'reveal'" class="flex flex-col gap-8">
-          <QuestionStage :question="phase.question" :reveal="phase.reveal" />
-          <RevealedAnswer :question="phase.question" :answer="phase.reveal.answer" />
-          <RevealChart :question="phase.question" :reveal="phase.reveal" />
-          <p class="text-center font-bold text-slate-600 dark:text-slate-300">
-            {{ t('game.reveal.answeredCount', { answered: phase.reveal.answeredCount, total: phase.reveal.playerCount }) }}
-          </p>
-          <p v-if="phase.reveal.explanation" class="mx-auto max-w-2xl rounded-2xl bg-sky-50 dark:bg-sky-950/40 p-4 text-center text-lg text-sky-900 dark:text-sky-200">
-            💡 {{ phase.reveal.explanation }}
-          </p>
+        <div v-else-if="phase.phase === 'reveal'" class="grid gap-6 lg:grid-cols-[1fr_22rem] lg:items-start">
+          <div class="flex min-w-0 flex-col gap-6">
+            <QuestionStage :question="phase.question" :reveal="phase.reveal" />
+            <RevealedAnswer :question="phase.question" :answer="phase.reveal.answer" size="lg" :choices="false" />
+          </div>
+          <aside class="flex flex-col gap-4">
+            <RevealChart v-if="!('options' in phase.question)" :question="phase.question" :reveal="phase.reveal" />
+            <p class="rounded-2xl bg-white/5 px-4 py-3 text-center text-lg font-bold text-slate-200 ring-1 ring-white/10">
+              {{ t('game.reveal.answeredCount', { answered: phase.reveal.answeredCount, total: phase.reveal.playerCount }) }}
+            </p>
+            <p v-if="phase.reveal.explanation" class="rounded-2xl bg-sky-500/10 p-5 text-lg leading-relaxed text-sky-100 ring-1 ring-sky-400/20">
+              <span aria-hidden="true">💡</span> {{ phase.reveal.explanation }}
+            </p>
+          </aside>
         </div>
 
-        <div v-else-if="phase.phase === 'leaderboard'" class="mx-auto w-full max-w-2xl">
-          <h2 class="mb-6 text-center text-4xl font-black">{{ t('game.leaderboard.title') }}</h2>
-          <LeaderboardList :entries="phase.leaderboard" />
+        <div v-else-if="phase.phase === 'leaderboard'" class="mx-auto w-full max-w-4xl">
+          <h2 class="mb-8 text-center text-5xl font-bold">{{ t('game.leaderboard.title') }}</h2>
+          <LeaderboardList :entries="phase.leaderboard.slice(0, 5)" size="lg" />
+          <p v-if="phase.leaderboard.length > 5" class="mt-4 text-center text-lg text-slate-400">
+            {{ t('game.leaderboard.more', { n: phase.leaderboard.length - 5 }) }}
+          </p>
         </div>
 
         <RoundSummaryPanel v-else-if="phase.phase === 'round_summary'" :round="phase.round" :leaderboard="phase.leaderboard" />
 
         <div v-else-if="phase.phase === 'podium'" class="flex flex-col gap-10">
-          <h2 class="text-center text-4xl font-black">{{ t('game.podium.title') }}</h2>
+          <h2 class="text-center text-5xl font-bold">{{ t('game.podium.title') }}</h2>
           <PodiumPanel :results="phase.results" />
-          <ResultsTable :results="phase.results" />
+          <ResultsTable :results="phase.results" size="lg" />
         </div>
         </Transition>
       </div>
 
       <!-- Host controls -->
       <nav
-        class="sticky bottom-4 mx-auto mt-8 flex w-fit max-w-full flex-wrap items-center justify-center gap-2 rounded-full bg-ink-900/70 px-3 py-2 shadow-2xl ring-1 ring-white/10 backdrop-blur-xl"
+        class="fixed inset-x-0 bottom-4 z-20 mx-auto flex w-fit max-w-[calc(100%-2rem)] flex-wrap items-center justify-center gap-2 rounded-full bg-ink-900/80 px-3 py-2 shadow-2xl ring-1 ring-white/10 backdrop-blur-xl"
         :aria-label="t('game.controls.label')"
       >
         <template v-if="phase.phase === 'lobby'">

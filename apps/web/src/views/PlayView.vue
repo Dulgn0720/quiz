@@ -14,6 +14,7 @@ import PodiumPanel from '@/components/game/PodiumPanel.vue';
 import QuestionHeader from '@/components/game/QuestionHeader.vue';
 import RevealedAnswer from '@/components/game/RevealedAnswer.vue';
 import LevelBar from '@/components/LevelBar.vue';
+import LockedAnswer from '@/components/game/LockedAnswer.vue';
 import RoundSummaryPanel from '@/components/game/RoundSummaryPanel.vue';
 import SoundToggles from '@/components/SoundToggles.vue';
 import { useGameSounds } from '@/game/useGameSounds';
@@ -74,7 +75,7 @@ function leave(): void {
 
 <template>
   <div class="dark stage min-h-dvh">
-  <section class="mx-auto flex min-h-dvh max-w-xl flex-col px-4 pb-6">
+  <section class="mx-auto flex min-h-dvh max-w-xl flex-col px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
     <ConnectionBanner />
 
     <div v-if="game.ended || fatalError" class="card mt-16 p-8 text-center" role="alert">
@@ -94,11 +95,15 @@ function leave(): void {
     <p v-else-if="!phase || !me" class="mt-16 text-center text-slate-500 dark:text-slate-400">{{ t('common.loading') }}</p>
 
     <template v-else>
-      <header class="sticky top-0 z-10 -mx-4 mb-4 flex items-center gap-3 bg-ink-950/70 px-4 py-3 backdrop-blur-xl">
+      <header class="sticky top-0 z-10 -mx-4 mb-4 flex items-center gap-3 bg-ink-950/70 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-xl">
         <span class="grid h-10 w-10 place-items-center rounded-full bg-white/10 text-2xl leading-none" aria-hidden="true">{{ me.avatar }}</span>
         <span class="mr-auto truncate font-bold">{{ me.nickname }}</span>
-        <span class="rounded-full bg-brand-500 px-3 py-1 font-display font-bold tabular-nums text-ink-950" :aria-label="t('game.player.score')">
-          {{ myScore }}
+        <span
+          v-if="phase.phase !== 'lobby'"
+          class="rounded-full bg-brand-500 px-3 py-1 font-display font-bold tabular-nums text-ink-950"
+          aria-live="polite"
+        >
+          <span class="sr-only">{{ t('game.player.score') }}: </span>{{ myScore }}
         </span>
         <SoundToggles />
         <button type="button" class="btn-icon" :aria-label="t('game.player.leave')" @click="leave">✕</button>
@@ -120,7 +125,7 @@ function leave(): void {
         <div v-else-if="phase.phase === 'question'" class="flex flex-1 flex-col gap-4">
           <QuestionHeader :question="phase.question" />
           <div class="flex items-center gap-3">
-            <h2 class="flex-1 text-xl font-black leading-snug">{{ phase.question.prompt }}</h2>
+            <h2 class="flex-1 text-xl font-bold leading-snug">{{ phase.question.prompt }}</h2>
             <GameTimer :ends-at="phase.question.endsAt" :paused-remaining-ms="phase.question.pausedRemainingMs" :total="phase.question.timeLimit" />
           </div>
           <img v-if="phase.question.imageUrl" :src="phase.question.imageUrl" alt="" class="max-h-48 self-center rounded-xl object-contain" />
@@ -129,11 +134,7 @@ function leave(): void {
             <p class="text-5xl" aria-hidden="true">👀</p>
             <p class="mt-3 text-lg font-bold">{{ t('game.player.eliminated') }}</p>
           </div>
-          <div v-else-if="lockedAnswer" class="card flex flex-1 animate-pop flex-col items-center justify-center p-8 text-center" role="status">
-            <p class="text-5xl" aria-hidden="true">⏳</p>
-            <p class="mt-3 text-xl font-black">{{ t('game.player.answerLocked') }}</p>
-            <p class="mt-1 font-semibold text-slate-500 dark:text-slate-400">{{ t('game.player.waitingForOthers') }}</p>
-          </div>
+          <LockedAnswer v-else-if="lockedAnswer" :question="phase.question" :answer="lockedAnswer" />
           <p v-else-if="phase.question.pausedRemainingMs !== undefined" class="card p-8 text-center text-lg font-bold" role="status">
             ❚❚ {{ t('game.player.paused') }}
           </p>
@@ -143,7 +144,9 @@ function leave(): void {
         <div v-else-if="phase.phase === 'reveal'" class="flex flex-1 flex-col justify-center gap-6">
           <PlayerResult v-if="phase.you" :result="phase.you" />
           <RevealedAnswer :question="phase.question" :answer="phase.reveal.answer" />
-          <p v-if="phase.reveal.explanation" class="rounded-2xl bg-sky-50 dark:bg-sky-950/40 p-4 text-center text-sky-900 dark:text-sky-200">💡 {{ phase.reveal.explanation }}</p>
+          <p v-if="phase.reveal.explanation" class="rounded-2xl bg-sky-500/10 p-4 text-sky-100 ring-1 ring-sky-400/20">
+            <span aria-hidden="true">💡</span> {{ phase.reveal.explanation }}
+          </p>
         </div>
 
         <div v-else-if="phase.phase === 'leaderboard'" class="flex flex-col gap-6">

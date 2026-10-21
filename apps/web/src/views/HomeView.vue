@@ -44,22 +44,22 @@ onMounted(async () => {
 <template>
   <div class="mx-auto max-w-6xl px-4 pb-20">
     <!-- Hero -->
-    <section class="grid items-center gap-10 pt-12 sm:pt-20 lg:grid-cols-[1.15fr_1fr]">
+    <section class="grid items-center gap-8 pt-8 sm:gap-10 sm:pt-20 lg:grid-cols-[1.15fr_1fr]">
       <div class="animate-rise">
         <span class="chip bg-brand-500/15 px-3 py-1 text-sm text-brand-700 ring-1 ring-brand-500/25 dark:text-brand-300">
           <span class="h-2 w-2 animate-pulse rounded-full bg-brand-500" aria-hidden="true" />
           {{ $t('app.tagline') }}
         </span>
-        <h1 class="mt-6 text-4xl font-bold leading-[1.05] sm:text-6xl">
+        <h1 class="mt-6 text-3xl font-bold leading-[1.05] sm:text-6xl">
           {{ $t('home.titleLead') }}
           <span class="text-gradient">{{ $t('home.titleAccent') }}</span>
         </h1>
         <p class="mt-6 max-w-xl text-lg text-ink-600 dark:text-ink-300">{{ $t('home.subtitle') }}</p>
-        <div class="mt-8 flex flex-wrap gap-3">
+        <div class="mt-8 hidden flex-wrap gap-3 sm:flex">
           <RouterLink to="/quizzes" class="btn-primary px-7 py-3.5 text-base">▶ {{ $t('home.hostCta') }}</RouterLink>
           <RouterLink v-if="auth.canEditQuizzes" to="/quizzes/new" class="btn-secondary px-7 py-3.5 text-base">{{ $t('home.createCta') }}</RouterLink>
         </div>
-        <dl v-if="quizzes.length" class="mt-10 flex gap-8 text-sm">
+        <dl v-if="quizzes.length" class="mt-10 hidden gap-8 text-sm sm:flex">
           <div>
             <dt class="text-ink-500 dark:text-ink-400">{{ $t('home.statQuizzes') }}</dt>
             <dd class="font-display text-3xl font-bold">{{ quizzes.length }}</dd>
@@ -73,7 +73,7 @@ onMounted(async () => {
 
       <!-- Join card -->
       <form
-        class="stage animate-rise overflow-hidden rounded-[2rem] p-8 shadow-2xl [animation-delay:120ms] sm:p-10"
+        class="stage order-first animate-rise overflow-hidden rounded-[2rem] p-6 shadow-2xl [animation-delay:120ms] sm:p-10 lg:order-none"
         @submit.prevent="join"
       >
         <p class="font-display text-2xl font-bold">{{ $t('home.joinTitle') }}</p>
@@ -85,8 +85,10 @@ onMounted(async () => {
             inputmode="numeric"
             autocomplete="off"
             :maxlength="PIN_LENGTH"
-            placeholder="000000"
-            class="w-full rounded-2xl border-0 bg-white/10 px-3 py-4 text-center font-display text-3xl font-bold tracking-[0.2em] text-white sm:px-5 sm:text-4xl sm:tracking-[0.35em] outline-none ring-1 ring-white/15 placeholder:text-white/25 focus:ring-2 focus:ring-brand-400"
+            pattern="[0-9]*"
+            enterkeyhint="go"
+            placeholder="••••••"
+            class="w-full rounded-2xl border-0 bg-white/10 px-3 py-4 text-center font-display text-3xl font-bold tracking-[0.2em] text-white sm:px-5 sm:text-4xl sm:tracking-[0.35em] outline-none ring-1 ring-white/15 placeholder:text-white/20 focus:ring-2 focus:ring-brand-400"
             @input="onPinInput"
           />
         </label>
@@ -99,14 +101,25 @@ onMounted(async () => {
       </form>
     </section>
 
+    <!-- How it works -->
+    <section class="mt-12 grid gap-3 sm:grid-cols-3" :aria-label="$t('home.howItWorks')">
+      <div v-for="(step, i) in ['host', 'join', 'play']" :key="step" class="card flex items-start gap-4 p-5">
+        <span class="font-display text-2xl font-bold text-brand-500" aria-hidden="true">0{{ i + 1 }}</span>
+        <div>
+          <h2 class="font-display text-base font-bold">{{ $t(`home.steps.${step}.title`) }}</h2>
+          <p class="mt-1 text-sm text-ink-600 dark:text-ink-300">{{ $t(`home.steps.${step}.text`) }}</p>
+        </div>
+      </div>
+    </section>
+
     <!-- Company quizzes -->
-    <section class="mt-24">
+    <section class="mt-16 sm:mt-20">
       <div class="flex flex-wrap items-end gap-3">
         <div class="mr-auto">
           <h2 class="text-2xl font-bold sm:text-3xl">{{ $t('home.libraryTitle') }}</h2>
           <p class="mt-1 text-ink-600 dark:text-ink-300">{{ $t('home.librarySubtitle') }}</p>
         </div>
-        <RouterLink to="/quizzes" class="btn-secondary">{{ $t('home.seeAll') }} →</RouterLink>
+        <RouterLink to="/quizzes" class="btn-secondary">{{ $t('home.seeAll', { n: quizzes.length }) }} →</RouterLink>
       </div>
 
       <ul v-if="!loaded" class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-hidden="true">
@@ -114,7 +127,7 @@ onMounted(async () => {
       </ul>
       <ul v-else class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <li
-          v-for="(quiz, i) in quizzes"
+          v-for="(quiz, i) in quizzes.slice(0, 6)"
           :key="quiz.id"
           class="card group flex animate-rise flex-col overflow-hidden transition duration-300 hover:-translate-y-1 hover:shadow-xl"
           :style="{ animationDelay: `${Math.min(i, 8) * 50}ms` }"
@@ -144,14 +157,7 @@ onMounted(async () => {
       <p v-if="loaded && quizzes.length === 0" class="mt-8 text-ink-500">{{ $t('quizList.empty') }}</p>
     </section>
 
-    <!-- How it works -->
-    <section class="mt-24 grid gap-4 sm:grid-cols-3">
-      <div v-for="(step, i) in ['host', 'join', 'play']" :key="step" class="card p-6">
-        <span class="font-display text-4xl font-bold text-brand-500">0{{ i + 1 }}</span>
-        <h3 class="mt-3 font-display text-lg font-bold">{{ $t(`home.steps.${step}.title`) }}</h3>
-        <p class="mt-1 text-sm text-ink-600 dark:text-ink-300">{{ $t(`home.steps.${step}.text`) }}</p>
-      </div>
-    </section>
+
 
     <HostGameDialog :quiz="hosting" @close="hosting = null" />
   </div>

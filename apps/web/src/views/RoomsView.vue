@@ -34,14 +34,24 @@ onBeforeUnmount(() => clearInterval(timer));
 <template>
   <section class="mx-auto max-w-4xl px-4 py-8">
     <div class="flex flex-wrap items-center gap-3">
-      <h1 class="mr-auto text-3xl font-black">{{ t('rooms.title') }}</h1>
+      <h1 class="mr-auto text-3xl font-bold">{{ t('rooms.title') }}</h1>
       <RouterLink to="/join" class="btn-secondary">{{ t('rooms.havePin') }}</RouterLink>
     </div>
     <p class="mt-2 text-slate-600 dark:text-slate-300">{{ t('rooms.subtitle') }}</p>
 
     <p v-if="error" class="mt-8 rounded-2xl bg-red-50 dark:bg-red-950/40 p-4 text-center font-bold text-red-700 dark:text-red-300" role="alert">{{ error }}</p>
-    <p v-else-if="loaded && rooms.length === 0" class="mt-16 text-center text-slate-500 dark:text-slate-400">{{ t('rooms.empty') }}</p>
-    <p v-else-if="!loaded" class="mt-16 text-center text-slate-500 dark:text-slate-400">{{ t('common.loading') }}</p>
+    <div v-else-if="loaded && rooms.length === 0" class="card mx-auto mt-12 max-w-md p-8 text-center">
+      <p class="text-5xl" aria-hidden="true">🎮</p>
+      <p class="mt-4 text-lg font-bold">{{ t('rooms.empty') }}</p>
+      <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ t('rooms.emptyHint') }}</p>
+      <div class="mt-6 flex flex-wrap justify-center gap-2">
+        <RouterLink to="/join" class="btn-primary">{{ t('rooms.havePin') }}</RouterLink>
+        <RouterLink to="/quizzes" class="btn-secondary">{{ t('home.hostCta') }}</RouterLink>
+      </div>
+    </div>
+    <ul v-else-if="!loaded" class="mt-6 grid gap-3 sm:grid-cols-2" aria-hidden="true">
+      <li v-for="i in 4" :key="i" class="card h-24 animate-pulse" />
+    </ul>
 
     <TransitionGroup
       tag="ul"

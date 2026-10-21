@@ -25,8 +25,8 @@ watch(seconds, (s, before) => {
       <p class="text-lg font-bold uppercase tracking-wide text-brand-700 dark:text-brand-300">
         {{ $t('game.countdown.round', { n: countdown.roundIndex + 1 }) }}
       </p>
-      <h2 class="animate-pop text-4xl font-black sm:text-6xl">{{ countdown.roundName }}</h2>
-      <p v-if="countdown.roundType !== 'normal'" class="max-w-md rounded-full bg-amber-100 dark:bg-amber-900/40 px-4 py-1 font-bold text-amber-900 dark:text-amber-200">
+      <h2 class="animate-pop text-4xl font-bold sm:text-6xl">{{ countdown.roundName }}</h2>
+      <p v-if="countdown.roundType !== 'normal'" class="max-w-xl rounded-full bg-amber-100 px-5 py-2 text-lg font-bold text-amber-900 dark:bg-amber-400/15 dark:text-amber-200">
         {{ $t(`round.types.${countdown.roundType}`) }} — {{ $t(`round.typeHelp.${countdown.roundType}`) }}
       </p>
     </template>
@@ -34,8 +34,8 @@ watch(seconds, (s, before) => {
       {{ $t('game.question.ofTotal', { n: countdown.globalIndex + 1, total: countdown.totalQuestions }) }}
     </p>
     <p class="text-lg font-bold text-slate-500 dark:text-slate-400">{{ $t('game.countdown.getReady') }}</p>
-    <span :key="seconds" class="grid h-28 w-28 animate-pop place-items-center rounded-full bg-brand-600 text-6xl font-black text-white shadow-lg" aria-live="polite">
-      {{ countdown.pausedRemainingMs !== undefined ? '❚❚' : seconds }}
+    <span class="grid h-40 w-40 place-items-center rounded-full bg-brand-500 font-display text-8xl font-bold text-ink-950 shadow-glow" aria-live="polite">
+      <span :key="seconds" class="animate-tick">{{ countdown.pausedRemainingMs !== undefined ? '❚❚' : seconds }}</span>
     </span>
   </div>
 </template>

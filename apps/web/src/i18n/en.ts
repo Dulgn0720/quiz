@@ -51,7 +51,8 @@ export default {
     statQuestions: 'Questions',
     libraryTitle: 'Agula quiz library',
     librarySubtitle: 'IT and information security, ethics, labour rules, safety, claims, risk and internal systems.',
-    seeAll: 'All quizzes',
+    seeAll: 'All quizzes ({n})',
+    howItWorks: 'How it works',
     preview: 'Preview',
     steps: {
       host: { title: 'Host', text: 'Pick a quiz and open it on a projector or TV. The room PIN and QR code appear on screen.' },
@@ -60,6 +61,7 @@ export default {
     },
   },
   quizList: {
+    more: 'More actions',
     filter: 'Show',
     all: 'All quizzes',
     mine: 'My quizzes',
@@ -230,6 +232,7 @@ export default {
       network: 'Can’t reach the server. Check your internet connection and try again.',
     },
     join: {
+      alreadyIn: 'Players joined: {n}',
       guestHint: 'You’re playing as a guest. Sign in to earn XP and badges.',
       title: 'Join a game',
       pin: 'Game PIN',
@@ -301,6 +304,8 @@ export default {
       imageOption: 'Picture {n}',
     },
     reveal: {
+      correctAnswer: 'Correct answer',
+      correctAnswers: 'Correct answers',
       correct: 'Correct',
       incorrect: 'Incorrect',
       noAnswer: 'No answer',
@@ -314,6 +319,7 @@ export default {
       answeredCount: '{answered} of {total} players answered',
     },
     leaderboard: {
+      more: 'and {n} more',
       title: 'Leaderboard',
       movedUp: 'moved up',
       movedDown: 'moved down',
@@ -335,6 +341,7 @@ export default {
       backToQuizzes: 'Back to quizzes',
     },
     player: {
+      yourAnswer: 'Your answer',
       youAreIn: 'You’re in!',
       waitingForHost: 'See your name on the screen? The host will start soon.',
       answerLocked: 'Answer locked in',
@@ -412,6 +419,7 @@ export default {
     level_10: { name: 'Quiz star', description: 'Reach level 10.' },
   },
   rooms: {
+    emptyHint: 'Rooms appear here as soon as a host opens a public one. Have a PIN? Join directly.',
     title: 'Open rooms',
     subtitle: 'Public games waiting for players. The list updates automatically.',
     empty: 'No open rooms right now. Host one from your quizzes!',

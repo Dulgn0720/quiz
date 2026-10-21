@@ -34,7 +34,7 @@ const medals = ['', '🥇', '🥈', '🥉'];
         </div>
       </Transition>
       <div class="grid w-full place-items-center rounded-t-3xl text-4xl font-black" :class="[step.height, step.color]">
-        <span :aria-label="$t('game.podium.place', { n: step.place })">{{ medals[step.place] }}</span>
+        <span aria-hidden="true">{{ medals[step.place] }}</span><span class="sr-only">{{ $t('game.podium.place', { n: step.place }) }}</span>
       </div>
     </div>
   </div>

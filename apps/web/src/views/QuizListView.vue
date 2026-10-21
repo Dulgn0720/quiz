@@ -103,7 +103,7 @@ function onImported(quiz: QuizDetail): void {
 <template>
   <section class="mx-auto max-w-6xl px-4 py-8">
     <div class="flex flex-wrap items-center gap-3">
-      <h1 class="mr-auto text-3xl font-bold">{{ t('quizList.title') }}</h1>
+      <h1 class="w-full text-3xl font-bold sm:mr-auto sm:w-auto">{{ t('quizList.title') }}</h1>
       <template v-if="auth.canEditQuizzes">
         <button type="button" class="btn-secondary" @click="importOpen = true">{{ t('quizList.import') }}</button>
         <RouterLink to="/quizzes/new" class="btn-primary">{{ t('nav.create') }}</RouterLink>
@@ -176,12 +176,22 @@ function onImported(quiz: QuizDetail): void {
           <RouterLink v-if="canEdit(quiz)" :to="{ name: 'quiz-edit', params: { id: quiz.id } }" class="btn-ghost">
             {{ t('common.edit') }}
           </RouterLink>
-          <button v-if="auth.canEditQuizzes" type="button" class="btn-ghost" @click="duplicate(quiz)">{{ t('common.duplicate') }}</button>
-          <a :href="quizzesApi.exportUrl(quiz.id, 'json')" class="btn-ghost" :title="t('quizList.exportJson')">JSON</a>
-          <a :href="quizzesApi.exportUrl(quiz.id, 'csv')" class="btn-ghost" :title="t('quizList.exportCsv')">CSV</a>
-          <button v-if="canEdit(quiz)" type="button" class="btn-danger ml-auto" @click="remove(quiz)">
-            {{ t('common.delete') }}
-          </button>
+          <RouterLink v-else :to="{ name: 'quiz-edit', params: { id: quiz.id } }" class="btn-ghost">{{ t('home.preview') }}</RouterLink>
+          <details class="relative ml-auto">
+            <summary class="btn-icon cursor-pointer list-none text-xl [&::-webkit-details-marker]:hidden" :aria-label="t('quizList.more')" :title="t('quizList.more')">
+              ⋯
+            </summary>
+            <div class="card absolute bottom-full right-0 z-10 mb-2 flex min-w-48 flex-col p-1.5 shadow-xl">
+              <button v-if="auth.canEditQuizzes" type="button" class="btn-ghost justify-start" @click="duplicate(quiz)">
+                {{ t('common.duplicate') }}
+              </button>
+              <a :href="quizzesApi.exportUrl(quiz.id, 'json')" class="btn-ghost justify-start">{{ t('quizList.exportJson') }}</a>
+              <a :href="quizzesApi.exportUrl(quiz.id, 'csv')" class="btn-ghost justify-start">{{ t('quizList.exportCsv') }}</a>
+              <button v-if="canEdit(quiz)" type="button" class="btn-danger justify-start" @click="remove(quiz)">
+                {{ t('common.delete') }}
+              </button>
+            </div>
+          </details>
         </div>
         </div>
       </li>

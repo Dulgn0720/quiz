@@ -131,13 +131,17 @@ function formatDate(iso: string): string {
           v-for="badge in BADGES"
           :key="badge.code"
           class="card flex items-center gap-3 p-4"
-          :class="earned.has(badge.code) ? '' : 'opacity-40 grayscale'"
+          :class="earned.has(badge.code) ? 'ring-2 ring-brand-400/60' : ''"
         >
-          <span class="text-3xl" aria-hidden="true">{{ badge.icon }}</span>
-          <span>
-            <span class="block font-black">{{ t(`badges.${badge.code}.name`) }}</span>
+          <span class="text-3xl" :class="earned.has(badge.code) ? '' : 'opacity-35 grayscale'" aria-hidden="true">{{ badge.icon }}</span>
+          <span class="min-w-0">
+            <span class="flex items-center gap-1.5 font-bold" :class="earned.has(badge.code) ? '' : 'text-slate-600 dark:text-slate-300'">
+              {{ t(`badges.${badge.code}.name`) }}
+              <span v-if="!earned.has(badge.code)" class="chip bg-slate-100 px-1.5 text-slate-500 dark:bg-white/10 dark:text-slate-400">
+                <span aria-hidden="true">🔒</span><span class="sr-only">{{ t('profile.locked') }}</span>
+              </span>
+            </span>
             <span class="block text-xs text-slate-500 dark:text-slate-400">{{ t(`badges.${badge.code}.description`) }}</span>
-            <span v-if="!earned.has(badge.code)" class="sr-only">({{ t('profile.locked') }})</span>
           </span>
         </li>
       </ul>

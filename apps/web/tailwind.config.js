@@ -35,12 +35,14 @@ export default {
           '50%': { transform: 'translate3d(2%, -3%, 0) scale(1.06)' },
         },
         rise: { from: { opacity: '0', transform: 'translateY(16px)' }, to: { opacity: '1', transform: 'none' } },
+        tick: { '0%': { transform: 'scale(1.3)' }, '100%': { transform: 'scale(1)' } },
       },
       animation: {
         grow: 'grow 600ms ease-out',
         pop: 'pop 450ms ease-out',
         float: 'float 18s ease-in-out infinite',
         rise: 'rise 600ms cubic-bezier(0.2, 0.8, 0.2, 1) both',
+        tick: 'tick 300ms ease-out',
       },
       colors: {
         // Agula orange, from the logo.

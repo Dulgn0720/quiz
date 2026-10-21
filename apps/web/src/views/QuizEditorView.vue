@@ -11,6 +11,7 @@ import RoundSettingsPanel from '@/components/editor/RoundSettingsPanel.vue';
 import { useToast } from '@/composables/useToast';
 import { hasErrorsUnder, roundSettingsHaveErrors, type DraftQuestion } from '@/editor/draft';
 import { useFieldErrors } from '@/editor/useFieldErrors';
+import { shortTitle } from '@/brand/topics';
 import { useAuthStore } from '@/stores/auth';
 import { useEditorStore, type EditorSelection } from '@/stores/editor';
 
@@ -168,20 +169,22 @@ const statusText = computed(() => {
     <!-- Title bar -->
     <div class="flex flex-wrap items-center gap-3">
       <RouterLink to="/quizzes" class="btn-icon" :aria-label="t('common.back')" :title="t('common.back')">←</RouterLink>
-      <label class="min-w-[min(100%,16rem)] flex-1">
+      <h1 v-if="readOnly" class="min-w-[min(100%,16rem)] flex-1 px-2 text-2xl font-bold sm:text-3xl">{{ shortTitle(editor.draft.title) }}</h1>
+      <label v-else class="relative min-w-[min(100%,16rem)] flex-1">
         <span class="sr-only">{{ t('editor.titlePlaceholder') }}</span>
         <input
           v-model="editor.draft.title"
-          class="w-full rounded-xl border-2 border-transparent bg-transparent px-2 py-1 text-2xl font-black outline-none transition hover:border-slate-200 focus:border-brand-500 sm:text-3xl"
+          class="w-full rounded-xl border-2 border-dashed border-slate-200 bg-transparent py-1 pl-3 pr-10 font-display text-2xl font-bold outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-solid focus:border-brand-500 dark:border-white/15 sm:text-3xl"
           :class="{ 'border-red-400': fieldError('title') }"
           :placeholder="t('editor.titlePlaceholder')"
           :maxlength="LIMITS.titleMax"
-          :readonly="readOnly"
+          :autofocus="!editor.quizId"
         />
+        <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xl text-slate-400" aria-hidden="true">✎</span>
         <span v-if="fieldError('title')" class="field-error block px-2">{{ fieldError('title') }}</span>
       </label>
       <div class="flex items-center gap-2">
-        <span class="text-sm font-semibold text-slate-500 dark:text-slate-400" aria-live="polite">{{ statusText }}</span>
+        <span v-if="!readOnly" class="text-sm font-semibold text-slate-500 dark:text-slate-400" aria-live="polite">{{ statusText }}</span>
         <template v-if="editor.quizId">
           <a :href="quizzesApi.exportUrl(editor.quizId, 'json')" class="btn-ghost" :title="t('quizList.exportJson')">JSON</a>
           <a :href="quizzesApi.exportUrl(editor.quizId, 'csv')" class="btn-ghost" :title="t('quizList.exportCsv')">CSV</a>
@@ -295,6 +298,7 @@ const statusText = computed(() => {
         <RoundSettingsPanel
           v-else-if="editor.selection.kind === 'round' && editor.draft.rounds[editor.selection.roundIndex]"
           :key="`round-${editor.selection.roundIndex}`"
+          :read-only="readOnly"
           :round-index="editor.selection.roundIndex"
         />
         <QuestionEditor
