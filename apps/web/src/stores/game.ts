@@ -1,6 +1,8 @@
 import {
+  AVATARS,
   GAME_ERRORS,
   type AnswerPayload,
+  type Avatar,
   type ClientToServerEvents,
   type GameErrorCode,
   type PhasePayload,
@@ -21,6 +23,11 @@ export type Ack = { ok: true } | { ok: false; error: GameError };
 type HostCommand = 'host:start' | 'host:skip' | 'host:next' | 'host:end';
 
 const ACK_TIMEOUT_MS = 8000;
+
+/** Avatars come from storage or user input; send only ones the server accepts. */
+function toAvatar(value: string): Avatar | undefined {
+  return (AVATARS as readonly string[]).includes(value) ? (value as Avatar) : undefined;
+}
 
 /** Errors after which there is no point in reconnecting to the room. */
 const FATAL: readonly GameError[] = [
@@ -162,7 +169,7 @@ export const useGameStore = defineStore('game', () => {
     try {
       const res = await socket
         .timeout(ACK_TIMEOUT_MS)
-        .emitWithAck('room:join', { pin: pin.value, nickname, avatar, reconnectToken });
+        .emitWithAck('room:join', { pin: pin.value, nickname, avatar: toAvatar(avatar), reconnectToken });
       if (!res.ok) return res;
       me.value = { playerId: res.playerId, nickname: res.nickname, avatar: res.avatar };
       session.savePlayer(pin.value, { reconnectToken: res.reconnectToken, nickname: res.nickname, avatar: res.avatar });

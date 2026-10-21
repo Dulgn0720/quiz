@@ -14,6 +14,7 @@ import {
   type QuizDetail,
   type QuizSummary,
 } from '@quiz/shared';
+import { ProgressionService } from '../account/progression.service';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   QUIZ_WITH_CONTENT,
@@ -25,6 +26,9 @@ import {
 
 export interface ListQuizzesParams {
   search?: string;
+  /** Only quizzes owned by `userId`. */
+  mine?: boolean;
+  userId?: string;
   page: number;
   pageSize: number;
 }
@@ -35,20 +39,30 @@ export interface QuizFile {
   body: string;
 }
 
-// TODO(phase 5): scope list/update/delete to the signed-in owner once accounts exist.
+/**
+ * Quizzes created while signed in belong to that account: only the owner may
+ * edit or delete them (everyone may play and duplicate them). Quizzes made
+ * by guests have no owner and stay editable by anyone.
+ */
 @Injectable()
 export class QuizzesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly progression: ProgressionService,
+  ) {}
 
-  async list({ search, page, pageSize }: ListQuizzesParams): Promise<Paginated<QuizSummary>> {
-    const where: Prisma.QuizWhereInput = search
-      ? {
-          OR: [
-            { title: { contains: search, mode: 'insensitive' } },
-            { description: { contains: search, mode: 'insensitive' } },
-          ],
-        }
-      : {};
+  async list({ search, mine, userId, page, pageSize }: ListQuizzesParams): Promise<Paginated<QuizSummary>> {
+    const where: Prisma.QuizWhereInput = {
+      ...(search
+        ? {
+            OR: [
+              { title: { contains: search, mode: 'insensitive' } },
+              { description: { contains: search, mode: 'insensitive' } },
+            ],
+          }
+        : {}),
+      ...(mine ? { ownerId: userId ?? '-' } : {}),
+    };
     const [total, rows] = await this.prisma.$transaction([
       this.prisma.quiz.count({ where }),
       this.prisma.quiz.findMany({
@@ -67,18 +81,19 @@ export class QuizzesService {
     return toQuizDetail(row);
   }
 
-  async create(content: QuizContent): Promise<QuizDetail> {
+  async create(content: QuizContent, ownerId?: string): Promise<QuizDetail> {
     const row = await this.prisma.quiz.create({
-      data: contentToCreateData(content),
+      data: { ...contentToCreateData(content), ownerId: ownerId ?? null },
       include: QUIZ_WITH_CONTENT,
     });
+    if (ownerId) await this.progression.refreshBadges(ownerId).catch(() => undefined);
     return toQuizDetail(row);
   }
 
   /** Replaces the quiz's content. Rounds and questions are rewritten, so their ids change. */
-  async update(id: string, content: QuizContent): Promise<QuizDetail> {
+  async update(id: string, content: QuizContent, userId?: string): Promise<QuizDetail> {
     const row = await this.prisma.$transaction(async (tx) => {
-      await this.assertEditable(tx, id);
+      await this.assertEditable(tx, id, userId);
       await tx.round.deleteMany({ where: { quizId: id } });
       return tx.quiz.update({
         where: { id },
@@ -89,16 +104,16 @@ export class QuizzesService {
     return toQuizDetail(row);
   }
 
-  async remove(id: string): Promise<void> {
-    await this.assertEditable(this.prisma, id);
+  async remove(id: string, userId?: string): Promise<void> {
+    await this.assertEditable(this.prisma, id, userId);
     await this.prisma.quiz.delete({ where: { id } });
   }
 
-  async duplicate(id: string): Promise<QuizDetail> {
+  async duplicate(id: string, userId?: string): Promise<QuizDetail> {
     const content = toQuizContent(await this.get(id));
     const suffix = ' (copy)';
     const title = content.title.slice(0, LIMITS.titleMax - suffix.length) + suffix;
-    return this.create({ ...content, title });
+    return this.create({ ...content, title }, userId);
   }
 
   async export(id: string, format: ExportFormat): Promise<QuizFile> {
@@ -113,7 +128,7 @@ export class QuizzesService {
         };
   }
 
-  async import({ format, content, title }: ImportQuizRequest): Promise<QuizDetail> {
+  async import({ format, content, title }: ImportQuizRequest, userId?: string): Promise<QuizDetail> {
     const result =
       format === 'csv'
         ? parseQuizCsv(content, { title: title?.trim() || 'Imported quiz' })
@@ -122,14 +137,17 @@ export class QuizzesService {
       const body: ApiErrorBody = { statusCode: 400, message: 'Import failed', issues: result.issues };
       throw new BadRequestException(body);
     }
-    return this.create(result.quiz);
+    return this.create(result.quiz, userId);
   }
 
-  private async assertEditable(db: Prisma.TransactionClient, id: string): Promise<void> {
-    const quiz = await db.quiz.findUnique({ where: { id }, select: { isSample: true } });
+  private async assertEditable(db: Prisma.TransactionClient, id: string, userId?: string): Promise<void> {
+    const quiz = await db.quiz.findUnique({ where: { id }, select: { isSample: true, ownerId: true } });
     if (!quiz) throw new NotFoundException('Quiz not found');
     if (quiz.isSample) {
       throw new ForbiddenException('Sample quizzes are read-only. Duplicate it to make changes.');
+    }
+    if (quiz.ownerId && quiz.ownerId !== userId) {
+      throw new ForbiddenException('Only the owner can change this quiz. Duplicate it to make your own copy.');
     }
   }
 }

@@ -222,6 +222,16 @@ describe('joining', () => {
     });
   });
 
+  it('gives a signed-in player their seat back on another device, unless kicked', () => {
+    const engine = makeEngine();
+    const first = engine.join({ nickname: 'Bat', userId: 'user-1' });
+    if (!first.ok) throw new Error();
+    const again = engine.join({ nickname: 'Other name', userId: 'user-1' });
+    expect(again.ok && again.player.id).toBe(first.player.id);
+    engine.kick(first.player.id);
+    expect(engine.join({ nickname: 'Bat', userId: 'user-1' })).toEqual({ ok: false, error: 'kicked' });
+  });
+
   it('needs at least one player to start', () => {
     const engine = makeEngine();
     expect(engine.start()).toEqual({ ok: false, error: 'invalid_state' });

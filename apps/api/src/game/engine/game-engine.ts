@@ -139,11 +139,17 @@ export class GameEngine {
     nickname: string;
     avatar?: string;
     reconnectToken?: string;
+    userId?: string;
   }): EngineResult<{ player: PlayerRecord; reconnected: boolean }> {
     const s = this.state;
     if (input.reconnectToken) {
       if (s.kickedTokens.includes(input.reconnectToken)) return fail(GAME_ERRORS.kicked);
       const existing = s.players.find((p) => p.reconnectToken === input.reconnectToken);
+      if (existing) return { ok: true, player: existing, reconnected: true };
+    }
+    if (input.userId) {
+      if (s.kickedTokens.includes(`user:${input.userId}`)) return fail(GAME_ERRORS.kicked);
+      const existing = s.players.find((p) => p.userId === input.userId);
       if (existing) return { ok: true, player: existing, reconnected: true };
     }
     if (s.status === 'finished' || s.status === 'aborted') return fail(GAME_ERRORS.finished);
@@ -157,6 +163,7 @@ export class GameEngine {
       nickname: input.nickname,
       avatar: input.avatar ?? AVATARS[hashSeed(input.nickname) % AVATARS.length]!,
       reconnectToken: this.deps.ids.token(),
+      userId: input.userId,
       joinedAt: this.now(),
       connected: false,
       score: 0,
@@ -196,6 +203,7 @@ export class GameEngine {
     const player = this.findPlayer(playerId);
     if (!player) return fail(GAME_ERRORS.notFound);
     this.state.kickedTokens.push(player.reconnectToken);
+    if (player.userId) this.state.kickedTokens.push(`user:${player.userId}`);
     this.removePlayer(playerId);
     this.deps.output.kicked(playerId);
     return ok;

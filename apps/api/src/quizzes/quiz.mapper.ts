@@ -105,6 +105,7 @@ export function toQuizSummary(row: QuizRow): QuizSummary {
     coverImageUrl: row.coverImageUrl ?? undefined,
     language: row.language as Locale,
     isSample: row.isSample,
+    ownerId: row.ownerId ?? undefined,
     roundCount: row.roundCount,
     questionCount: row.questionCount,
     createdAt: row.createdAt.toISOString(),
@@ -120,6 +121,7 @@ export function toQuizDetail(row: QuizWithContent): QuizDetail {
     coverImageUrl: row.coverImageUrl ?? undefined,
     language: row.language as Locale,
     isSample: row.isSample,
+    ownerId: row.ownerId ?? undefined,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     rounds: row.rounds.map((round) => ({

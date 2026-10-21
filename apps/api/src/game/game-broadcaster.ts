@@ -1,10 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import type { ClientToServerEvents, PhasePayload, RoomState, ServerToClientEvents } from '@quiz/shared';
+import type {
+  ClientToServerEvents,
+  PhasePayload,
+  PlayerProgressUpdate,
+  RoomState,
+  ServerToClientEvents,
+} from '@quiz/shared';
 import type { Server, Socket } from 'socket.io';
 import type { Viewer } from './engine/game-engine';
 
 /** What the gateway remembers about each socket. */
 export interface SocketData {
+  /** Signed-in account, from the token in the handshake. */
+  userId?: string;
   pin?: string;
   role?: 'host' | 'player';
   playerId?: string;
@@ -39,6 +47,10 @@ export class GameBroadcaster {
 
   answerCount(pin: string, payload: { answered: number; total: number }): void {
     this.server?.to(rooms.game(pin)).emit('game:answer-count', payload);
+  }
+
+  progress(pin: string, playerId: string, payload: PlayerProgressUpdate): void {
+    this.server?.to(rooms.player(pin, playerId)).emit('player:progress', payload);
   }
 
   kicked(pin: string, playerId: string): void {

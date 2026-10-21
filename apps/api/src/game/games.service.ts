@@ -16,6 +16,7 @@ import {
   type RoomInfo,
 } from '@quiz/shared';
 import { randomBytes, randomInt, timingSafeEqual } from 'node:crypto';
+import { ProgressionService } from '../account/progression.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { QuizzesService } from '../quizzes/quizzes.service';
 import { GameEngine, type GameOutput } from './engine/game-engine';
@@ -48,6 +49,7 @@ export class GamesService implements OnModuleInit, OnModuleDestroy {
     private readonly quizzes: QuizzesService,
     private readonly store: GameStore,
     private readonly broadcaster: GameBroadcaster,
+    private readonly progression: ProgressionService,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -68,7 +70,7 @@ export class GamesService implements OnModuleInit, OnModuleDestroy {
     await this.store.flush();
   }
 
-  async create(input: CreateGameOptions): Promise<CreateGameResponse> {
+  async create(input: CreateGameOptions, hostId?: string): Promise<CreateGameResponse> {
     const quiz = await this.quizzes.get(input.quizId);
     if (quiz.rounds.every((r) => r.questions.length === 0)) {
       throw new BadRequestException('This quiz has no questions');
@@ -85,6 +87,7 @@ export class GamesService implements OnModuleInit, OnModuleDestroy {
         data: {
           pin,
           quizId: quiz.id,
+          hostId: hostId ?? null,
           visibility: settings.visibility,
           quizSnapshot: quizSnapshot as unknown as Prisma.InputJsonObject,
           settings,
@@ -198,6 +201,7 @@ export class GamesService implements OnModuleInit, OnModuleDestroy {
           this.prisma.gamePlayer.create({
             data: {
               gameId: snapshot.gameId,
+              userId: p.userId ?? null,
               nickname: p.nickname,
               avatar: p.avatar,
               score: p.score,
@@ -234,7 +238,16 @@ export class GamesService implements OnModuleInit, OnModuleDestroy {
       this.logger.log(`Game ${snapshot.gameId} finished with ${snapshot.players.length} player(s)`);
     } catch (err) {
       this.logger.error(`Saving results of game ${snapshot.gameId} failed: ${(err as Error).message}`);
+      return;
     }
+    const userIds = new Map(snapshot.players.map((p) => [p.id, p.userId]));
+    const game = await this.prisma.game.findUnique({ where: { id: snapshot.gameId }, select: { hostId: true } });
+    const updates = await this.progression.applyGame({
+      gameId: snapshot.gameId,
+      hostId: game?.hostId,
+      results: [...stats.values()].map((s) => ({ ...s, userId: userIds.get(s.playerId) })),
+    });
+    for (const [playerId, update] of updates) this.broadcaster.progress(snapshot.pin, playerId, update);
   }
 
   private async sweep(): Promise<void> {

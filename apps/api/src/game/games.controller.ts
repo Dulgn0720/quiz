@@ -8,6 +8,7 @@ import {
   type PublicRoomSummary,
   type RoomInfo,
 } from '@quiz/shared';
+import { CurrentUserId } from '../auth/current-user';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { GamesService } from './games.service';
 
@@ -15,11 +16,13 @@ import { GamesService } from './games.service';
 export class GamesController {
   constructor(private readonly games: GamesService) {}
 
-  // TODO(phase 5): record the signed-in host once accounts exist.
   @Throttle({ default: { limit: 20, ttl: 60_000 } })
   @Post()
-  create(@Body(new ZodValidationPipe(createGameSchema)) body: CreateGameOptions): Promise<CreateGameResponse> {
-    return this.games.create(body);
+  create(
+    @Body(new ZodValidationPipe(createGameSchema)) body: CreateGameOptions,
+    @CurrentUserId() userId?: string,
+  ): Promise<CreateGameResponse> {
+    return this.games.create(body, userId);
   }
 
   @Get('public')

@@ -43,6 +43,7 @@ export const AVATARS = [
   '🐙', '🦉', '🐨', '🐰', '🐻', '🐶', '🐱', '🦖',
   '🐳', '🦋', '🐝', '🐢', '🦀', '🐲', '👽', '🤖',
 ] as const;
+export type Avatar = (typeof AVATARS)[number];
 
 /** Error codes returned in acks and `game:error`; the web app translates them. */
 export const GAME_ERRORS = {

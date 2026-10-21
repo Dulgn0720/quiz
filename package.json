@@ -31,6 +31,9 @@
       "@prisma/engines",
       "esbuild",
       "prisma"
-    ]
+    ],
+    "overrides": {
+      "socket.io": "^4.8.1"
+    }
   }
 }

@@ -21,6 +21,8 @@ export interface PlayerRecord {
   avatar: string;
   /** Secret that lets a refreshed or disconnected client take this seat back. */
   reconnectToken: string;
+  /** Account of a signed-in player; they get their seat back from any device. */
+  userId?: string;
   joinedAt: number;
   connected: boolean;
   score: number;
@@ -89,6 +91,7 @@ export interface GameSnapshot {
 
   /** In join order. */
   players: PlayerRecord[];
+  /** Reconnect tokens, and `user:<id>` keys, of kicked players. */
   kickedTokens: string[];
   /** Answers to closed questions. */
   answers: AnswerRecord[];

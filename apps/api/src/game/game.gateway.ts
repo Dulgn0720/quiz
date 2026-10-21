@@ -6,6 +6,7 @@ import {
   MessageBody,
   SubscribeMessage,
   WebSocketGateway,
+  type OnGatewayConnection,
   type OnGatewayDisconnect,
   type OnGatewayInit,
 } from '@nestjs/websockets';
@@ -17,6 +18,7 @@ import {
   type GameErrorCode,
 } from '@quiz/shared';
 import { z } from 'zod';
+import { AuthService } from '../auth/auth.service';
 import type { Env } from '../config/env';
 import type { EngineResult, GameEngine } from './engine/game-engine';
 import { GameBroadcaster, rooms, type GameServer, type GameSocket } from './game-broadcaster';
@@ -40,7 +42,9 @@ const toAck = (result: EngineResult): Ack => (result.ok ? { ok: true } : failure
  */
 @SkipThrottle()
 @WebSocketGateway()
-export class GameGateway implements OnGatewayInit<GameServer>, OnGatewayDisconnect<GameSocket> {
+export class GameGateway
+  implements OnGatewayInit<GameServer>, OnGatewayConnection<GameSocket>, OnGatewayDisconnect<GameSocket>
+{
   private readonly logger = new Logger(GameGateway.name);
   /** Open sockets per player, so a player with two tabs only goes offline when both close. */
   private readonly connections = new Map<string, Set<string>>();
@@ -50,6 +54,7 @@ export class GameGateway implements OnGatewayInit<GameServer>, OnGatewayDisconne
     private readonly games: GamesService,
     private readonly broadcaster: GameBroadcaster,
     private readonly limiter: JoinRateLimiter,
+    private readonly auth: AuthService,
     config: ConfigService<Env, true>,
   ) {
     this.trustProxy = config.get('TRUST_PROXY', { infer: true });
@@ -57,6 +62,12 @@ export class GameGateway implements OnGatewayInit<GameServer>, OnGatewayDisconne
 
   afterInit(server: GameServer): void {
     this.broadcaster.server = server;
+  }
+
+  /** Signed-in clients pass their token as `auth.token`; guests connect without one. */
+  handleConnection(socket: GameSocket): void {
+    const token = (socket.handshake.auth as { token?: unknown } | undefined)?.token;
+    socket.data = { userId: this.auth.verify(typeof token === 'string' ? token : null) ?? undefined };
   }
 
   handleDisconnect(socket: GameSocket): void {
@@ -79,7 +90,7 @@ export class GameGateway implements OnGatewayInit<GameServer>, OnGatewayDisconne
     this.detach(socket);
     const { pin } = engine;
     void socket.join([rooms.game(pin), rooms.host(pin)]);
-    socket.data = { pin, role: 'host' };
+    socket.data = { userId: socket.data.userId, pin, role: 'host' };
     socket.emit('room:state', engine.roomState());
     socket.emit('game:phase', engine.view({ kind: 'host' }));
     return { ok: true };
@@ -93,14 +104,14 @@ export class GameGateway implements OnGatewayInit<GameServer>, OnGatewayDisconne
     const engine = this.games.get(parsed.data.pin);
     if (!engine) return failure(GAME_ERRORS.notFound);
 
-    const result = engine.join(parsed.data);
+    const result = engine.join({ ...parsed.data, userId: socket.data.userId });
     if (!result.ok) return failure(result.error);
     const { player } = result;
 
     this.detach(socket);
     const { pin } = engine;
     void socket.join([rooms.game(pin), rooms.player(pin, player.id)]);
-    socket.data = { pin, role: 'player', playerId: player.id };
+    socket.data = { userId: socket.data.userId, pin, role: 'player', playerId: player.id };
     this.attach(engine, player.id, socket.id);
     socket.emit('room:state', engine.roomState());
     socket.emit('game:phase', engine.view({ kind: 'player', playerId: player.id }));
@@ -206,7 +217,7 @@ export class GameGateway implements OnGatewayInit<GameServer>, OnGatewayDisconne
   private detach(socket: GameSocket): void {
     const { pin, role, playerId } = socket.data;
     if (!pin) return;
-    socket.data = {};
+    socket.data = { userId: socket.data.userId };
     void socket.leave(rooms.game(pin));
     if (role === 'host') {
       void socket.leave(rooms.host(pin));

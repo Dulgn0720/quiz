@@ -23,6 +23,7 @@ import {
 } from '@quiz/shared';
 import type { Response } from 'express';
 import { z } from 'zod';
+import { CurrentUserId } from '../auth/current-user';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { QuizzesService, type ListQuizzesParams } from './quizzes.service';
 
@@ -31,6 +32,10 @@ export const IMPORT_MAX_CHARS = 2_000_000;
 
 const listQuerySchema = z.object({
   search: z.string().trim().max(100).optional(),
+  mine: z
+    .enum(['true', 'false', '1', '0'])
+    .optional()
+    .transform((v) => v === 'true' || v === '1'),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(50).default(20),
 });
@@ -48,19 +53,28 @@ export class QuizzesController {
   constructor(private readonly quizzes: QuizzesService) {}
 
   @Get()
-  list(@Query(new ZodValidationPipe(listQuerySchema)) query: ListQuizzesParams): Promise<Paginated<QuizSummary>> {
-    return this.quizzes.list(query);
+  list(
+    @Query(new ZodValidationPipe(listQuerySchema)) query: Omit<ListQuizzesParams, 'userId'>,
+    @CurrentUserId() userId?: string,
+  ): Promise<Paginated<QuizSummary>> {
+    return this.quizzes.list({ ...query, userId });
   }
 
   @Post()
-  create(@Body(new ZodValidationPipe(quizInputSchema)) body: QuizContent): Promise<QuizDetail> {
-    return this.quizzes.create(body);
+  create(
+    @Body(new ZodValidationPipe(quizInputSchema)) body: QuizContent,
+    @CurrentUserId() userId?: string,
+  ): Promise<QuizDetail> {
+    return this.quizzes.create(body, userId);
   }
 
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post('import')
-  import(@Body(new ZodValidationPipe(importBodySchema)) body: ImportQuizRequest): Promise<QuizDetail> {
-    return this.quizzes.import(body);
+  import(
+    @Body(new ZodValidationPipe(importBodySchema)) body: ImportQuizRequest,
+    @CurrentUserId() userId?: string,
+  ): Promise<QuizDetail> {
+    return this.quizzes.import(body, userId);
   }
 
   @Get(':id')
@@ -72,19 +86,20 @@ export class QuizzesController {
   update(
     @Param('id') id: string,
     @Body(new ZodValidationPipe(quizInputSchema)) body: QuizContent,
+    @CurrentUserId() userId?: string,
   ): Promise<QuizDetail> {
-    return this.quizzes.update(id, body);
+    return this.quizzes.update(id, body, userId);
   }
 
   @Delete(':id')
   @HttpCode(204)
-  remove(@Param('id') id: string): Promise<void> {
-    return this.quizzes.remove(id);
+  remove(@Param('id') id: string, @CurrentUserId() userId?: string): Promise<void> {
+    return this.quizzes.remove(id, userId);
   }
 
   @Post(':id/duplicate')
-  duplicate(@Param('id') id: string): Promise<QuizDetail> {
-    return this.quizzes.duplicate(id);
+  duplicate(@Param('id') id: string, @CurrentUserId() userId?: string): Promise<QuizDetail> {
+    return this.quizzes.duplicate(id, userId);
   }
 
   @Get(':id/export')
