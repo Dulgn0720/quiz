@@ -78,8 +78,8 @@ onMounted(async () => {
         @submit.prevent="join"
       >
         <Mascot mood="wave" :size="96" class="pointer-events-none absolute -right-2 -top-1 hidden sm:block" />
-        <p class="font-display text-2xl font-bold">{{ $t('home.joinTitle') }}</p>
-        <p class="mt-2 text-ink-300">{{ $t('home.joinSubtitle') }}</p>
+        <p class="font-display text-2xl font-bold sm:pr-20">{{ $t('home.joinTitle') }}</p>
+        <p class="mt-2 text-ink-300 sm:pr-20">{{ $t('home.joinSubtitle') }}</p>
         <label class="mt-8 block">
           <span class="sr-only">PIN</span>
           <input
