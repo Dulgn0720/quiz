@@ -73,7 +73,7 @@ onMounted(async () => {
 
       <!-- Join card -->
       <form
-        class="stage order-first animate-rise overflow-hidden rounded-[2rem] p-6 shadow-2xl [animation-delay:120ms] sm:p-10 lg:order-none"
+        class="dark stage order-first animate-rise overflow-hidden rounded-[2rem] p-6 shadow-2xl [animation-delay:120ms] sm:p-10 lg:order-none"
         @submit.prevent="join"
       >
         <p class="font-display text-2xl font-bold">{{ $t('home.joinTitle') }}</p>

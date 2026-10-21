@@ -157,7 +157,7 @@ watch(
           <label
             v-for="emoji in AVATARS"
             :key="emoji"
-            class="grid h-11 cursor-pointer place-items-center rounded-xl text-2xl ring-1 ring-slate-200 dark:ring-slate-700 transition has-[:checked]:bg-brand-100 dark:has-[:checked]:bg-brand-900/40 has-[:checked]:ring-2 has-[:checked]:ring-brand-500 has-[:focus-visible]:ring-4"
+            class="grid h-11 cursor-pointer place-items-center rounded-xl text-2xl ring-1 ring-slate-200 dark:ring-slate-700 transition has-[:checked]:bg-brand-100 dark:has-[:checked]:bg-brand-500/30 has-[:checked]:scale-110 has-[:checked]:ring-2 has-[:checked]:ring-brand-500 has-[:focus-visible]:ring-4"
           >
             <input v-model="avatar" type="radio" name="avatar" :value="emoji" class="sr-only" />
             <span aria-hidden="true">{{ emoji }}</span>
