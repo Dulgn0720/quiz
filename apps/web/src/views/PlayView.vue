@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { GAME_ERRORS, type AnswerPayload } from '@quiz/shared';
-import { computed, onMounted, watch } from 'vue';
+import { GAME_ERRORS, rankForLevel, type AnswerPayload } from '@quiz/shared';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import AnswerForm from '@/components/game/AnswerForm.vue';
@@ -14,6 +14,7 @@ import PodiumPanel from '@/components/game/PodiumPanel.vue';
 import QuestionHeader from '@/components/game/QuestionHeader.vue';
 import RevealedAnswer from '@/components/game/RevealedAnswer.vue';
 import LevelBar from '@/components/LevelBar.vue';
+import RankUpCelebration from '@/components/RankUpCelebration.vue';
 import LockedAnswer from '@/components/game/LockedAnswer.vue';
 import ReactionBar from '@/components/game/ReactionBar.vue';
 import TeamRace from '@/components/game/TeamRace.vue';
@@ -52,6 +53,14 @@ const phaseKey = computed(() => {
 const me = computed(() => game.me);
 const myId = computed(() => me.value?.playerId);
 const myTeam = computed(() => game.room?.players.find((p) => p.id === myId.value)?.team);
+// A new wrestling title after the game gets its own ceremony.
+const rankUpLevel = ref<number | null>(null);
+watch(
+  () => game.progress,
+  (p) => {
+    if (p && rankForLevel(p.level).code !== rankForLevel(p.previousLevel).code) rankUpLevel.value = p.level;
+  },
+);
 const myScore = computed(() => game.room?.players.find((p) => p.id === myId.value)?.score ?? 0);
 
 /** The answer this player gave to the open question, from the server or just sent. */
@@ -236,5 +245,6 @@ function leave(): void {
       </Transition>
     </template>
   </section>
+  <RankUpCelebration v-if="rankUpLevel !== null" :level="rankUpLevel" @close="rankUpLevel = null" />
   </div>
 </template>

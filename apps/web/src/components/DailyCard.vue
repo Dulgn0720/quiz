@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import type { DailyQuestion, DailyResult, DailyStreak } from '@quiz/shared';
+import { rankForLevel, type DailyQuestion, type DailyResult, type DailyStreak } from '@quiz/shared';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { dailyApi } from '@/api/daily';
 import { ApiError } from '@/api/client';
 import Mascot, { type MascotMood } from '@/components/Mascot.vue';
+import RankUpCelebration from '@/components/RankUpCelebration.vue';
 import { useConfetti } from '@/composables/useConfetti';
 import { useEmojiRain } from '@/composables/useEmojiRain';
 import { guestDaily, saveGuestDaily } from '@/game/guest-daily';
@@ -25,6 +26,7 @@ const failed = ref(false);
 /** Set right after answering, to play the reveal animations once. */
 const justAnswered = ref(false);
 const now = ref(Date.now());
+const rankUpLevel = ref<number | null>(null);
 let timer: ReturnType<typeof setInterval> | undefined;
 
 const choices = computed(() => {
@@ -108,13 +110,23 @@ async function answer(id: string): Promise<void> {
     } else {
       sound.play('wrong');
     }
-    if (auth.user && res.result.xp > 0) void auth.refresh().catch(() => undefined);
+    if (auth.user && res.result.xp > 0) void refreshLevel(auth.user.level);
   } catch (e) {
     // The day changed under us, or the network dropped: fetch today's question again.
     if (e instanceof ApiError && e.status === 400) await load();
     else failed.value = true;
   } finally {
     busy.value = false;
+  }
+}
+
+/** Daily XP can be the push to a new title: celebrate it like after a game. */
+async function refreshLevel(before: number): Promise<void> {
+  try {
+    const profile = await auth.refresh();
+    if (rankForLevel(profile.level).code !== rankForLevel(before).code) rankUpLevel.value = profile.level;
+  } catch {
+    // The header catches up on the next page load.
   }
 }
 
@@ -201,6 +213,7 @@ onBeforeUnmount(() => clearInterval(timer));
         <Mascot :mood="mood" :size="130" :say="speech" />
       </div>
     </div>
+    <RankUpCelebration v-if="rankUpLevel !== null" :level="rankUpLevel" @close="rankUpLevel = null" />
   </section>
 </template>
 
