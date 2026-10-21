@@ -568,7 +568,8 @@ describe('team games', () => {
     const a = join('Anu', 'IT');
     const b = join('Bat', '  it ');
     const c = join('Saraa', 'Нөхөн төлбөр');
-    expect(engine.teams()).toEqual(['IT', 'Нөхөн төлбөр']);
+    // Mongolian collation: Cyrillic names come before Latin ones.
+    expect(engine.teams()).toEqual(['Нөхөн төлбөр', 'IT']);
     expect(engine.roomState()).toMatchObject({ teamMode: true });
     expect(engine.findPlayer(b)!.team).toBe('IT');
 
