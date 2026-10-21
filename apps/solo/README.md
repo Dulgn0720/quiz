@@ -5,7 +5,7 @@
 ## Ажиллуулах
 
 ```bash
-npm start          # http://localhost:5173 (эсвэл: python3 -m http.server)
+npm start          # http://localhost:5174 (эсвэл: python3 -m http.server)
 npm test           # engine-ийн тестүүд (Node 18+)
 ```
 
