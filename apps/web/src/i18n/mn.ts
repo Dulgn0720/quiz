@@ -412,6 +412,10 @@ const mn = {
       avgTime: 'Дундаж хугацаа',
       backToQuizzes: 'Quiz-үүд рүү буцах',
     },
+    hype: {
+      label: 'Hype',
+      burst: 'Танхим дүрэлзлээ!',
+    },
     report: {
       download: 'Тайлан татах (Excel)',
       hardestTitle: 'Хамгийн хэцүү асуултууд',

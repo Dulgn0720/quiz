@@ -14,6 +14,7 @@ import RevealedAnswer from '@/components/game/RevealedAnswer.vue';
 import RoundSummaryPanel from '@/components/game/RoundSummaryPanel.vue';
 import ShareRoom from '@/components/game/ShareRoom.vue';
 import ReactionLayer from '@/components/game/ReactionLayer.vue';
+import HypeMeter from '@/components/game/HypeMeter.vue';
 import Mascot from '@/components/Mascot.vue';
 import AwardsPanel from '@/components/game/AwardsPanel.vue';
 import RevealMascot from '@/components/game/RevealMascot.vue';
@@ -166,6 +167,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
 <template>
   <div class="dark stage min-h-dvh">
   <ReactionLayer />
+  <HypeMeter />
   <section class="mx-auto flex min-h-dvh max-w-6xl flex-col px-4 pb-28 pt-5">
     <ConnectionBanner />
 
