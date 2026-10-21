@@ -340,6 +340,7 @@ for (const p of [host, ...players]) await p.context().close();
   await asStaff.waitForTimeout(500);
   await shot(asStaff, 'training-question');
   for (let i = 0; i < 10; i++) {
+    await asStaff.waitForTimeout(400);
     const f = asStaff.locator('form').first();
     if (!(await f.count())) break;
     if (await f.locator('#typed-answer').count()) {

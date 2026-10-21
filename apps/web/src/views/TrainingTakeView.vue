@@ -41,9 +41,9 @@ function asPublic(q: TrainingQuestion, i: number): QuestionPublic {
     timeLimit: 0,
     endsAt: 0,
     type: q.type,
-    options: q.options ?? [],
-    correctCount: q.correctCount ?? 1,
-    items: q.items ?? [],
+    // The form picks its layout by which fields exist, so only send the ones this type has.
+    ...(q.options ? { options: q.options, correctCount: q.correctCount ?? 1 } : {}),
+    ...(q.items ? { items: q.items } : {}),
   } as unknown as QuestionPublic;
 }
 
