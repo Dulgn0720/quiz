@@ -8,3 +8,4 @@ export * from './random';
 export * from './scoring';
 export * from './progression';
 export * from './auth';
+export * from './daily';

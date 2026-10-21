@@ -1,4 +1,4 @@
-import type { PlayerStats, QuestionPublic, QuestionReveal } from '@quiz/shared';
+import { stringifyCsv, type PlayerStats, type QuestionPublic, type QuestionReveal } from '@quiz/shared';
 import { correctCount } from './reveal-stats';
 
 /** How the room did on one question, collected by the host screen as the game goes. */
@@ -56,11 +56,10 @@ export interface ReportLabels {
 function cell(value: string | number | null | undefined): string {
   const text = value === null || value === undefined ? '' : String(value);
   // Spreadsheet apps run cells starting with these as formulas.
-  const safe = /^[=+\-@\t\r]/.test(text) ? `'${text}` : text;
-  return /[",\n\r]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
+  return /^[=+\-@\t\r]/.test(text) ? `'${text}` : text;
 }
 
-const row = (values: (string | number | null | undefined)[]): string => values.map(cell).join(',');
+const row = (values: (string | number | null | undefined)[]): string[] => values.map(cell);
 
 /** Results as CSV that Excel opens with Cyrillic intact: players, then per-question correct rates. */
 export function reportCsv(
@@ -71,7 +70,7 @@ export function reportCsv(
   labels: ReportLabels,
 ): string {
   const hasTeams = teams.size > 0;
-  const lines = [row([title]), '', row([labels.players])];
+  const lines = [row([title]), [], row([labels.players])];
   lines.push(
     row([
       labels.rank,
@@ -99,7 +98,7 @@ export function reportCsv(
     );
   }
   if (questions.length > 0) {
-    lines.push('', row([labels.questions]));
+    lines.push([], row([labels.questions]));
     lines.push(row([labels.number, labels.round, labels.question, labels.answered, labels.correct, labels.correctPercent]));
     for (const q of [...questions].sort((a, b) => a.number - b.number)) {
       const rate = correctRate(q);
@@ -108,7 +107,7 @@ export function reportCsv(
       );
     }
   }
-  return `﻿${lines.join('\r\n')}\r\n`;
+  return stringifyCsv(lines, { bom: true });
 }
 
 export function downloadFile(name: string, content: string, type = 'text/csv;charset=utf-8'): void {

@@ -6,6 +6,7 @@ import { useRouter } from 'vue-router';
 import { quizzesApi } from '@/api/quizzes';
 import { quizTheme, shortTitle } from '@/brand/topics';
 import HostGameDialog from '@/components/game/HostGameDialog.vue';
+import DailyCard from '@/components/DailyCard.vue';
 import Mascot from '@/components/Mascot.vue';
 import { useAuthStore } from '@/stores/auth';
 
@@ -125,6 +126,9 @@ onMounted(async () => {
         </div>
       </div>
     </section>
+
+    <!-- Daily question -->
+    <DailyCard class="mt-12" />
 
     <!-- Company quizzes -->
     <section class="mt-16 sm:mt-20">

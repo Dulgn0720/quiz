@@ -96,6 +96,10 @@ Useful scripts (from the repo root):
 
 Quizzes have a topic (`category`) and are **private** or **public**. Private quizzes are seen and hosted only by their owner; public ones appear in everyone's library, where they can be filtered by shelf (official, community, mine), topic and popularity. Copies and imports start private; guest quizzes are always public; only admins can file a quiz under «Агула».
 
+### Daily question
+
+«Өдрийн асуулт» on the home page: one single-choice or true/false question a day from the official library, the same for everyone (days follow Ulaanbaatar time). Signed-in players earn 15 XP for a right answer and 5 XP for trying, once a day, and keep a streak of days in a row on the server; guests can play too, with their streak kept in the browser. `GET /api/daily`, `POST /api/daily/answer` (`{ answer }`: an option id, or `true` / `false`).
+
 ### Ranks and the leaderboard
 
 `/leaderboard` ranks signed-in players by XP, all time or over the last 30 days. Ranks follow the level and are named after Naadam wrestling titles: Шинэхэн (1), Начин (3), Харцага (5), Заан (8), Гарьд (11), Арслан (15), Аварга (20).

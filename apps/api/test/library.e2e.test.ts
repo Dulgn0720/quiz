@@ -1,4 +1,4 @@
-import type { AuthResponse, Paginated, QuizDetail, QuizSummary } from '@quiz/shared';
+import type { AuthResponse, DailyAnswerResponse, DailyQuestion, Paginated, QuizDetail, QuizSummary } from '@quiz/shared';
 import { spawn, type ChildProcess } from 'node:child_process';
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -122,5 +122,55 @@ describe('quiz library', () => {
     expect(agula.body.items.every((q) => q.category === 'agula')).toBe(true);
     expect((await api('/quizzes?sort=popular')).status).toBe(200);
     expect((await api('/quizzes?category=nope')).status).toBe(400);
+  });
+});
+
+describe('daily question', () => {
+  it('gives everyone the same question and scores a guest without saving', async () => {
+    const a = await api<DailyQuestion>('/daily');
+    const b = await api<DailyQuestion>('/daily');
+    expect(a.status).toBe(200);
+    expect(b.body.prompt).toBe(a.body.prompt);
+    expect(a.body.result).toBeUndefined();
+    expect(a.body.streak).toBeUndefined();
+    expect(JSON.stringify(a.body)).not.toContain('correct');
+
+    const guess = a.body.type === 'true_false' ? 'true' : a.body.options![0]!.id;
+    const res = await api<DailyAnswerResponse>('/daily/answer', { method: 'POST', body: JSON.stringify({ answer: guess }) });
+    expect(res.status).toBe(200);
+    expect(res.body.result.answer).toBe(guess);
+    expect(res.body.result.correct).toBe(res.body.result.correctAnswer === guess);
+    expect(res.body.result.xp).toBe(0);
+
+    const bad = await api('/daily/answer', { method: 'POST', body: JSON.stringify({ answer: 'nope' }) });
+    expect(bad.status).toBe(400);
+  });
+
+  it('saves the first answer of the day, awards XP once and counts the streak', async () => {
+    const { body: auth } = await register('daily');
+    const { body: q } = await api<DailyQuestion>('/daily', { token: auth.token });
+    expect(q.streak).toEqual({ current: 0, best: 0, correctTotal: 0, daysTotal: 0 });
+
+    const options = q.type === 'true_false' ? ['true', 'false'] : q.options!.map((o) => o.id);
+    const first = await api<DailyAnswerResponse>('/daily/answer', {
+      method: 'POST',
+      token: auth.token,
+      body: JSON.stringify({ answer: options[0] }),
+    });
+    expect(first.body.result.xp).toBe(first.body.result.correct ? 15 : 5);
+    expect(first.body.streak).toMatchObject({ current: 1, best: 1, daysTotal: 1 });
+
+    const again = await api<DailyAnswerResponse>('/daily/answer', {
+      method: 'POST',
+      token: auth.token,
+      body: JSON.stringify({ answer: options[1] }),
+    });
+    expect(again.body.result.answer).toBe(options[0]);
+    expect(again.body.result.xp).toBe(0);
+
+    const after = await api<DailyQuestion>('/daily', { token: auth.token });
+    expect(after.body.result?.answer).toBe(options[0]);
+    const me = await api<{ xp: number }>('/me', { token: auth.token });
+    expect(me.body.xp).toBe(first.body.result.xp);
   });
 });

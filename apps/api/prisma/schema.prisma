@@ -62,6 +62,24 @@ model User {
   gamePlayers GamePlayer[]
   badges      UserBadge[]
   resets      PasswordReset[]
+  daily       DailyAnswer[]
+}
+
+/// Answers to «Өдрийн асуулт», one per player per day (Ulaanbaatar date).
+model DailyAnswer {
+  id         String   @id @default(cuid())
+  userId     String
+  /// YYYY-MM-DD in Ulaanbaatar time.
+  day        String
+  /// Not a relation: library quizzes can be re-seeded, the answer stays.
+  questionId String
+  answer     String
+  correct    Boolean
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, day])
 }
 
 /// One-time password reset links. Only a hash of the token is stored.
