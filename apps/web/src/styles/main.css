@@ -24,7 +24,7 @@
       radial-gradient(40vmax 40vmax at 15% 10%, rgb(245 124 20 / 0.16), transparent 60%),
       radial-gradient(35vmax 35vmax at 85% 15%, rgb(99 102 241 / 0.12), transparent 60%),
       radial-gradient(45vmax 45vmax at 60% 95%, rgb(236 72 153 / 0.08), transparent 60%);
-    animation: float 24s ease-in-out infinite;
+    @apply animate-float;
   }
   html.dark body::before {
     background:
@@ -33,8 +33,7 @@
       radial-gradient(45vmax 45vmax at 60% 95%, rgb(236 72 153 / 0.1), transparent 60%);
   }
   h1,
-  h2,
-  .font-display {
+  h2 {
     @apply font-display tracking-tight;
   }
   dialog {
