@@ -63,6 +63,8 @@ model User {
   badges      UserBadge[]
   resets      PasswordReset[]
   daily       DailyAnswer[]
+  trainings   Training[]
+  attempts    TrainingAttempt[]
 }
 
 /// Answers to «Өдрийн асуулт», one per player per day (Ulaanbaatar date).
@@ -116,8 +118,9 @@ model Quiz {
   updatedAt     DateTime @updatedAt
 
   owner  User?   @relation(fields: [ownerId], references: [id], onDelete: SetNull)
-  rounds Round[]
-  games  Game[]
+  rounds    Round[]
+  games     Game[]
+  trainings Training[]
 
   @@index([ownerId])
   @@index([updatedAt])
@@ -248,4 +251,43 @@ model UserBadge {
 
   @@id([userId, badgeId])
   @@index([badgeId])
+}
+
+/// A quiz assigned as a required training, to everyone or to one department.
+model Training {
+  id          String   @id @default(cuid())
+  quizId      String
+  title       String
+  passPercent Int      @default(80)
+  /// YYYY-MM-DD the training should be done by.
+  dueDate     String?
+  /// Only this department; everyone when null.
+  department  String?
+  active      Boolean  @default(true)
+  createdById String?
+  createdAt   DateTime @default(now())
+
+  quiz      Quiz              @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  createdBy User?             @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  attempts  TrainingAttempt[]
+
+  @@index([active])
+}
+
+/// One graded attempt at a training. A passing attempt's id is its certificate number.
+model TrainingAttempt {
+  id         String   @id @default(cuid())
+  trainingId String
+  userId     String
+  correct    Int
+  total      Int
+  percent    Int
+  passed     Boolean
+  createdAt  DateTime @default(now())
+
+  training Training @relation(fields: [trainingId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([trainingId, userId])
+  @@index([userId])
 }
