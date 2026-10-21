@@ -122,7 +122,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
             PIN <span class="font-display">{{ room.pin }}</span>
           </span>
           <span class="chip bg-white/10 px-3 py-1 text-base">
-            <span aria-hidden="true">👥</span> {{ players.length }}
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20a6.5 6.5 0 0 1 13 0" /><path d="M16 4.5a3.5 3.5 0 0 1 0 7" /><path d="M18 14a6.5 6.5 0 0 1 3.5 6" /></svg>
+            <span class="tabular-nums">{{ players.length }}</span>
           </span>
         </template>
         <SoundToggles music />
