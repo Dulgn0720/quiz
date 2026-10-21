@@ -12,7 +12,7 @@ function seconds(ms: number | null): string {
   <div class="card overflow-x-auto">
     <table class="w-full min-w-[32rem] text-left">
       <caption class="sr-only">{{ $t('game.podium.results') }}</caption>
-      <thead class="border-b border-slate-200 text-sm text-slate-500">
+      <thead class="border-b border-slate-200 dark:border-slate-700 text-sm text-slate-500 dark:text-slate-400">
         <tr>
           <th scope="col" class="px-4 py-3">#</th>
           <th scope="col" class="px-4 py-3">{{ $t('game.podium.player') }}</th>
@@ -23,7 +23,7 @@ function seconds(ms: number | null): string {
         </tr>
       </thead>
       <tbody>
-        <tr v-for="r in results" :key="r.playerId" class="border-b border-slate-100 last:border-0">
+        <tr v-for="r in results" :key="r.playerId" class="border-b border-slate-100 dark:border-slate-800 last:border-0">
           <td class="px-4 py-3 font-black tabular-nums">{{ r.rank }}</td>
           <td class="px-4 py-3 font-bold"><span aria-hidden="true">{{ r.avatar }}</span> {{ r.nickname }}</td>
           <td class="px-4 py-3 text-right font-black tabular-nums">{{ r.score }}</td>

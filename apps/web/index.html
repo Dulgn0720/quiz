@@ -12,8 +12,18 @@
       rel="stylesheet"
     />
     <title>Quiz Pro</title>
+    <script>
+      // Apply the saved theme before first paint so dark mode does not flash.
+      (function () {
+        try {
+          var theme = localStorage.getItem('quiz-pro:theme');
+          var dark = theme === 'dark' || (theme !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+          if (dark) document.documentElement.classList.add('dark');
+        } catch (e) {}
+      })();
+    </script>
   </head>
-  <body class="bg-slate-50 text-slate-900 antialiased">
+  <body>
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>

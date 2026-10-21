@@ -34,10 +34,10 @@ function movement(entry: LeaderboardEntry): 'up' | 'down' | null {
     <li
       v-for="entry in rows"
       :key="entry.playerId"
-      class="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-sm ring-1 ring-slate-200"
+      class="flex items-center gap-3 rounded-2xl bg-white dark:bg-slate-900 px-4 py-3 shadow-sm ring-1 ring-slate-200 dark:ring-slate-700"
       :class="entry.playerId === highlightId ? 'ring-2 ring-brand-500' : ''"
     >
-      <span class="w-8 text-center text-xl font-black tabular-nums text-slate-500">{{ entry.rank }}</span>
+      <span class="w-8 text-center text-xl font-black tabular-nums text-slate-500 dark:text-slate-400">{{ entry.rank }}</span>
       <span class="text-3xl leading-none" aria-hidden="true">{{ entry.avatar }}</span>
       <span class="mr-auto truncate text-lg font-black">
         {{ entry.nickname }}

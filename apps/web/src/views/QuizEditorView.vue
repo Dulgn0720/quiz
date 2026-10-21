@@ -148,7 +148,7 @@ const statusText = computed(() => {
 </script>
 
 <template>
-  <div v-if="loading" class="py-24 text-center text-slate-500">{{ t('common.loading') }}</div>
+  <div v-if="loading" class="py-24 text-center text-slate-500 dark:text-slate-400">{{ t('common.loading') }}</div>
 
   <div v-else-if="loadError" class="mx-auto max-w-md px-4 py-24 text-center" role="alert">
     <p class="text-lg font-bold">{{ loadError === 'not-found' ? t('editor.notFound') : t('common.error') }}</p>
@@ -175,7 +175,7 @@ const statusText = computed(() => {
         <span v-if="fieldError('title')" class="field-error block px-2">{{ fieldError('title') }}</span>
       </label>
       <div class="flex items-center gap-2">
-        <span class="text-sm font-semibold text-slate-500" aria-live="polite">{{ statusText }}</span>
+        <span class="text-sm font-semibold text-slate-500 dark:text-slate-400" aria-live="polite">{{ statusText }}</span>
         <template v-if="editor.quizId">
           <a :href="quizzesApi.exportUrl(editor.quizId, 'json')" class="btn-ghost" :title="t('quizList.exportJson')">JSON</a>
           <a :href="quizzesApi.exportUrl(editor.quizId, 'csv')" class="btn-ghost" :title="t('quizList.exportCsv')">CSV</a>
@@ -188,7 +188,7 @@ const statusText = computed(() => {
 
     <div
       v-if="readOnly"
-      class="mt-4 flex flex-wrap items-center gap-3 rounded-2xl bg-amber-50 p-4 text-amber-900"
+      class="mt-4 flex flex-wrap items-center gap-3 rounded-2xl bg-amber-50 dark:bg-amber-950/40 p-4 text-amber-900 dark:text-amber-200"
       role="status"
     >
       <p class="mr-auto font-semibold">{{ t('editor.readOnly') }}</p>
@@ -201,7 +201,7 @@ const statusText = computed(() => {
         <button
           type="button"
           class="w-full rounded-xl px-3 py-2.5 text-left font-bold transition"
-          :class="isSelected({ kind: 'quiz' }) ? 'bg-brand-600 text-white' : 'bg-white hover:bg-slate-100'"
+          :class="isSelected({ kind: 'quiz' }) ? 'bg-brand-600 text-white' : 'bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800'"
           @click="select({ kind: 'quiz' })"
         >
           ⚙ {{ t('editor.quizSettings') }}
@@ -212,7 +212,7 @@ const statusText = computed(() => {
             <button
               type="button"
               class="min-w-0 flex-1 rounded-lg px-2 py-2 text-left transition"
-              :class="isSelected({ kind: 'round', roundIndex: ri }) ? 'bg-brand-600 text-white' : 'hover:bg-slate-100'"
+              :class="isSelected({ kind: 'round', roundIndex: ri }) ? 'bg-brand-600 text-white' : 'hover:bg-slate-100 dark:hover:bg-slate-800'"
               @click="select({ kind: 'round', roundIndex: ri })"
             >
               <span class="block truncate font-black">
@@ -245,8 +245,8 @@ const statusText = computed(() => {
                 class="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm transition"
                 :class="
                   isSelected({ kind: 'question', roundIndex: ri, questionIndex: qi })
-                    ? 'bg-brand-100 font-bold text-brand-900'
-                    : 'text-slate-700 hover:bg-slate-100'
+                    ? 'bg-brand-100 dark:bg-brand-900/40 font-bold text-brand-900 dark:text-brand-100'
+                    : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
                 "
                 @click="select({ kind: 'question', roundIndex: ri, questionIndex: qi })"
               >
@@ -263,7 +263,7 @@ const statusText = computed(() => {
           <button
             v-if="!readOnly && round.questions.length < LIMITS.questionsPerRoundMax"
             type="button"
-            class="btn-ghost mt-1 w-full justify-start text-brand-700"
+            class="btn-ghost mt-1 w-full justify-start text-brand-700 dark:text-brand-300"
             @click="editor.addQuestion(ri)"
           >
             ＋ {{ t('editor.addQuestion') }}

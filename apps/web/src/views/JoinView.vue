@@ -113,14 +113,14 @@ watch(
       <button type="submit" class="btn-primary py-4 text-lg" :disabled="!pinValid || checking">
         {{ checking ? t('game.join.checking') : t('game.join.next') }}
       </button>
-      <p v-if="message" id="join-message" class="text-center font-bold text-red-600" role="alert">{{ message }}</p>
+      <p v-if="message" id="join-message" class="text-center font-bold text-red-600 dark:text-red-400" role="alert">{{ message }}</p>
     </form>
 
     <form v-else class="card flex flex-col gap-5 p-6" @submit.prevent="submitJoin">
       <div class="text-center">
-        <p class="text-sm font-bold uppercase tracking-wide text-slate-500">PIN {{ room.pin }}</p>
+        <p class="text-sm font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">PIN {{ room.pin }}</p>
         <h1 class="text-2xl font-black">{{ room.quizTitle }}</h1>
-        <p class="text-sm font-semibold text-slate-500">{{ t('game.lobby.players', { n: room.playerCount }, room.playerCount) }}</p>
+        <p class="text-sm font-semibold text-slate-500 dark:text-slate-400">{{ t('game.lobby.players', { n: room.playerCount }, room.playerCount) }}</p>
       </div>
 
       <label class="block">
@@ -142,7 +142,7 @@ watch(
           <label
             v-for="emoji in AVATARS"
             :key="emoji"
-            class="grid aspect-square cursor-pointer place-items-center rounded-xl text-2xl ring-1 ring-slate-200 transition has-[:checked]:bg-brand-100 has-[:checked]:ring-2 has-[:checked]:ring-brand-500 has-[:focus-visible]:ring-4"
+            class="grid aspect-square cursor-pointer place-items-center rounded-xl text-2xl ring-1 ring-slate-200 dark:ring-slate-700 transition has-[:checked]:bg-brand-100 dark:has-[:checked]:bg-brand-900/40 has-[:checked]:ring-2 has-[:checked]:ring-brand-500 has-[:focus-visible]:ring-4"
           >
             <input v-model="avatar" type="radio" name="avatar" :value="emoji" class="sr-only" />
             <span aria-hidden="true">{{ emoji }}</span>
@@ -154,7 +154,7 @@ watch(
       <button type="submit" class="btn-primary py-4 text-lg" :disabled="!nicknameValid || joining">
         {{ joining ? t('game.join.joining') : t('game.join.submit') }}
       </button>
-      <p v-if="message" id="join-message" class="text-center font-bold text-red-600" role="alert">{{ message }}</p>
+      <p v-if="message" id="join-message" class="text-center font-bold text-red-600 dark:text-red-400" role="alert">{{ message }}</p>
       <button type="button" class="btn-ghost" @click="changePin">{{ t('game.join.changePin') }}</button>
     </form>
   </section>

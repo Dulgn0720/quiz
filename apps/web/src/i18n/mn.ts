@@ -331,6 +331,12 @@ const mn: typeof en = {
       joinAnother: 'Өөр тоглоомд нэгдэх',
     },
   },
+  settings: {
+    theme: 'Загвар: {mode}',
+    themes: { system: 'системийн', light: 'цайвар', dark: 'бараан' },
+    sound: 'Дууны эффект',
+    music: 'Хөгжим',
+  },
   notFound: {
     title: 'Хуудас олдсонгүй',
     home: 'Нүүр хуудас руу',

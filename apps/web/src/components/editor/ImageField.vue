@@ -48,7 +48,7 @@ async function onFile(event: Event): Promise<void> {
     <span v-if="!props.compact" class="label">{{ props.label }}</span>
     <div class="flex items-start gap-3">
       <div
-        class="grid shrink-0 place-items-center overflow-hidden rounded-xl border border-dashed border-slate-300 bg-slate-50"
+        class="grid shrink-0 place-items-center overflow-hidden rounded-xl border border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-950"
         :class="props.compact ? 'h-12 w-12' : 'h-24 w-32'"
       >
         <img v-if="model" :src="model" :alt="props.label" class="h-full w-full object-contain" />

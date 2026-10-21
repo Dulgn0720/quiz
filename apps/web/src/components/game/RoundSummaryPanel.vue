@@ -7,15 +7,15 @@ defineProps<{ round: RoundStats; leaderboard: LeaderboardEntry[]; highlightId?: 
 
 <template>
   <div class="mx-auto w-full max-w-2xl">
-    <p class="text-center text-sm font-bold uppercase tracking-wide text-brand-700">{{ $t(`round.types.${round.roundType}`) }}</p>
+    <p class="text-center text-sm font-bold uppercase tracking-wide text-brand-700 dark:text-brand-300">{{ $t(`round.types.${round.roundType}`) }}</p>
     <h2 class="text-center text-3xl font-black sm:text-4xl">{{ $t('game.roundSummary.title', { name: round.roundName }) }}</h2>
     <dl class="mt-6 grid grid-cols-2 gap-3">
       <div class="card p-4 text-center">
-        <dt class="text-sm font-bold text-slate-500">{{ $t('game.roundSummary.correctRate') }}</dt>
+        <dt class="text-sm font-bold text-slate-500 dark:text-slate-400">{{ $t('game.roundSummary.correctRate') }}</dt>
         <dd class="text-3xl font-black">{{ Math.round(round.correctRate * 100) }}%</dd>
       </div>
       <div class="card p-4 text-center">
-        <dt class="text-sm font-bold text-slate-500">{{ $t('game.roundSummary.topScorer') }}</dt>
+        <dt class="text-sm font-bold text-slate-500 dark:text-slate-400">{{ $t('game.roundSummary.topScorer') }}</dt>
         <dd v-if="round.topScorer" class="truncate text-2xl font-black">
           {{ round.topScorer.avatar }} {{ round.topScorer.nickname }}
           <span class="block text-sm font-bold text-emerald-600">+{{ round.topScorer.points }}</span>

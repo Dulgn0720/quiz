@@ -23,7 +23,7 @@ function removeOption(index: number): void {
 <template>
   <fieldset>
     <legend class="label">{{ t('question.options') }}</legend>
-    <p class="mb-3 text-sm text-slate-500">
+    <p class="mb-3 text-sm text-slate-500 dark:text-slate-400">
       {{ multiple ? t('question.correctHintMultiple') : t('question.correctHintSingle') }}
     </p>
     <ul class="grid gap-3 sm:grid-cols-2">
@@ -31,7 +31,7 @@ function removeOption(index: number): void {
         v-for="(option, i) in question.options"
         :key="option.id"
         class="flex flex-col gap-2 rounded-xl border-2 p-2 transition"
-        :class="question.correct.includes(option.id) ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200'"
+        :class="question.correct.includes(option.id) ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40' : 'border-slate-200 dark:border-slate-700'"
       >
         <div class="flex items-center gap-2">
           <span class="h-9 w-2 shrink-0 rounded-full" :class="colors[i % colors.length]" aria-hidden="true" />
@@ -48,7 +48,7 @@ function removeOption(index: number): void {
             :class="
               question.correct.includes(option.id)
                 ? 'border-emerald-500 bg-emerald-500 text-white'
-                : 'border-slate-300 text-transparent hover:border-emerald-400'
+                : 'border-slate-300 dark:border-slate-600 text-transparent hover:border-emerald-400'
             "
             :role="multiple ? 'checkbox' : 'radio'"
             :aria-checked="question.correct.includes(option.id)"

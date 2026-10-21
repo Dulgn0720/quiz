@@ -13,6 +13,8 @@ import RevealChart from '@/components/game/RevealChart.vue';
 import RevealedAnswer from '@/components/game/RevealedAnswer.vue';
 import RoundSummaryPanel from '@/components/game/RoundSummaryPanel.vue';
 import ShareRoom from '@/components/game/ShareRoom.vue';
+import SoundToggles from '@/components/SoundToggles.vue';
+import { useGameSounds } from '@/game/useGameSounds';
 import { useToast } from '@/composables/useToast';
 import { useGameStore, type Ack } from '@/stores/game';
 
@@ -22,6 +24,7 @@ const { t } = useI18n();
 const toast = useToast();
 const game = useGameStore();
 const busy = ref(false);
+useGameSounds();
 
 onMounted(() => game.host(props.pin));
 watch(
@@ -102,26 +105,28 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
       <RouterLink to="/quizzes" class="btn-primary mt-6">{{ t('game.podium.backToQuizzes') }}</RouterLink>
     </div>
 
-    <p v-else-if="!room || !phase" class="mt-16 text-center text-slate-500">{{ t('common.loading') }}</p>
+    <p v-else-if="!room || !phase" class="mt-16 text-center text-slate-500 dark:text-slate-400">{{ t('common.loading') }}</p>
 
     <template v-else>
       <header class="mb-6 flex flex-wrap items-center gap-3">
         <h1 class="mr-auto text-xl font-black">{{ room.quizTitle }}</h1>
-        <span class="rounded-full bg-slate-100 px-3 py-1 text-sm font-bold text-slate-700">
+        <span class="rounded-full bg-slate-100 dark:bg-slate-800 px-3 py-1 text-sm font-bold text-slate-700 dark:text-slate-200">
           PIN {{ room.pin }}
         </span>
-        <span class="rounded-full bg-slate-100 px-3 py-1 text-sm font-bold text-slate-700">
+        <span class="rounded-full bg-slate-100 dark:bg-slate-800 px-3 py-1 text-sm font-bold text-slate-700 dark:text-slate-200">
           👥 {{ players.length }}
         </span>
+        <SoundToggles music />
       </header>
 
       <div class="flex flex-1 flex-col justify-center">
+        <Transition name="phase" mode="out-in">
         <!-- Lobby -->
         <div v-if="phase.phase === 'lobby'" class="flex flex-col gap-6">
           <ShareRoom :pin="room.pin" />
           <div class="text-center">
             <h2 class="text-2xl font-black">{{ t('game.lobby.players', { n: players.length }, players.length) }}</h2>
-            <p v-if="players.length === 0" class="mt-2 animate-pulse font-semibold text-slate-500">{{ t('game.lobby.waiting') }}</p>
+            <p v-if="players.length === 0" class="mt-2 animate-pulse font-semibold text-slate-500 dark:text-slate-400">{{ t('game.lobby.waiting') }}</p>
           </div>
           <PlayerChips :players="players" kickable @kick="kick" />
         </div>
@@ -139,10 +144,10 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
           <QuestionStage :question="phase.question" :reveal="phase.reveal" />
           <RevealedAnswer :question="phase.question" :answer="phase.reveal.answer" />
           <RevealChart :question="phase.question" :reveal="phase.reveal" />
-          <p class="text-center font-bold text-slate-600">
+          <p class="text-center font-bold text-slate-600 dark:text-slate-300">
             {{ t('game.reveal.answeredCount', { answered: phase.reveal.answeredCount, total: phase.reveal.playerCount }) }}
           </p>
-          <p v-if="phase.reveal.explanation" class="mx-auto max-w-2xl rounded-2xl bg-sky-50 p-4 text-center text-lg text-sky-900">
+          <p v-if="phase.reveal.explanation" class="mx-auto max-w-2xl rounded-2xl bg-sky-50 dark:bg-sky-950/40 p-4 text-center text-lg text-sky-900 dark:text-sky-200">
             💡 {{ phase.reveal.explanation }}
           </p>
         </div>
@@ -159,11 +164,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
           <PodiumPanel :results="phase.results" />
           <ResultsTable :results="phase.results" />
         </div>
+        </Transition>
       </div>
 
       <!-- Host controls -->
       <nav
-        class="sticky bottom-0 -mx-4 mt-8 flex flex-wrap items-center justify-center gap-2 border-t border-slate-200 bg-slate-50/95 px-4 py-3 backdrop-blur"
+        class="sticky bottom-0 -mx-4 mt-8 flex flex-wrap items-center justify-center gap-2 border-t border-slate-200 dark:border-slate-700 bg-slate-50/95 dark:bg-slate-950/95 px-4 py-3 backdrop-blur"
         :aria-label="t('game.controls.label')"
       >
         <template v-if="phase.phase === 'lobby'">

@@ -6,3 +6,5 @@ export * from './api';
 export * from './game';
 export * from './random';
 export * from './scoring';
+export * from './progression';
+export * from './auth';

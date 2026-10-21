@@ -12,10 +12,10 @@ const { t } = useI18n();
 <template>
   <fieldset>
     <legend class="label">{{ t('question.items') }}</legend>
-    <p class="mb-3 text-sm text-slate-500">{{ t('question.orderingHint') }}</p>
+    <p class="mb-3 text-sm text-slate-500 dark:text-slate-400">{{ t('question.orderingHint') }}</p>
     <ol class="space-y-2">
       <li v-for="(item, i) in question.items" :key="item.id" class="flex items-center gap-2">
-        <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-100 font-black text-brand-700">
+        <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand-100 dark:bg-brand-900/40 font-black text-brand-700 dark:text-brand-300">
           {{ i + 1 }}
         </span>
         <input

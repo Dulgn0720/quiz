@@ -59,7 +59,7 @@ function submitOrder(): void {
 <template>
   <form class="flex flex-1 flex-col gap-3" @submit.prevent>
     <template v-if="'options' in question">
-      <p v-if="isMultiple" class="text-center text-sm font-bold text-slate-600">
+      <p v-if="isMultiple" class="text-center text-sm font-bold text-slate-600 dark:text-slate-300">
         {{ $t('game.question.selectAll', { n: question.correctCount }) }}
       </p>
       <div class="grid flex-1 grid-cols-2 gap-3">
@@ -74,7 +74,7 @@ function submitOrder(): void {
           @click="pick(option.id)"
         >
           <span class="text-2xl" aria-hidden="true">{{ tileStyle(i).shape }}</span>
-          <img v-if="option.imageUrl" :src="option.imageUrl" alt="" class="max-h-20 rounded-lg bg-white object-contain" />
+          <img v-if="option.imageUrl" :src="option.imageUrl" alt="" class="max-h-20 rounded-lg bg-white dark:bg-slate-900 object-contain" />
           <span class="leading-tight">{{ option.text }}</span>
         </button>
       </div>
@@ -118,9 +118,9 @@ function submitOrder(): void {
     </div>
 
     <div v-else-if="question.type === 'ordering'" class="flex flex-col gap-3">
-      <p class="text-center text-sm font-bold text-slate-600">{{ $t('game.question.orderHint') }}</p>
+      <p class="text-center text-sm font-bold text-slate-600 dark:text-slate-300">{{ $t('game.question.orderHint') }}</p>
       <TransitionGroup tag="ol" class="flex flex-col gap-2" move-class="transition-transform duration-200">
-        <li v-for="(item, i) in order" :key="item.id" class="flex items-center gap-2 rounded-xl bg-white p-2 pl-4 shadow-sm ring-1 ring-slate-200">
+        <li v-for="(item, i) in order" :key="item.id" class="flex items-center gap-2 rounded-xl bg-white dark:bg-slate-900 p-2 pl-4 shadow-sm ring-1 ring-slate-200 dark:ring-slate-700">
           <span class="font-black tabular-nums text-slate-400">{{ i + 1 }}</span>
           <span class="flex-1 font-bold">{{ item.text }}</span>
           <button type="button" class="btn-icon" :disabled="disabled || i === 0" :aria-label="$t('common.moveUp')" @click="move(i, -1)">↑</button>

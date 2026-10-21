@@ -18,6 +18,8 @@ export interface QuizSummary {
   coverImageUrl?: string;
   language: Locale;
   isSample: boolean;
+  /** Set when the quiz belongs to an account; only that account may edit it. */
+  ownerId?: string;
   roundCount: number;
   questionCount: number;
   createdAt: string;
@@ -30,6 +32,7 @@ export type SavedRound = Omit<Round, 'questions'> & { id: string; questions: Sav
 export interface QuizDetail extends Omit<QuizContent, 'rounds'> {
   id: string;
   isSample: boolean;
+  ownerId?: string;
   createdAt: string;
   updatedAt: string;
   rounds: SavedRound[];
@@ -37,6 +40,8 @@ export interface QuizDetail extends Omit<QuizContent, 'rounds'> {
 
 export interface ListQuizzesQuery {
   search?: string;
+  /** Only quizzes owned by the signed-in user. */
+  mine?: boolean;
   page?: number;
   pageSize?: number;
 }

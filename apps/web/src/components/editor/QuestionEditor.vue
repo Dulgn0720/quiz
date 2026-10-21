@@ -81,7 +81,7 @@ function removeAcceptedAnswer(index: number): void {
           v-for="type in QUESTION_TYPES"
           :key="type"
           class="flex min-h-12 cursor-pointer items-center gap-2 rounded-xl border-2 px-3 py-2 text-sm font-bold transition has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-brand-200"
-          :class="question.type === type ? 'border-brand-500 bg-brand-50 text-brand-800' : 'border-slate-200 hover:border-slate-300'"
+          :class="question.type === type ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/30 text-brand-800 dark:text-brand-200' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'"
         >
           <input
             type="radio"
@@ -112,7 +112,7 @@ function removeAcceptedAnswer(index: number): void {
 
     <div>
       <ImageField v-model="question.imageUrl" :label="t('question.image')" :error="err('imageUrl')" />
-      <p v-if="question.type === 'image'" class="mt-1 text-sm text-slate-500">{{ t('question.imageRequiredHint') }}</p>
+      <p v-if="question.type === 'image'" class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ t('question.imageRequiredHint') }}</p>
     </div>
 
     <ChoiceOptionsEditor v-if="isChoiceQuestionType(question.type)" :question="question" :path="path" />
@@ -124,7 +124,7 @@ function removeAcceptedAnswer(index: number): void {
           v-for="value in [true, false]"
           :key="String(value)"
           class="flex min-h-14 cursor-pointer items-center justify-center rounded-xl border-2 text-lg font-black transition has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-brand-200"
-          :class="question.trueFalse === value ? 'border-emerald-500 bg-emerald-50 text-emerald-800' : 'border-slate-200'"
+          :class="question.trueFalse === value ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200' : 'border-slate-200 dark:border-slate-700'"
         >
           <input v-model="question.trueFalse" type="radio" class="sr-only" :name="`tf-${question.key}`" :value="value" />
           {{ value ? t('question.true') : t('question.false') }}

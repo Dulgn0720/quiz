@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { LIMITS, PIN_LENGTH } from './constants';
+import type { PlayerProgressUpdate } from './auth';
 import type { ScoreBreakdown } from './scoring';
 import type { ChoiceOption, OrderingItem, QuestionType, RoundType } from './quiz';
 
@@ -360,4 +361,6 @@ export interface ServerToClientEvents {
   'room:closed': () => void;
   'game:phase': (payload: PhasePayload) => void;
   'game:answer-count': (payload: { answered: number; total: number }) => void;
+  /** Signed-in players, after the game is saved: XP, level and new badges. */
+  'player:progress': (payload: PlayerProgressUpdate) => void;
 }

@@ -126,7 +126,7 @@ const columnsHint = CSV_COLUMNS.join(', ');
   >
     <form class="flex flex-col gap-4 p-6" @submit.prevent="submit">
       <h2 id="import-title" class="text-xl font-black">{{ t('importDialog.title') }}</h2>
-      <p class="text-sm text-slate-600">{{ t('importDialog.help') }}</p>
+      <p class="text-sm text-slate-600 dark:text-slate-300">{{ t('importDialog.help') }}</p>
 
       <label class="block">
         <span class="label">{{ t('importDialog.chooseFile') }}</span>
@@ -143,11 +143,11 @@ const columnsHint = CSV_COLUMNS.join(', ');
         <input v-model="csvTitle" class="input" maxlength="120" />
       </label>
 
-      <button type="button" class="self-start text-sm font-bold text-brand-700 underline" :title="columnsHint" @click="downloadTemplate">
+      <button type="button" class="self-start text-sm font-bold text-brand-700 dark:text-brand-300 underline" :title="columnsHint" @click="downloadTemplate">
         {{ t('importDialog.downloadTemplate') }}
       </button>
 
-      <div v-if="message" class="rounded-xl bg-red-50 p-3 text-sm text-red-700" role="alert">
+      <div v-if="message" class="rounded-xl bg-red-50 dark:bg-red-950/40 p-3 text-sm text-red-700 dark:text-red-300" role="alert">
         <p class="font-bold">{{ message }}</p>
         <ul v-if="issues.length" class="mt-2 max-h-48 list-disc space-y-1 overflow-auto pl-5">
           <li v-for="(issue, i) in issues" :key="i">

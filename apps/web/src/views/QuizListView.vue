@@ -102,12 +102,12 @@ function onImported(quiz: QuizDetail): void {
       <input v-model="search" type="search" class="input" :placeholder="t('quizList.search')" />
     </label>
 
-    <div v-if="loadError" class="mt-8 rounded-2xl bg-red-50 p-6 text-center text-red-700" role="alert">
+    <div v-if="loadError" class="mt-8 rounded-2xl bg-red-50 dark:bg-red-950/40 p-6 text-center text-red-700 dark:text-red-300" role="alert">
       <p class="font-bold">{{ loadError }}</p>
       <button type="button" class="btn-secondary mt-4" @click="load(true)">{{ t('common.retry') }}</button>
     </div>
 
-    <p v-else-if="!loading && items.length === 0" class="mt-16 text-center text-slate-500">
+    <p v-else-if="!loading && items.length === 0" class="mt-16 text-center text-slate-500 dark:text-slate-400">
       {{ search.trim() ? t('quizList.noResults', { query: search.trim() }) : t('quizList.empty') }}
     </p>
 
@@ -120,20 +120,20 @@ function onImported(quiz: QuizDetail): void {
           >
             {{ quiz.title }}
           </RouterLink>
-          <span v-if="quiz.isSample" class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-800">
+          <span v-if="quiz.isSample" class="rounded-full bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 text-xs font-bold text-amber-800 dark:text-amber-200">
             {{ t('quizList.sample') }}
           </span>
-          <span class="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-bold uppercase text-slate-600">
+          <span class="rounded-full bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-xs font-bold uppercase text-slate-600 dark:text-slate-300">
             {{ quiz.language }}
           </span>
         </div>
-        <p v-if="quiz.description" class="mt-2 line-clamp-2 text-sm text-slate-600">{{ quiz.description }}</p>
-        <p class="mt-3 text-sm font-semibold text-slate-500">
+        <p v-if="quiz.description" class="mt-2 line-clamp-2 text-sm text-slate-600 dark:text-slate-300">{{ quiz.description }}</p>
+        <p class="mt-3 text-sm font-semibold text-slate-500 dark:text-slate-400">
           {{ t('quizList.rounds', { n: quiz.roundCount }, quiz.roundCount) }} ·
           {{ t('quizList.questions', { n: quiz.questionCount }, quiz.questionCount) }}
         </p>
         <p class="text-xs text-slate-400">{{ t('quizList.updated', { date: formatDate(quiz.updatedAt) }) }}</p>
-        <div class="mt-4 flex flex-wrap gap-1 border-t border-slate-100 pt-3">
+        <div class="mt-4 flex flex-wrap gap-1 border-t border-slate-100 dark:border-slate-800 pt-3">
           <button
             type="button"
             class="btn-primary"
@@ -156,7 +156,7 @@ function onImported(quiz: QuizDetail): void {
       </li>
     </ul>
 
-    <p v-if="loading" class="mt-8 text-center text-slate-500">{{ t('common.loading') }}</p>
+    <p v-if="loading" class="mt-8 text-center text-slate-500 dark:text-slate-400">{{ t('common.loading') }}</p>
     <div v-else-if="items.length < total" class="mt-8 text-center">
       <button type="button" class="btn-secondary" @click="load(false)">{{ t('quizList.loadMore') }}</button>
     </div>

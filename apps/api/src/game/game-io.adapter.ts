@@ -10,7 +10,6 @@ import type { Server, ServerOptions } from 'socket.io';
  */
 export class GameIoAdapter extends IoAdapter {
   private adapter?: ReturnType<typeof createAdapter>;
-  private clients: Redis[] = [];
 
   constructor(
     app: INestApplicationContext,
@@ -23,7 +22,6 @@ export class GameIoAdapter extends IoAdapter {
     const pub = new Redis(url, { lazyConnect: true });
     const sub = pub.duplicate();
     await Promise.all([pub.connect(), sub.connect()]);
-    this.clients = [pub, sub];
     this.adapter = createAdapter(pub, sub, { key: 'quiz:io' });
   }
 
@@ -36,10 +34,5 @@ export class GameIoAdapter extends IoAdapter {
     }) as Server;
     if (this.adapter) server.adapter(this.adapter);
     return server;
-  }
-
-  override async close(server: Server): Promise<void> {
-    await super.close(server);
-    await Promise.all(this.clients.map((c) => c.quit().catch(() => undefined)));
   }
 }

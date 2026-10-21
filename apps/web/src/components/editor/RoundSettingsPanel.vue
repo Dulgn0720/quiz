@@ -53,12 +53,12 @@ function remove(): void {
           v-for="type in ROUND_TYPES"
           :key="type"
           class="flex cursor-pointer gap-3 rounded-xl border-2 p-3 transition has-[:focus-visible]:ring-4 has-[:focus-visible]:ring-brand-200"
-          :class="round.type === type ? 'border-brand-500 bg-brand-50' : 'border-slate-200 hover:border-slate-300'"
+          :class="round.type === type ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/30' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'"
         >
           <input v-model="round.type" type="radio" :value="type" class="sr-only" :name="`round-type-${round.key}`" />
           <span>
             <span class="block font-bold">{{ t(`round.types.${type}`) }}</span>
-            <span class="block text-sm text-slate-500">{{ t(`round.typeHelp.${type}`) }}</span>
+            <span class="block text-sm text-slate-500 dark:text-slate-400">{{ t(`round.typeHelp.${type}`) }}</span>
           </span>
         </label>
       </div>

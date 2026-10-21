@@ -42,9 +42,9 @@ jobs:
       - name: Build shared package
         run: pnpm build:shared
       - name: Typecheck
-        run: pnpm typecheck
+        run: pnpm -r --no-bail typecheck
       - name: Unit tests
-        run: pnpm test
+        run: pnpm -r --no-bail test
       - name: Build
         run: pnpm build
       - name: Migrate database

@@ -329,6 +329,12 @@ export default {
       joinAnother: 'Join another game',
     },
   },
+  settings: {
+    theme: 'Theme: {mode}',
+    themes: { system: 'system', light: 'light', dark: 'dark' },
+    sound: 'Sound effects',
+    music: 'Music',
+  },
   notFound: {
     title: 'Page not found',
     home: 'Go home',

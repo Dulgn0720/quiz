@@ -62,7 +62,7 @@ async function submit(): Promise<void> {
     <form class="flex flex-col gap-5 p-6" @submit.prevent="submit">
       <div>
         <h2 id="host-title" class="text-xl font-black">{{ t('game.hostDialog.title') }}</h2>
-        <p class="mt-1 text-sm font-semibold text-slate-600">{{ quiz?.title }}</p>
+        <p class="mt-1 text-sm font-semibold text-slate-600 dark:text-slate-300">{{ quiz?.title }}</p>
       </div>
 
       <fieldset class="flex flex-col gap-2">
@@ -70,12 +70,12 @@ async function submit(): Promise<void> {
         <label
           v-for="option in ['private', 'public'] as const"
           :key="option"
-          class="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 p-3 has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50"
+          class="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 dark:border-slate-700 p-3 has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50 dark:has-[:checked]:bg-brand-900/30"
         >
           <input v-model="visibility" type="radio" name="visibility" :value="option" class="mt-1 accent-brand-600" />
           <span>
             <span class="block font-bold">{{ t(`game.hostDialog.${option}`) }}</span>
-            <span class="block text-sm text-slate-600">{{ t(`game.hostDialog.${option}Help`) }}</span>
+            <span class="block text-sm text-slate-600 dark:text-slate-300">{{ t(`game.hostDialog.${option}Help`) }}</span>
           </span>
         </label>
       </fieldset>
@@ -84,11 +84,11 @@ async function submit(): Promise<void> {
         <input v-model="perPlayerShuffle" type="checkbox" class="mt-1 h-4 w-4 accent-brand-600" />
         <span>
           <span class="block font-bold">{{ t('game.hostDialog.perPlayerShuffle') }}</span>
-          <span class="block text-sm text-slate-600">{{ t('game.hostDialog.perPlayerShuffleHelp') }}</span>
+          <span class="block text-sm text-slate-600 dark:text-slate-300">{{ t('game.hostDialog.perPlayerShuffleHelp') }}</span>
         </span>
       </label>
 
-      <p v-if="message" class="rounded-xl bg-red-50 p-3 text-sm font-bold text-red-700" role="alert">{{ message }}</p>
+      <p v-if="message" class="rounded-xl bg-red-50 dark:bg-red-950/40 p-3 text-sm font-bold text-red-700 dark:text-red-300" role="alert">{{ message }}</p>
 
       <div class="flex justify-end gap-2">
         <button type="button" class="btn-ghost" @click="emit('close')">{{ t('common.cancel') }}</button>

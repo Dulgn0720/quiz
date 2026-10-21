@@ -27,10 +27,10 @@ const medals = ['', '🥇', '🥈', '🥉'];
       <Transition enter-from-class="translate-y-6 opacity-0" enter-active-class="transition duration-500 ease-out">
         <div v-if="shown >= step.order" class="mb-2 flex flex-col items-center text-center">
           <span class="text-5xl" aria-hidden="true">{{ step.player!.avatar }}</span>
-          <span class="max-w-full truncate text-lg font-black" :class="step.player!.playerId === highlightId ? 'text-brand-700' : ''">
+          <span class="max-w-full truncate text-lg font-black" :class="step.player!.playerId === highlightId ? 'text-brand-700 dark:text-brand-300' : ''">
             {{ step.player!.nickname }}
           </span>
-          <span class="font-bold tabular-nums text-slate-600">{{ step.player!.score }}</span>
+          <span class="font-bold tabular-nums text-slate-600 dark:text-slate-300">{{ step.player!.score }}</span>
         </div>
       </Transition>
       <div class="grid w-full place-items-center rounded-t-2xl text-4xl font-black shadow-inner" :class="[step.height, step.color]">

@@ -44,7 +44,7 @@ const trueFalseAnswer = computed(() =>
       />
       <div v-if="!reveal && total !== undefined" class="text-center" aria-live="polite">
         <p class="text-5xl font-black tabular-nums">{{ answered }}</p>
-        <p class="text-sm font-bold text-slate-500">{{ $t('game.question.answers', { total }) }}</p>
+        <p class="text-sm font-bold text-slate-500 dark:text-slate-400">{{ $t('game.question.answers', { total }) }}</p>
       </div>
     </div>
 
@@ -56,7 +56,7 @@ const trueFalseAnswer = computed(() =>
         :class="[tileStyle(i).bg, reveal && !correctIds.has(option.id) ? 'opacity-30' : '']"
       >
         <span class="text-3xl" aria-hidden="true">{{ tileStyle(i).shape }}</span>
-        <img v-if="option.imageUrl" :src="option.imageUrl" alt="" class="h-16 w-16 rounded-lg bg-white object-contain" />
+        <img v-if="option.imageUrl" :src="option.imageUrl" alt="" class="h-16 w-16 rounded-lg bg-white dark:bg-slate-900 object-contain" />
         <span class="flex-1">{{ option.text }}</span>
         <span v-if="reveal && correctIds.has(option.id)" class="text-3xl" :aria-label="$t('game.reveal.correct')">✔</span>
         <span v-if="reveal" class="text-lg tabular-nums opacity-90">{{ reveal.distribution[option.id] ?? 0 }}</span>
@@ -76,12 +76,12 @@ const trueFalseAnswer = computed(() =>
     </ul>
 
     <ol v-else-if="question.type === 'ordering' && !reveal" class="mx-auto flex w-full max-w-xl flex-col gap-2">
-      <li v-for="item in question.items" :key="item.id" class="rounded-xl bg-white px-5 py-3 text-xl font-bold shadow-sm ring-1 ring-slate-200">
+      <li v-for="item in question.items" :key="item.id" class="rounded-xl bg-white dark:bg-slate-900 px-5 py-3 text-xl font-bold shadow-sm ring-1 ring-slate-200 dark:ring-slate-700">
         {{ item.text }}
       </li>
     </ol>
 
-    <p v-else-if="question.type === 'type_answer' && !reveal" class="text-center text-xl font-bold text-slate-500">
+    <p v-else-if="question.type === 'type_answer' && !reveal" class="text-center text-xl font-bold text-slate-500 dark:text-slate-400">
       ⌨️ {{ $t('game.question.typeOnDevice') }}
     </p>
   </div>
