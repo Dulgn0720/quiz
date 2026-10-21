@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { PIN_LENGTH, QUIZ_CATEGORIES, type QuizSummary } from '@quiz/shared';
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { quizzesApi } from '@/api/quizzes';
+import { trainingsApi } from '@/api/trainings';
 import { quizTheme, shortTitle } from '@/brand/topics';
 import HostGameDialog from '@/components/game/HostGameDialog.vue';
 import DailyCard from '@/components/DailyCard.vue';
@@ -42,6 +43,22 @@ function onPinInput(event: Event): void {
 function join(): void {
   if (pinValid.value) void router.push({ name: 'join-pin', params: { pin: pin.value } });
 }
+
+/** Required trainings still to do, nudged on the home page. */
+const pendingTrainings = ref(0);
+watch(
+  () => auth.user?.id,
+  async (id) => {
+    pendingTrainings.value = 0;
+    if (!id) return;
+    try {
+      pendingTrainings.value = (await trainingsApi.list()).filter((x) => x.active && x.status !== 'passed').length;
+    } catch {
+      // Not essential.
+    }
+  },
+  { immediate: true },
+);
 
 onMounted(async () => {
   try {
@@ -126,6 +143,17 @@ onMounted(async () => {
         </div>
       </div>
     </section>
+
+    <!-- Required trainings -->
+    <RouterLink
+      v-if="pendingTrainings > 0"
+      to="/trainings"
+      class="training-nudge card mt-10 flex items-center gap-4 border-2 border-amber-300 p-5 transition hover:-translate-y-0.5 dark:border-amber-400/40"
+    >
+      <span class="text-4xl" aria-hidden="true">🎓</span>
+      <span class="flex-1 font-display text-lg font-bold">{{ $t('trainings.homeBanner', { n: pendingTrainings }) }}</span>
+      <span class="btn-primary">{{ $t('trainings.homeOpen') }} →</span>
+    </RouterLink>
 
     <!-- Daily question -->
     <DailyCard class="mt-12" />

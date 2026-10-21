@@ -96,6 +96,10 @@ Useful scripts (from the repo root):
 
 Quizzes have a topic (`category`) and are **private** or **public**. Private quizzes are seen and hosted only by their owner; public ones appear in everyone's library, where they can be filtered by shelf (official, community, mine), topic and popularity. Copies and imports start private; guest quizzes are always public; only admins can file a quiz under «Агула».
 
+### Trainings and certificates
+
+Admins turn any quiz into a required training at `/trainings`: a pass mark, an optional due date and an optional department (everyone when empty). Employees see their trainings (and a reminder on the home page), take them at their own pace one question at a time, and get a review with explanations. Answers are graded on the server; answer keys never reach the browser. A passing attempt is the certificate: an A4 page (`/certificates/:id`) to print or save as PDF, numbered by the attempt id. For each training, admins see who passed, failed or has not started yet, filter and search, and download the list as CSV for Excel. API: `GET/POST /api/trainings`, `GET/PATCH /api/trainings/:id`, `POST /api/trainings/:id/attempts`, `GET /api/trainings/:id/report`, `GET /api/trainings/certificates/:attemptId`.
+
 ### Daily question
 
 «Өдрийн асуулт» on the home page: one single-choice or true/false question a day from the official library, the same for everyone (days follow Ulaanbaatar time). Signed-in players earn 15 XP for a right answer and 5 XP for trying, once a day, and keep a streak of days in a row on the server; guests can play too, with their streak kept in the browser. `GET /api/daily`, `POST /api/daily/answer` (`{ answer }`: an option id, or `true` / `false`).

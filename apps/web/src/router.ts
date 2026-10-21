@@ -65,6 +65,29 @@ export const router = createRouter({
       // Played on a phone like a live game, so it gets the same immersive screen.
       meta: { fullscreen: true },
     },
+    { path: '/trainings', name: 'trainings', component: () => import('@/views/TrainingsView.vue'), meta: { requiresAuth: true } },
+    {
+      path: '/trainings/:id',
+      name: 'training',
+      component: () => import('@/views/TrainingTakeView.vue'),
+      props: true,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/trainings/:id/report',
+      name: 'training-report',
+      component: () => import('@/views/TrainingReportView.vue'),
+      props: true,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/certificates/:id',
+      name: 'certificate',
+      component: () => import('@/views/CertificateView.vue'),
+      props: true,
+      // A sheet of paper: no app header, prints on one A4 page.
+      meta: { requiresAuth: true, fullscreen: true },
+    },
     { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('@/views/NotFoundView.vue') },
   ],
   scrollBehavior: () => ({ top: 0 }),
