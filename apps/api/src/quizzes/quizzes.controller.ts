@@ -1,0 +1,105 @@
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  Post,
+  Put,
+  Query,
+  Res,
+} from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
+import {
+  EXPORT_FORMATS,
+  LIMITS,
+  quizInputSchema,
+  type ImportQuizRequest,
+  type Paginated,
+  type QuizContent,
+  type QuizDetail,
+  type QuizSummary,
+} from '@quiz/shared';
+import type { Response } from 'express';
+import { z } from 'zod';
+import { ZodValidationPipe } from '../common/zod-validation.pipe';
+import { QuizzesService, type ListQuizzesParams } from './quizzes.service';
+
+/** Upper bound for an import file's text; the JSON body limit in main.ts leaves room for escaping. */
+export const IMPORT_MAX_CHARS = 2_000_000;
+
+const listQuerySchema = z.object({
+  search: z.string().trim().max(100).optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(50).default(20),
+});
+
+const exportQuerySchema = z.object({ format: z.enum(EXPORT_FORMATS).default('json') });
+
+const importBodySchema = z.object({
+  format: z.enum(EXPORT_FORMATS),
+  content: z.string().min(1).max(IMPORT_MAX_CHARS),
+  title: z.string().trim().max(LIMITS.titleMax).optional(),
+});
+
+@Controller('quizzes')
+export class QuizzesController {
+  constructor(private readonly quizzes: QuizzesService) {}
+
+  @Get()
+  list(@Query(new ZodValidationPipe(listQuerySchema)) query: ListQuizzesParams): Promise<Paginated<QuizSummary>> {
+    return this.quizzes.list(query);
+  }
+
+  @Post()
+  create(@Body(new ZodValidationPipe(quizInputSchema)) body: QuizContent): Promise<QuizDetail> {
+    return this.quizzes.create(body);
+  }
+
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @Post('import')
+  import(@Body(new ZodValidationPipe(importBodySchema)) body: ImportQuizRequest): Promise<QuizDetail> {
+    return this.quizzes.import(body);
+  }
+
+  @Get(':id')
+  get(@Param('id') id: string): Promise<QuizDetail> {
+    return this.quizzes.get(id);
+  }
+
+  @Put(':id')
+  update(
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(quizInputSchema)) body: QuizContent,
+  ): Promise<QuizDetail> {
+    return this.quizzes.update(id, body);
+  }
+
+  @Delete(':id')
+  @HttpCode(204)
+  remove(@Param('id') id: string): Promise<void> {
+    return this.quizzes.remove(id);
+  }
+
+  @Post(':id/duplicate')
+  duplicate(@Param('id') id: string): Promise<QuizDetail> {
+    return this.quizzes.duplicate(id);
+  }
+
+  @Get(':id/export')
+  async export(
+    @Param('id') id: string,
+    @Query(new ZodValidationPipe(exportQuerySchema)) { format }: z.output<typeof exportQuerySchema>,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<string> {
+    const file = await this.quizzes.export(id, format);
+    const asciiName = file.filename.replace(/[^\x20-\x7e]/g, '_').replace(/"/g, "'");
+    res.setHeader('Content-Type', file.contentType);
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${asciiName}"; filename*=UTF-8''${encodeURIComponent(file.filename)}`,
+    );
+    return file.body;
+  }
+}

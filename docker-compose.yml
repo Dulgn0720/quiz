@@ -1,0 +1,70 @@
+# Local stack: `docker compose up --build`, then open http://localhost:5173
+# For hot-reload development, run only the databases (`docker compose up postgres redis`)
+# and start the apps with `pnpm dev`.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: quiz
+      POSTGRES_PASSWORD: quiz
+      POSTGRES_DB: quiz
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U quiz -d quiz']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    command: ['redis-server', '--appendonly', 'yes']
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      NODE_ENV: production
+      API_PORT: 3000
+      DATABASE_URL: postgresql://quiz:quiz@postgres:5432/quiz?schema=public
+      REDIS_URL: redis://redis:6379
+      CORS_ORIGINS: http://localhost:5173
+      UPLOAD_DIR: /data/uploads
+      PUBLIC_API_URL: http://localhost:3000
+    ports:
+      - '3000:3000'
+    volumes:
+      - uploads:/data/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_API_URL: http://localhost:3000
+    ports:
+      - '5173:80'
+    depends_on:
+      - api
+
+volumes:
+  postgres-data:
+  redis-data:
+  uploads:

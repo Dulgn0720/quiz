@@ -1,0 +1,206 @@
+// Quiz Pro database schema.
+// Enum values match the string unions in @quiz/shared so rows map 1:1 to API types.
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum QuestionType {
+  single
+  multiple
+  true_false
+  type_answer
+  ordering
+  image
+}
+
+enum RoundType {
+  normal
+  speed
+  double
+  elimination
+}
+
+enum RoomVisibility {
+  private
+  public
+}
+
+enum GameStatus {
+  lobby
+  in_progress
+  finished
+  aborted
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  displayName  String
+  avatar       String?
+  xp           Int      @default(0)
+  level        Int      @default(1)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  quizzes     Quiz[]
+  hostedGames Game[]
+  gamePlayers GamePlayer[]
+  badges      UserBadge[]
+}
+
+model Quiz {
+  id            String   @id @default(cuid())
+  title         String
+  description   String?
+  coverImageUrl String?
+  language      String   @default("mn")
+  /// Seeded sample quizzes are read-only; users duplicate them to edit.
+  isSample      Boolean  @default(false)
+  /// Denormalized for list views; kept in sync whenever rounds are written.
+  roundCount    Int      @default(0)
+  questionCount Int      @default(0)
+  ownerId       String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  owner  User?   @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  rounds Round[]
+  games  Game[]
+
+  @@index([ownerId])
+  @@index([updatedAt])
+}
+
+model Round {
+  id               String    @id @default(cuid())
+  quizId           String
+  position         Int
+  name             String
+  type             RoundType @default(normal)
+  /// Seconds per question unless a question overrides it.
+  timePerQuestion  Int       @default(20)
+  pointsMultiplier Float     @default(1)
+  shuffleQuestions Boolean   @default(false)
+  shuffleAnswers   Boolean   @default(false)
+
+  quiz      Quiz       @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  questions Question[]
+
+  @@unique([quizId, position])
+}
+
+model Question {
+  id          String       @id @default(cuid())
+  roundId     String
+  position    Int
+  type        QuestionType
+  prompt      String
+  imageUrl    String?
+  /// Seconds; overrides Round.timePerQuestion when set.
+  timeLimit   Int?
+  basePoints  Int          @default(1000)
+  explanation String?
+  /// Type-specific content and answer key (options/correct, acceptedAnswers, items...).
+  /// Validated by `questionSchema` in @quiz/shared before every write.
+  data        Json
+
+  round Round @relation(fields: [roundId], references: [id], onDelete: Cascade)
+
+  @@unique([roundId, position])
+}
+
+/// A live or finished session of a quiz.
+model Game {
+  id           String         @id @default(cuid())
+  /// Only unique among active games; uniqueness is enforced in Redis.
+  pin          String
+  quizId       String?
+  hostId       String?
+  visibility   RoomVisibility @default(private)
+  status       GameStatus     @default(lobby)
+  /// Copy of the quiz content at start time, so later edits do not affect the game or its history.
+  quizSnapshot Json
+  /// Game options chosen by the host (e.g. per-player shuffle seed).
+  settings     Json           @default("{}")
+  createdAt    DateTime       @default(now())
+  startedAt    DateTime?
+  endedAt      DateTime?
+
+  quiz    Quiz?        @relation(fields: [quizId], references: [id], onDelete: SetNull)
+  host    User?        @relation(fields: [hostId], references: [id], onDelete: SetNull)
+  players GamePlayer[]
+
+  @@index([pin, status])
+  @@index([visibility, status])
+}
+
+model GamePlayer {
+  id           String   @id @default(cuid())
+  gameId       String
+  /// Null for guests.
+  userId       String?
+  nickname     String
+  avatar       String
+  score        Int      @default(0)
+  finalRank    Int?
+  correctCount Int      @default(0)
+  answerCount  Int      @default(0)
+  bestStreak   Int      @default(0)
+  xpEarned     Int      @default(0)
+  joinedAt     DateTime @default(now())
+
+  game    Game         @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  user    User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  answers GameAnswer[]
+
+  @@unique([gameId, nickname])
+  @@index([userId])
+}
+
+model GameAnswer {
+  id             String   @id @default(cuid())
+  gamePlayerId   String
+  /// Id of the question in Game.quizSnapshot (not a foreign key: quizzes may change).
+  questionId     String
+  roundIndex     Int
+  questionIndex  Int
+  answer         Json
+  isCorrect      Boolean
+  pointsAwarded  Int
+  responseTimeMs Int
+  createdAt      DateTime @default(now())
+
+  player GamePlayer @relation(fields: [gamePlayerId], references: [id], onDelete: Cascade)
+
+  @@unique([gamePlayerId, questionId])
+}
+
+/// Achievement definitions. Names and descriptions are translated in the web app by `code`.
+model Badge {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  icon      String
+  createdAt DateTime @default(now())
+
+  users UserBadge[]
+}
+
+model UserBadge {
+  userId    String
+  badgeId   String
+  awardedAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@id([userId, badgeId])
+  @@index([badgeId])
+}
