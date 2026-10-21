@@ -96,7 +96,8 @@ export function parseQuizJson(text: string): ImportResult {
   }
   const parsed = quizInputSchema.safeParse(data);
   if (!parsed.success) return { ok: false, issues: zodIssues(parsed.error.issues) };
-  return { ok: true, quiz: stripIds(parsed.data) };
+  // Imported quizzes start private, whatever the file says.
+  return { ok: true, quiz: { ...stripIds(parsed.data), visibility: 'private' } };
 }
 
 // ---------------------------------------------------------------------------
