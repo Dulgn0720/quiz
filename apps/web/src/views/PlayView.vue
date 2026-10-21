@@ -16,6 +16,7 @@ import RevealedAnswer from '@/components/game/RevealedAnswer.vue';
 import LevelBar from '@/components/LevelBar.vue';
 import LockedAnswer from '@/components/game/LockedAnswer.vue';
 import ReactionBar from '@/components/game/ReactionBar.vue';
+import TeamRace from '@/components/game/TeamRace.vue';
 import Mascot from '@/components/Mascot.vue';
 import TapMascot from '@/components/game/TapMascot.vue';
 import TipCarousel from '@/components/game/TipCarousel.vue';
@@ -50,6 +51,7 @@ const phaseKey = computed(() => {
 });
 const me = computed(() => game.me);
 const myId = computed(() => me.value?.playerId);
+const myTeam = computed(() => game.room?.players.find((p) => p.id === myId.value)?.team);
 const myScore = computed(() => game.room?.players.find((p) => p.id === myId.value)?.score ?? 0);
 
 /** The answer this player gave to the open question, from the server or just sent. */
@@ -168,16 +170,26 @@ function leave(): void {
               ▲ {{ t('game.player.climbed', { n: phase.you.previousRank - phase.you.rank }) }}
             </p>
           </div>
+          <TeamRace v-if="phase.teams?.length" :teams="phase.teams" :highlight="myTeam" />
           <LeaderboardList :entries="phase.leaderboard" :highlight-id="myId" />
           <ReactionBar />
         </div>
 
-        <RoundSummaryPanel v-else-if="phase.phase === 'round_summary'" :round="phase.round" :leaderboard="phase.leaderboard" :highlight-id="myId" />
+        <div v-else-if="phase.phase === 'round_summary'" class="flex flex-col gap-6">
+          <RoundSummaryPanel :round="phase.round" :leaderboard="phase.leaderboard" :highlight-id="myId" />
+          <TeamRace v-if="phase.teams?.length" :teams="phase.teams" :highlight="myTeam" />
+        </div>
 
         <div v-else-if="phase.phase === 'podium'" class="flex flex-col gap-8">
           <div class="flex flex-col items-center">
             <Mascot :mood="!phase.you ? 'happy' : phase.you.rank === 1 ? 'cool' : phase.you.rank <= 3 ? 'celebrate' : 'love'" :size="120" />
             <h1 class="text-center text-3xl font-bold">{{ t('game.podium.title') }}</h1>
+          </div>
+          <div v-if="phase.teams?.length" class="flex flex-col gap-3">
+            <p class="rounded-2xl bg-gradient-to-r from-amber-400 to-brand-500 px-4 py-3 text-center font-display text-xl font-bold text-ink-950">
+              🏆 {{ t('game.teams.winner', { team: phase.teams[0]!.team }) }}
+            </p>
+            <TeamRace :teams="phase.teams" :highlight="myTeam" />
           </div>
           <PodiumPanel :results="phase.results" :highlight-id="myId" />
           <dl v-if="phase.you" class="grid grid-cols-2 gap-3">

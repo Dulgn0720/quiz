@@ -13,6 +13,8 @@ export const SNAPSHOT_VERSION = 1;
 export interface GameSettings {
   visibility: RoomVisibility;
   perPlayerShuffle: boolean;
+  /** Department battle (absent in snapshots from before team games). */
+  teamMode?: boolean;
 }
 
 export interface PlayerRecord {
@@ -23,6 +25,8 @@ export interface PlayerRecord {
   reconnectToken: string;
   /** Account of a signed-in player; they get their seat back from any device. */
   userId?: string;
+  /** Team in a team game. */
+  team?: string;
   joinedAt: number;
   connected: boolean;
   score: number;

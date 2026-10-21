@@ -18,6 +18,7 @@ import Mascot from '@/components/Mascot.vue';
 import AwardsPanel from '@/components/game/AwardsPanel.vue';
 import RevealMascot from '@/components/game/RevealMascot.vue';
 import TipCarousel from '@/components/game/TipCarousel.vue';
+import TeamRace from '@/components/game/TeamRace.vue';
 import BrandMark from '@/components/BrandMark.vue';
 import SoundToggles from '@/components/SoundToggles.vue';
 import { shortTitle } from '@/brand/topics';
@@ -189,21 +190,42 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
           </aside>
         </div>
 
-        <div v-else-if="phase.phase === 'leaderboard'" class="mx-auto w-full max-w-4xl">
+        <div v-else-if="phase.phase === 'leaderboard'" class="mx-auto w-full max-w-6xl">
           <h2 class="mb-8 text-center text-5xl font-bold">{{ t('game.leaderboard.title') }}</h2>
-          <LeaderboardList :entries="phase.leaderboard.slice(0, 5)" size="lg" />
-          <p v-if="phase.leaderboard.length > 5" class="mt-4 text-center text-lg text-slate-400">
-            {{ t('game.leaderboard.more', { n: phase.leaderboard.length - 5 }) }}
-          </p>
+          <div :class="phase.teams?.length ? 'grid gap-8 lg:grid-cols-2' : 'mx-auto max-w-4xl'">
+            <section v-if="phase.teams?.length">
+              <h3 class="mb-4 text-center text-2xl font-bold text-brand-300">🏢 {{ t('game.teams.title') }}</h3>
+              <TeamRace :teams="phase.teams" size="lg" />
+            </section>
+            <section>
+              <h3 v-if="phase.teams?.length" class="mb-4 text-center text-2xl font-bold text-brand-300">👤 {{ t('game.teams.players') }}</h3>
+              <LeaderboardList :entries="phase.leaderboard.slice(0, 5)" size="lg" />
+              <p v-if="phase.leaderboard.length > 5" class="mt-4 text-center text-lg text-slate-400">
+                {{ t('game.leaderboard.more', { n: phase.leaderboard.length - 5 }) }}
+              </p>
+            </section>
+          </div>
         </div>
 
-        <RoundSummaryPanel v-else-if="phase.phase === 'round_summary'" :round="phase.round" :leaderboard="phase.leaderboard" />
+        <div v-else-if="phase.phase === 'round_summary'" class="flex flex-col gap-8">
+          <RoundSummaryPanel :round="phase.round" :leaderboard="phase.leaderboard" />
+          <section v-if="phase.teams?.length" class="mx-auto w-full max-w-4xl">
+            <h3 class="mb-4 text-center text-2xl font-bold text-brand-300">🏢 {{ t('game.teams.title') }}</h3>
+            <TeamRace :teams="phase.teams" size="lg" />
+          </section>
+        </div>
 
         <div v-else-if="phase.phase === 'podium'" class="flex flex-col gap-10">
           <div class="flex items-center justify-center gap-4">
             <Mascot mood="celebrate" :size="110" />
             <h2 class="text-center text-5xl font-bold">{{ t('game.podium.title') }}</h2>
             <Mascot mood="celebrate" :size="110" class="-scale-x-100" />
+          </div>
+          <div v-if="phase.teams?.length" class="team-win mx-auto flex w-full max-w-4xl flex-col items-center gap-6">
+            <p class="rounded-3xl bg-gradient-to-r from-amber-400 to-brand-500 px-8 py-4 text-center font-display text-3xl font-bold text-ink-950 shadow-glow sm:text-4xl">
+              🏆 {{ t('game.teams.winner', { team: phase.teams[0]!.team }) }}
+            </p>
+            <TeamRace class="w-full" :teams="phase.teams" size="lg" />
           </div>
           <PodiumPanel :results="phase.results" />
           <AwardsPanel :results="phase.results" />

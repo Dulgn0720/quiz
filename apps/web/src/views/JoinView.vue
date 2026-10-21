@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { AVATARS, LIMITS, PIN_LENGTH, nicknameSchema, type RoomInfo } from '@quiz/shared';
+import { AVATARS, LIMITS, PIN_LENGTH, nicknameSchema, teamSchema, type RoomInfo } from '@quiz/shared';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
@@ -35,6 +35,9 @@ const avatar = ref<string>(
 
 const pinValid = computed(() => new RegExp(`^\\d{${PIN_LENGTH}}$`).test(pinInput.value));
 const nicknameValid = computed(() => nicknameSchema.safeParse(nickname.value).success);
+/** Team games: the department from the profile (or the portal) is suggested. */
+const team = ref(auth.user?.department ?? '');
+const teamValid = computed(() => !room.value?.teamMode || teamSchema.safeParse(team.value).success);
 
 async function checkPin(pin: string): Promise<void> {
   message.value = '';
@@ -67,10 +70,10 @@ function submitPin(): void {
 }
 
 async function submitJoin(): Promise<void> {
-  if (!room.value || !nicknameValid.value || joining.value) return;
+  if (!room.value || !nicknameValid.value || !teamValid.value || joining.value) return;
   joining.value = true;
   message.value = '';
-  const result = await game.join(room.value.pin, nickname.value, avatar.value);
+  const result = await game.join(room.value.pin, nickname.value, avatar.value, room.value.teamMode ? team.value : undefined);
   joining.value = false;
   if (result.ok) await router.push({ name: 'play', params: { pin: room.value.pin } });
   else message.value = result.error === 'network' ? t('common.networkError') : t(`game.errors.${result.error}`);
@@ -146,7 +149,34 @@ watch(
         />
       </label>
 
-      <button type="submit" class="btn-primary py-4 text-lg" :disabled="!nicknameValid || joining">
+      <label v-if="room.teamMode" class="block">
+        <span class="label">🏢 {{ t('game.join.team') }}</span>
+        <input
+          v-model="team"
+          class="input text-lg font-bold"
+          maxlength="40"
+          list="room-teams"
+          :placeholder="t('game.join.teamPlaceholder')"
+          autocomplete="organization"
+        />
+        <datalist id="room-teams">
+          <option v-for="name in room.teams" :key="name" :value="name" />
+        </datalist>
+        <span v-if="room.teams.length" class="mt-2 flex flex-wrap gap-1.5">
+          <button
+            v-for="name in room.teams"
+            :key="name"
+            type="button"
+            class="chip px-3 py-1 text-sm ring-1 transition"
+            :class="team === name ? 'bg-brand-500 text-ink-950 ring-brand-500' : 'ring-slate-200 dark:ring-white/15'"
+            @click="team = name"
+          >
+            {{ name }}
+          </button>
+        </span>
+      </label>
+
+      <button type="submit" class="btn-primary py-4 text-lg" :disabled="!nicknameValid || !teamValid || joining">
         {{ joining ? t('game.join.joining') : t('game.join.submit') }}
       </button>
       <p v-if="message" id="join-message" class="text-center font-bold text-red-600 dark:text-red-400" role="alert">{{ message }}</p>

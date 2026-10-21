@@ -204,6 +204,7 @@ Server → client: `room:state` (room settings and player list), `game:phase` (w
 - **Lobby fun:** players can tap Агу while they wait (every tenth tap gets a celebration), and both screens rotate "Did you know?" tips about the scoring rules.
 - **Reveal commentary:** on the projector, Агу reacts to how the room did on each question.
 - **Special awards:** after the podium, the big screen hands out ⚡ Quickest, 🔥 Streak champion and 🎯 Sharpshooter.
+- **Department battle:** with «Хэлтэс хоорондын тоглолт» on, every player joins a team (their profile or portal department is suggested, spellings like «it» / «IT» merge). Teams are ranked by their members' average score, shown as racing bars next to the leaderboard, in round summaries and on the podium with the winning team.
 - **Practice mode** (`/practice/<quiz id>`, the 🎯 button on every quiz): play any quiz alone on a phone with the same timer and scoring, see the explanation after each answer, earn up to three stars and beat your personal best (kept in the browser).
 - **Language:** the interface is Mongolian only, in everyday office Mongolian: common terms stay in English («Quiz», «Level», «streak», «badge», «Leaderboard»).
 

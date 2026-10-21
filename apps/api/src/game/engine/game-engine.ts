@@ -25,6 +25,7 @@ import {
   type RoundStats,
   type SavedQuestion,
   type SavedRound,
+  type TeamStanding,
 } from '@quiz/shared';
 import type { AnswerRecord, GameSnapshot, PlayerRecord } from './game-snapshot';
 
@@ -140,6 +141,7 @@ export class GameEngine {
     avatar?: string;
     reconnectToken?: string;
     userId?: string;
+    team?: string;
   }): EngineResult<{ player: PlayerRecord; reconnected: boolean }> {
     const s = this.state;
     if (input.reconnectToken) {
@@ -157,6 +159,8 @@ export class GameEngine {
     if (s.players.length >= GAME_LIMITS.playersMax) return fail(GAME_ERRORS.full);
     const key = nicknameKey(input.nickname);
     if (s.players.some((p) => nicknameKey(p.nickname) === key)) return fail(GAME_ERRORS.nicknameTaken);
+    const team = s.settings.teamMode ? this.teamName(input.team) : undefined;
+    if (s.settings.teamMode && !team) return fail(GAME_ERRORS.teamRequired);
 
     const player: PlayerRecord = {
       id: this.deps.ids.playerId(),
@@ -164,6 +168,7 @@ export class GameEngine {
       avatar: input.avatar ?? AVATARS[hashSeed(input.nickname) % AVATARS.length]!,
       reconnectToken: this.deps.ids.token(),
       userId: input.userId,
+      team,
       joinedAt: this.now(),
       connected: false,
       score: 0,
@@ -385,8 +390,43 @@ export class GameEngine {
         score: p.score,
         connected: p.connected,
         eliminated: p.eliminated,
+        team: p.team,
       })),
+      teamMode: s.settings.teamMode === true,
     };
+  }
+
+  /** Teams so far, for the join form. */
+  teams(): string[] {
+    return [...new Set(this.state.players.map((p) => p.team).filter((t): t is string => !!t))].sort((a, b) =>
+      a.localeCompare(b, 'mn'),
+    );
+  }
+
+  /**
+   * Teams ranked by their members' average score (so a small team can beat a big one).
+   * The previous ranking uses the scores before the last question.
+   */
+  teamStandings(): TeamStanding[] | undefined {
+    if (!this.state.settings.teamMode) return undefined;
+    const groups = new Map<string, PlayerRecord[]>();
+    for (const p of this.state.players) {
+      if (!p.team) continue;
+      groups.set(p.team, [...(groups.get(p.team) ?? []), p]);
+    }
+    const average = (list: PlayerRecord[], before: boolean) =>
+      Math.round(list.reduce((n, p) => n + p.score - (before ? p.lastDelta : 0), 0) / list.length);
+    const rows = [...groups].map(([team, list]) => ({ team, members: list.length, score: average(list, false), before: average(list, true) }));
+    const rankBy = (key: 'score' | 'before') => {
+      const sorted = [...rows].sort((a, b) => b[key] - a[key] || a.team.localeCompare(b.team, 'mn'));
+      const ranks = competitionRanks(sorted.map((r) => r[key]));
+      return new Map(sorted.map((r, i) => [r.team, ranks[i]!]));
+    };
+    const now = rankBy('score');
+    const before = rankBy('before');
+    return rows
+      .map((r) => ({ team: r.team, score: r.score, members: r.members, rank: now.get(r.team)!, previousRank: before.get(r.team)! }))
+      .sort((a, b) => a.rank - b.rank || a.team.localeCompare(b.team, 'mn'));
   }
 
   /** What `viewer` should currently see. */
@@ -433,7 +473,7 @@ export class GameEngine {
         };
       }
       case 'leaderboard':
-        return { phase: 'leaderboard', leaderboard: topEntries(standings), you };
+        return { phase: 'leaderboard', leaderboard: topEntries(standings), you, teams: this.teamStandings() };
       case 'round_summary':
         return {
           phase: 'round_summary',
@@ -441,6 +481,7 @@ export class GameEngine {
           leaderboard: topEntries(standings),
           isLastRound: s.roundIndex >= s.quiz.rounds.length - 1,
           you,
+          teams: this.teamStandings(),
         };
       case 'podium': {
         const results = this.playerStats(standings);
@@ -449,6 +490,7 @@ export class GameEngine {
           results: viewer.kind === 'host' ? results : results.slice(0, 3),
           rounds: s.quiz.rounds.map((_, i) => this.roundStats(i)).filter((r) => r.questionCount > 0),
           you: player ? results.find((r) => r.playerId === player.id) : undefined,
+          teams: this.teamStandings(),
         };
       }
     }
@@ -691,6 +733,14 @@ export class GameEngine {
       rank: standings.byPlayer.get(player.id)?.rank ?? standings.entries.length,
       eliminated: this.state.eliminatedNow.includes(player.id),
     };
+  }
+
+  /** Same team, however it was typed: "it", " IT " and "IT" join one team (the first spelling wins). */
+  private teamName(input: string | undefined): string | undefined {
+    const name = input?.normalize('NFKC').replace(/\s+/g, ' ').trim();
+    if (!name) return undefined;
+    const key = name.toLocaleLowerCase();
+    return this.state.players.find((p) => p.team?.toLocaleLowerCase() === key)?.team ?? name.slice(0, 40);
   }
 
   private shuffleSeed(viewer: Viewer, questionId: string): string {

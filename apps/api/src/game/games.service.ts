@@ -75,7 +75,7 @@ export class GamesService implements OnModuleInit, OnModuleDestroy {
     if (quiz.rounds.every((r) => r.questions.length === 0)) {
       throw new BadRequestException('This quiz has no questions');
     }
-    const settings = { visibility: input.visibility, perPlayerShuffle: input.perPlayerShuffle };
+    const settings = { visibility: input.visibility, perPlayerShuffle: input.perPlayerShuffle, teamMode: input.teamMode };
     const quizSnapshot = { id: quiz.id, title: quiz.title, rounds: quiz.rounds };
 
     for (let attempt = 0; attempt < PIN_ATTEMPTS; attempt++) {
@@ -128,6 +128,8 @@ export class GamesService implements OnModuleInit, OnModuleDestroy {
       phase: s.phase,
       locked: s.locked,
       playerCount: s.players.length,
+      teamMode: s.settings.teamMode === true,
+      teams: engine.teams(),
     };
   }
 

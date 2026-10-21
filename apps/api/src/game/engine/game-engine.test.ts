@@ -553,3 +553,52 @@ describe('persistence', () => {
     expect(restored.findPlayer(ann)!.score).toBe(1500);
   });
 });
+
+describe('team games', () => {
+  it('needs a team, merges spellings and ranks teams by average score', () => {
+    const engine = makeEngine({ teamMode: true });
+    expect(engine.join({ nickname: 'Solo' })).toMatchObject({ ok: false, error: 'team_required' });
+
+    const join = (nickname: string, team: string) => {
+      const res = engine.join({ nickname, team });
+      if (!res.ok) throw new Error(res.error);
+      engine.setConnected(res.player.id, true);
+      return res.player.id;
+    };
+    const a = join('Anu', 'IT');
+    const b = join('Bat', '  it ');
+    const c = join('Saraa', 'Нөхөн төлбөр');
+    expect(engine.teams()).toEqual(['IT', 'Нөхөн төлбөр']);
+    expect(engine.roomState()).toMatchObject({ teamMode: true });
+    expect(engine.findPlayer(b)!.team).toBe('IT');
+
+    startToQuestion(engine);
+    const index = currentIndex(engine);
+    expect(engine.submitAnswer(a, index, { type: 'single', optionIds: ['b'] }).ok).toBe(true);
+    expect(engine.submitAnswer(b, index, { type: 'single', optionIds: ['a'] }).ok).toBe(true);
+    expect(engine.submitAnswer(c, index, { type: 'single', optionIds: ['b'] }).ok).toBe(true);
+    time.advance(GAME_TIMINGS.allAnsweredRevealDelayMs + 10);
+    expect(engine.snapshot.phase).toBe('reveal');
+    expect(engine.next().ok).toBe(true);
+
+    const board = phaseOf('host');
+    if (board.phase !== 'leaderboard') throw new Error(board.phase);
+    const scoreA = engine.findPlayer(a)!.score;
+    const scoreC = engine.findPlayer(c)!.score;
+    expect(board.teams).toEqual([
+      { team: 'Нөхөн төлбөр', score: scoreC, members: 1, rank: 1, previousRank: 1 },
+      { team: 'IT', score: Math.round(scoreA / 2), members: 2, rank: 2, previousRank: 1 },
+    ]);
+  });
+
+  it('sends no team standings in ordinary games', () => {
+    const engine = makeEngine();
+    const a = joinConnected(engine, 'Anu');
+    startToQuestion(engine);
+    engine.submitAnswer(a, currentIndex(engine), { type: 'single', optionIds: ['b'] });
+    time.advance(GAME_TIMINGS.allAnsweredRevealDelayMs + 10);
+    engine.next();
+    const board = phaseOf('host');
+    expect(board.phase === 'leaderboard' && board.teams).toBeUndefined();
+  });
+});

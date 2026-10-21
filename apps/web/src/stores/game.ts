@@ -66,7 +66,7 @@ export const useGameStore = defineStore('game', () => {
 
   let socket: GameSocket | null = null;
   /** Identity typed in the join form, used by the first connect before a seat is saved. */
-  let pendingJoin: { nickname: string; avatar: string; resolve: (result: Ack) => void } | null = null;
+  let pendingJoin: { nickname: string; avatar: string; team?: string; resolve: (result: Ack) => void } | null = null;
 
   const isHost = computed(() => role.value === 'host');
 
@@ -160,7 +160,7 @@ export const useGameStore = defineStore('game', () => {
     } else {
       const saved = session.player(pin.value);
       if (saved) result = await joinRoom(saved.nickname, saved.avatar, saved.reconnectToken);
-      else if (pendingJoin) result = await joinRoom(pendingJoin.nickname, pendingJoin.avatar);
+      else if (pendingJoin) result = await joinRoom(pendingJoin.nickname, pendingJoin.avatar, undefined, pendingJoin.team);
       else result = { ok: false, error: GAME_ERRORS.notJoined };
     }
     if (socket !== s) return;
@@ -182,12 +182,12 @@ export const useGameStore = defineStore('game', () => {
     }
   }
 
-  async function joinRoom(nickname: string, avatar: string, reconnectToken?: string): Promise<Ack> {
+  async function joinRoom(nickname: string, avatar: string, reconnectToken?: string, team?: string): Promise<Ack> {
     if (!socket) return { ok: false, error: 'network' };
     try {
       const res = await socket
         .timeout(ACK_TIMEOUT_MS)
-        .emitWithAck('room:join', { pin: pin.value, nickname, avatar: toAvatar(avatar), reconnectToken });
+        .emitWithAck('room:join', { pin: pin.value, nickname, avatar: toAvatar(avatar), reconnectToken, team });
       if (!res.ok) return res;
       me.value = { playerId: res.playerId, nickname: res.nickname, avatar: res.avatar };
       session.savePlayer(pin.value, { reconnectToken: res.reconnectToken, nickname: res.nickname, avatar: res.avatar });
@@ -217,12 +217,12 @@ export const useGameStore = defineStore('game', () => {
   }
 
   /** First join from the join form. Resolves once the server has accepted (or refused) the nickname. */
-  function join(roomPin: string, nickname: string, avatar: string): Promise<Ack> {
+  function join(roomPin: string, nickname: string, avatar: string, team?: string): Promise<Ack> {
     reset();
     role.value = 'player';
     pin.value = roomPin;
     return new Promise<Ack>((resolve) => {
-      pendingJoin = { nickname, avatar, resolve };
+      pendingJoin = { nickname, avatar, team, resolve };
       connect().once('connect_error', () => finishPendingJoin({ ok: false, error: 'network' }));
     });
   }

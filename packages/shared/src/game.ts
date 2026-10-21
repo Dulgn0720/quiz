@@ -62,6 +62,7 @@ export const GAME_ERRORS = {
   paused: 'paused',
   eliminated: 'eliminated',
   notJoined: 'not_joined',
+  teamRequired: 'team_required',
 } as const;
 export type GameErrorCode = (typeof GAME_ERRORS)[keyof typeof GAME_ERRORS];
 
@@ -77,11 +78,19 @@ export const nicknameSchema = z
 
 export const avatarSchema = z.enum(AVATARS);
 
+/** Team (department) name in team games. */
+export const teamSchema = z
+  .string()
+  .transform((s) => s.normalize('NFKC').replace(/[\u0000-\u001f\u007f]/g, '').replace(/\s+/g, ' ').trim())
+  .pipe(z.string().min(1).max(40));
+
 export const createGameSchema = z.object({
   quizId: z.string().trim().min(1).max(LIMITS.idMax),
   visibility: z.enum(ROOM_VISIBILITIES).default('private'),
   /** Shuffle answer order separately for every player (rounds must have answer shuffle on). */
   perPlayerShuffle: z.boolean().default(true),
+  /** Department battle: every player joins a team, and teams are ranked by their average score. */
+  teamMode: z.boolean().default(false),
 });
 export type CreateGameRequest = z.input<typeof createGameSchema>;
 export type CreateGameOptions = z.output<typeof createGameSchema>;
@@ -103,6 +112,8 @@ export const joinRoomSchema = z.object({
   nickname: nicknameSchema,
   avatar: avatarSchema.optional(),
   reconnectToken: z.string().max(128).optional(),
+  /** Required when the room is a team game. */
+  team: teamSchema.optional(),
 });
 export type JoinRoomRequest = z.input<typeof joinRoomSchema>;
 
@@ -132,6 +143,9 @@ export interface RoomInfo {
   phase: GamePhase;
   locked: boolean;
   playerCount: number;
+  teamMode: boolean;
+  /** Teams players have joined so far, to pick from. */
+  teams: string[];
 }
 
 export interface PublicRoomSummary {
@@ -152,6 +166,18 @@ export interface PlayerPublic {
   connected: boolean;
   /** True while knocked out of the current elimination round. */
   eliminated: boolean;
+  team?: string;
+}
+
+/** A team in a team game, ranked by the average score of its members (fair to small teams). */
+export interface TeamStanding {
+  team: string;
+  /** Average score of the members, rounded. */
+  score: number;
+  members: number;
+  rank: number;
+  /** Rank before the last question. */
+  previousRank: number;
 }
 
 export interface RoomState {
@@ -167,6 +193,7 @@ export interface RoomState {
   questionIndex: number;
   totalQuestions: number;
   players: PlayerPublic[];
+  teamMode: boolean;
 }
 
 interface QuestionPublicBase {
@@ -314,13 +341,14 @@ export type PhasePayload =
       yourAnswer?: AnswerPayload;
       you?: PlayerAnswerResult;
     }
-  | { phase: 'leaderboard'; leaderboard: LeaderboardEntry[]; you?: PlayerStanding }
+  | { phase: 'leaderboard'; leaderboard: LeaderboardEntry[]; you?: PlayerStanding; teams?: TeamStanding[] }
   | {
       phase: 'round_summary';
       round: RoundStats;
       leaderboard: LeaderboardEntry[];
       isLastRound: boolean;
       you?: PlayerStanding;
+      teams?: TeamStanding[];
     }
   | {
       phase: 'podium';
@@ -328,6 +356,7 @@ export type PhasePayload =
       results: PlayerStats[];
       rounds: RoundStats[];
       you?: PlayerStats;
+      teams?: TeamStanding[];
     };
 
 export type CommandAck = (res: { ok: true } | { ok: false; error: GameErrorCode }) => void;

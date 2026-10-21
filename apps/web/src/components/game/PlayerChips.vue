@@ -36,6 +36,7 @@ const lastReaction = computed(() => new Map(game.reactions.map((r) => [r.playerI
     >
       <span class="leading-none" :class="size === 'lg' ? 'text-3xl' : 'text-2xl'" aria-hidden="true">{{ player.avatar }}</span>
       <span>{{ player.nickname }}</span>
+      <span v-if="player.team" class="text-xs font-semibold text-slate-400" :class="size === 'lg' ? 'text-sm' : ''">· {{ player.team }}</span>
       <span
         v-if="lastReaction.get(player.id)"
         :key="lastReaction.get(player.id)!.id"
