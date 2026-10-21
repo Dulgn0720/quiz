@@ -21,6 +21,12 @@ export const authApi = {
   settings(): Promise<AppSettings> {
     return request('/settings');
   },
+  forgotPassword(email: string): Promise<void> {
+    return request('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) });
+  },
+  resetPassword(token: string, password: string): Promise<AuthResponse> {
+    return request('/auth/reset-password', { method: 'POST', body: JSON.stringify({ token, password }) });
+  },
   me(): Promise<UserProfile> {
     return request('/me');
   },

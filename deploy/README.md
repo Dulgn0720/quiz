@@ -39,10 +39,12 @@ Quizzes in `apps/api/src/database/sample-quizzes.ts` are refreshed on every star
 
 ## Backups
 
+The `backup` service dumps the database every day into `deploy/backups/` and deletes dumps older than `BACKUP_KEEP_DAYS` (14). Copy that folder off the server now and then (e.g. `rsync` to another machine).
+
 ```bash
-# Database dump (run daily, e.g. from cron):
+# Dump right now:
 docker compose -f docker-compose.prod.yml exec -T postgres pg_dump -U quiz quiz | gzip > backup-$(date +%F).sql.gz
-# Restore:
+# Restore (from deploy/backups or a manual dump):
 gunzip -c backup-YYYY-MM-DD.sql.gz | docker compose -f docker-compose.prod.yml exec -T postgres psql -U quiz quiz
 ```
 
@@ -52,6 +54,11 @@ Uploaded images live in the `uploads` volume; back it up with the database if yo
 
 - `https://<DOMAIN>/api/health` returns `{"status":"ok",…}` when the database and Redis are reachable.
 - `docker compose -f docker-compose.prod.yml logs -f api`
+- The `monitor` service checks health every minute and, after three failures in a row, sends one "down" alert and later one "back up" alert. Set `ALERT_WEBHOOK_URL` (Slack, Mattermost or Discord incoming webhook) and/or `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` in `deploy/.env`.
+
+## Password reset mail
+
+Set `SMTP_URL` (e.g. `smtp://user:app-password@smtp.gmail.com:587`) and `MAIL_FROM` in `deploy/.env` so "Forgot password" sends emails. Without it, the link appears in the log: `docker compose -f docker-compose.prod.yml logs api | grep "reset link"`.
 
 ## Limits
 

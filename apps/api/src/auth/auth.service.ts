@@ -68,6 +68,11 @@ export class AuthService {
     return verifyToken(token, this.secret)?.sub ?? null;
   }
 
+  /** Signs in a user who proved who they are some other way (e.g. a password reset link). */
+  issueFor(user: User): AuthResponse {
+    return this.issue(user);
+  }
+
   private issue(user: User): AuthResponse {
     return { token: signToken(user.id, this.secret, TOKEN_TTL_SECONDS), user: toUserPublic(user, this.access.isAdminEmail(user.email)) };
   }

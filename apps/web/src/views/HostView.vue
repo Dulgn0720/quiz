@@ -13,6 +13,8 @@ import RevealChart from '@/components/game/RevealChart.vue';
 import RevealedAnswer from '@/components/game/RevealedAnswer.vue';
 import RoundSummaryPanel from '@/components/game/RoundSummaryPanel.vue';
 import ShareRoom from '@/components/game/ShareRoom.vue';
+import ReactionLayer from '@/components/game/ReactionLayer.vue';
+import Mascot from '@/components/Mascot.vue';
 import BrandMark from '@/components/BrandMark.vue';
 import SoundToggles from '@/components/SoundToggles.vue';
 import { shortTitle } from '@/brand/topics';
@@ -95,6 +97,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
 
 <template>
   <div class="dark stage min-h-dvh">
+  <ReactionLayer />
   <section class="mx-auto flex min-h-dvh max-w-6xl flex-col px-4 pb-28 pt-5">
     <ConnectionBanner />
 
@@ -134,7 +137,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
             <h2 :key="players.length" class="animate-pop text-3xl font-bold">
               {{ t('game.lobby.players', { n: players.length }, players.length) }}
             </h2>
-            <p v-if="players.length === 0" class="mt-2 animate-pulse text-lg font-semibold text-slate-400">{{ t('game.lobby.waiting') }}</p>
+          </div>
+          <div v-if="players.length === 0" class="flex justify-center">
+            <Mascot mood="wave" :size="150" :say="t('mascot.lobbyHost')" />
           </div>
           <PlayerChips :players="players" kickable size="lg" @kick="kick" />
         </div>
@@ -175,7 +180,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
         <RoundSummaryPanel v-else-if="phase.phase === 'round_summary'" :round="phase.round" :leaderboard="phase.leaderboard" />
 
         <div v-else-if="phase.phase === 'podium'" class="flex flex-col gap-10">
-          <h2 class="text-center text-5xl font-bold">{{ t('game.podium.title') }}</h2>
+          <div class="flex items-center justify-center gap-4">
+            <Mascot mood="celebrate" :size="110" />
+            <h2 class="text-center text-5xl font-bold">{{ t('game.podium.title') }}</h2>
+            <Mascot mood="celebrate" :size="110" class="-scale-x-100" />
+          </div>
           <PodiumPanel :results="phase.results" />
           <ResultsTable :results="phase.results" size="lg" />
         </div>

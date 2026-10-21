@@ -8,6 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { validateEnv } from './config/env';
 import { GamesModule } from './game/games.module';
 import { HealthController } from './health/health.controller';
+import { MailModule } from './mail/mail.module';
 import { MediaModule } from './media/media.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { QuizzesModule } from './quizzes/quizzes.module';
@@ -20,6 +21,7 @@ import { RedisModule } from './redis/redis.module';
     ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 1200 }]),
     PrismaModule,
     RedisModule,
+    MailModule,
     AuthModule,
     AccountModule,
     QuizzesModule,

@@ -2,6 +2,7 @@
 import type { PhasePayload } from '@quiz/shared';
 import { watch } from 'vue';
 import { sound } from '@/game/sound';
+import Mascot from '@/components/Mascot.vue';
 import { useCountdown } from '@/game/useCountdown';
 
 type Countdown = Extract<PhasePayload, { phase: 'countdown' }>;
@@ -21,6 +22,7 @@ watch(seconds, (s, before) => {
 
 <template>
   <div class="flex flex-col items-center gap-4 py-10 text-center">
+    <Mascot :mood="countdown.roundStart ? 'surprised' : 'wave'" :size="countdown.roundStart ? 130 : 100" />
     <template v-if="countdown.roundStart">
       <p class="text-lg font-bold uppercase tracking-wide text-brand-700 dark:text-brand-300">
         {{ $t('game.countdown.round', { n: countdown.roundIndex + 1 }) }}

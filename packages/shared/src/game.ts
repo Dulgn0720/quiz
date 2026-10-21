@@ -332,6 +332,17 @@ export type PhasePayload =
 
 export type CommandAck = (res: { ok: true } | { ok: false; error: GameErrorCode }) => void;
 
+/** Emoji players can send to the big screen. */
+export const REACTIONS = ['👏', '😂', '😮', '🔥', '❤️', '🎉'] as const;
+export type Reaction = (typeof REACTIONS)[number];
+export const reactionSchema = z.object({ emoji: z.enum(REACTIONS) });
+
+export interface ReactionEvent {
+  emoji: Reaction;
+  playerId: string;
+  avatar: string;
+}
+
 export interface ClientToServerEvents {
   /** Clock sync: the server answers with its epoch ms so clients can correct timers. */
   'clock:sync': (ack: (serverNow: number) => void) => void;
@@ -353,6 +364,8 @@ export interface ClientToServerEvents {
   'host:next': (ack?: CommandAck) => void;
   'host:end': (ack?: CommandAck) => void;
   'player:answer': (payload: z.input<typeof submitAnswerSchema>, ack: CommandAck) => void;
+  /** Fire-and-forget; rate limited per player. */
+  'player:react': (payload: { emoji: Reaction }) => void;
 }
 
 export interface ServerToClientEvents {
@@ -362,6 +375,8 @@ export interface ServerToClientEvents {
   'room:closed': () => void;
   'game:phase': (payload: PhasePayload) => void;
   'game:answer-count': (payload: { answered: number; total: number }) => void;
+  /** A player's emoji reaction, shown floating on the host screen. */
+  'game:reaction': (payload: ReactionEvent) => void;
   /** Signed-in players, after the game is saved: XP, level and new badges. */
   'player:progress': (payload: PlayerProgressUpdate) => void;
 }

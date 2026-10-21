@@ -20,6 +20,13 @@ export const router = createRouter({
     },
     { path: '/login', name: 'login', component: () => import('@/views/AuthView.vue'), props: { mode: 'login' } },
     { path: '/register', name: 'register', component: () => import('@/views/AuthView.vue'), props: { mode: 'register' } },
+    { path: '/forgot-password', name: 'forgot-password', component: () => import('@/views/ForgotPasswordView.vue') },
+    {
+      path: '/reset-password',
+      name: 'reset-password',
+      component: () => import('@/views/ResetPasswordView.vue'),
+      props: (route) => ({ token: typeof route.query.token === 'string' ? route.query.token : '' }),
+    },
     { path: '/me', name: 'profile', component: () => import('@/views/ProfileView.vue'), meta: { requiresAuth: true } },
     { path: '/rooms', name: 'rooms', component: () => import('@/views/RoomsView.vue') },
     { path: '/join', name: 'join', component: () => import('@/views/JoinView.vue') },

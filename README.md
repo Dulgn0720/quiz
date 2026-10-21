@@ -117,6 +117,9 @@ No personal data or credentials from the documents are used. Re-seeding updates 
 | `JWT_SECRET` | dev value | Signs login tokens; **required in production** (32+ characters) |
 | `ADMIN_EMAILS` | — | Comma-separated emails of admin accounts (they register normally) |
 | `RESTRICT_QUIZ_EDITING` | `false` | `true`: only admins create, edit, import or delete quizzes; everyone can still host and play |
+| `PUBLIC_WEB_URL` | first `CORS_ORIGINS` entry | Web address used in password reset links |
+| `SMTP_URL` | — | e.g. `smtp://user:pass@smtp.gmail.com:587`. Without it, reset links are written to the API log |
+| `MAIL_FROM` | `Agula Quiz <no-reply@localhost>` | Sender of password reset emails |
 | `TRUST_PROXY` | `false` | Use `X-Forwarded-For` behind a reverse proxy |
 | `UPLOAD_DIR`, `PUBLIC_API_URL` | `./uploads`, `http://localhost:3000` | Uploaded images |
 
@@ -155,16 +158,20 @@ Client → server (each takes an acknowledgement callback returning `{ ok: true 
 | `room:join`     | `{ pin, nickname, avatar?, reconnectToken? }` | player |
 | `room:leave`    | —                                             | player |
 | `player:answer` | `{ questionIndex, answer }`                   | player |
+| `player:react`  | `{ emoji }` (👏 😂 😮 🔥 ❤️ 🎉, 5 per 4 s, no ack) | player |
 | `host:kick` · `host:lock` · `host:pause` | `{ playerId }` · `{ locked }` · `{ paused }` | host |
 | `host:start` · `host:next` · `host:skip` · `host:end` | — | host |
 
-Server → client: `room:state` (room settings and player list), `game:phase` (what this client should show now, personalized: shuffled options, your answer, your result and rank), `game:answer-count`, `room:kicked`, `room:closed`, and `player:progress` (XP, level and new badges, for signed-in players after the game).
+Server → client: `room:state` (room settings and player list), `game:phase` (what this client should show now, personalized: shuffled options, your answer, your result and rank), `game:answer-count`, `game:reaction` (to the host screen), `room:kicked`, `room:closed`, and `player:progress` (XP, level and new badges, for signed-in players after the game).
 
 ## Look and feel
 
 - **Dark mode:** the 🖥️/☀️/🌙 button cycles between following the system, light and dark. The choice is applied before the first paint, so the page does not flash.
 - **Sound:** effects (countdown, last-seconds ticks, answer, correct/wrong, reveal, fanfare) and background music on the host screen are synthesized with the Web Audio API, so there are no audio files. 🔊 toggles effects and 🎵 toggles music; both settings are remembered.
 - **Motion:** confetti for correct answers and the podium, animated leaderboard overtakes, page and phase transitions. Everything respects `prefers-reduced-motion`.
+- **Mascot «Агу»:** an SVG snow leopard in an Agula scarf. It waves in the lobby, counts down, cheers or comforts after each answer (with a different line each time), celebrates on the podium and keeps empty pages friendly.
+- **Live reactions:** players tap 👏 😂 😮 🔥 ❤️ 🎉 on their phones and the emojis float up the projector screen with their avatar.
+- **Streaks:** three or more correct answers in a row light up an "on fire" banner.
 - **Languages:** Mongolian (default) and English everywhere, switchable in the header.
 
 ## Accounts and progression
@@ -176,6 +183,8 @@ Accounts are optional. Guests can create, host and play everything. Signing up (
 - **History:** every game played, with rank, score, correct answers and XP. The profile page (`/me`) shows level progress, badges, stats and history.
 - **Ownership:** quizzes created while signed in belong to the account. Only the owner can edit or delete them; anyone can play or duplicate them. Quizzes made as a guest stay editable by anyone.
 - **Same seat on any device:** a signed-in player who opens the game on another device gets their seat back.
+
+**Forgotten password:** `/forgot-password` emails a one-time link valid for one hour (`SMTP_URL`). Without mail set up, the link is written to the API log, so an admin can pass it on. The answer is the same whether or not the email has an account.
 
 Passwords are hashed with scrypt; logins return an HS256 token (30 days) sent as `Authorization: Bearer …` and in the Socket.IO handshake (`auth.token`). Set `JWT_SECRET` (32+ characters) in production; the API refuses to start without it there.
 

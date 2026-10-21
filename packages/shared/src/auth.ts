@@ -30,6 +30,15 @@ export const loginSchema = z.object({
 });
 export type LoginRequest = z.input<typeof loginSchema>;
 
+export const forgotPasswordSchema = z.object({ email });
+export type ForgotPasswordRequest = z.input<typeof forgotPasswordSchema>;
+
+export const resetPasswordSchema = z.object({
+  token: z.string().trim().min(20).max(200),
+  password: z.string().min(AUTH_LIMITS.passwordMin).max(AUTH_LIMITS.passwordMax),
+});
+export type ResetPasswordRequest = z.input<typeof resetPasswordSchema>;
+
 export const updateProfileSchema = z.object({
   displayName: displayName.optional(),
   avatar: z.enum(AVATARS).nullable().optional(),

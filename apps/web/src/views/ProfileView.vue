@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { authApi } from '@/api/auth';
 import LevelBar from '@/components/LevelBar.vue';
+import Mascot from '@/components/Mascot.vue';
 import { useToast } from '@/composables/useToast';
 import { useAuthStore } from '@/stores/auth';
 
@@ -147,10 +148,11 @@ function formatDate(iso: string): string {
       </ul>
 
       <h2 class="mt-10 text-2xl font-black">{{ t('profile.history') }}</h2>
-      <p v-if="history.length === 0" class="mt-4 text-slate-500 dark:text-slate-400">
+      <div v-if="history.length === 0" class="mt-4 flex items-center gap-3 text-slate-500 dark:text-slate-400">
+        <Mascot mood="wave" :size="70" />
         {{ t('profile.noHistory') }}
         <RouterLink to="/join" class="font-bold text-brand-700 dark:text-brand-300 underline">{{ t('nav.join') }}</RouterLink>
-      </p>
+      </div>
       <ul v-else class="mt-4 flex flex-col gap-2">
         <li v-for="game in history" :key="game.gameId" class="card flex flex-wrap items-center gap-3 p-4">
           <span class="w-10 text-center text-2xl font-black tabular-nums">

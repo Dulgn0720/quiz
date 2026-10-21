@@ -7,6 +7,8 @@ import {
   type GameErrorCode,
   type PhasePayload,
   type PlayerProgressUpdate,
+  type Reaction,
+  type ReactionEvent,
   type RoomState,
 } from '@quiz/shared';
 import { defineStore } from 'pinia';
@@ -53,6 +55,9 @@ export const useGameStore = defineStore('game', () => {
   const room = shallowRef<RoomState | null>(null);
   const phase = shallowRef<PhasePayload | null>(null);
   const answerCount = ref({ answered: 0, total: 0 });
+  /** Emoji reactions floating on the host screen; each lives a few seconds. */
+  const reactions = ref<(ReactionEvent & { id: number; x: number })[]>([]);
+  let reactionId = 0;
   /** XP, level and badges earned in this game (signed-in players, after the podium). */
   const progress = shallowRef<PlayerProgressUpdate | null>(null);
   const me = ref<{ playerId: string; nickname: string; avatar: string } | null>(null);
@@ -102,6 +107,12 @@ export const useGameStore = defineStore('game', () => {
     });
     s.on('game:answer-count', (count) => {
       answerCount.value = count;
+    });
+    s.on('game:reaction', (reaction) => {
+      const item = { ...reaction, id: ++reactionId, x: 5 + Math.random() * 90 };
+      // Keep the screen readable when a whole room reacts at once.
+      reactions.value = [...reactions.value.slice(-39), item];
+      setTimeout(() => (reactions.value = reactions.value.filter((r) => r.id !== item.id)), 3500);
     });
     s.on('player:progress', (update) => {
       progress.value = update;
@@ -243,6 +254,10 @@ export const useGameStore = defineStore('game', () => {
   const setLocked = (locked: boolean) => call('host:lock', { locked });
   const setPaused = (paused: boolean) => call('host:pause', { paused });
 
+  function react(emoji: Reaction): void {
+    socket?.emit('player:react', { emoji });
+  }
+
   function leave(): void {
     if (role.value === 'player') {
       socket?.emit('room:leave');
@@ -262,6 +277,8 @@ export const useGameStore = defineStore('game', () => {
     room,
     phase,
     answerCount,
+    reactions,
+    react,
     progress,
     me,
     submitted,

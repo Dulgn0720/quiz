@@ -8,6 +8,7 @@ import { quizzesApi } from '@/api/quizzes';
 import ImportQuizDialog from '@/components/ImportQuizDialog.vue';
 import HostGameDialog from '@/components/game/HostGameDialog.vue';
 import { quizTheme, shortTitle } from '@/brand/topics';
+import Mascot from '@/components/Mascot.vue';
 import { useToast } from '@/composables/useToast';
 import { useAuthStore } from '@/stores/auth';
 
@@ -133,9 +134,10 @@ function onImported(quiz: QuizDetail): void {
       <button type="button" class="btn-secondary mt-4" @click="load(true)">{{ t('common.retry') }}</button>
     </div>
 
-    <p v-else-if="!loading && items.length === 0" class="mt-16 text-center text-slate-500 dark:text-slate-400">
-      {{ search.trim() ? t('quizList.noResults', { query: search.trim() }) : t('quizList.empty') }}
-    </p>
+    <div v-else-if="!loading && items.length === 0" class="mt-12 flex flex-col items-center text-center text-slate-500 dark:text-slate-400">
+      <Mascot :mood="search.trim() ? 'thinking' : 'wave'" :size="130" />
+      <p class="mt-2">{{ search.trim() ? t('quizList.noResults', { query: search.trim() }) : t('quizList.empty') }}</p>
+    </div>
 
     <ul class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <li v-for="quiz in items" :key="quiz.id" class="card group flex flex-col overflow-hidden transition duration-300 hover:-translate-y-1 hover:shadow-xl">

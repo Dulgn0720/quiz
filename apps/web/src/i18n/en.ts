@@ -209,6 +209,16 @@ export default {
     image_required: 'Add an image for this question.',
   },
   game: {
+    reactions: {
+      label: 'Send a reaction',
+      send: 'Send {emoji}',
+    },
+    praise: {
+      correct: ['Brilliant!', 'Spot on!', 'Nailed it!', 'Great job!', 'Yes!'],
+      fast: ['Lightning fast!', 'Quick draw!', 'No hesitation!'],
+      wrong: ['Get the next one!', 'No worries!', 'So close!', 'Now you know!'],
+      noAnswer: ['Time’s up — catch the next one!', 'Wake up, here comes the next!'],
+    },
     status: {
       connecting: 'Connecting…',
       reconnecting: 'Connection lost — reconnecting…',
@@ -304,6 +314,7 @@ export default {
       imageOption: 'Picture {n}',
     },
     reveal: {
+      onFire: '{n} in a row — you’re on fire!',
       correctAnswer: 'Correct answer',
       correctAnswers: 'Correct answers',
       correct: 'Correct',
@@ -368,6 +379,20 @@ export default {
     music: 'Music',
   },
   auth: {
+    forgot: 'Forgot your password?',
+    forgotTitle: 'Reset your password',
+    forgotHelp: 'Enter the email you signed up with and we’ll send you a reset link.',
+    sendResetLink: 'Send reset link',
+    backToLogin: 'Back to sign in',
+    resetSentTitle: 'Check your email',
+    resetSent: 'If {email} has an account, a reset link is on its way. It works for 1 hour.',
+    resetTitle: 'New password',
+    newPassword: 'New password',
+    confirmPassword: 'Repeat the password',
+    passwordMismatch: 'The passwords don’t match.',
+    resetSubmit: 'Set new password',
+    resetDone: 'Password updated. You’re signed in.',
+    resetInvalid: 'This link is invalid or has expired. Request a new one.',
     loginTitle: 'Welcome back',
     registerTitle: 'Create an account',
     why: 'An account is optional. With one, your XP, level, badges and game history are saved.',
@@ -425,6 +450,11 @@ export default {
     empty: 'No open rooms right now. Host one from your quizzes!',
     havePin: 'I have a PIN',
     join: 'Join',
+  },
+  mascot: {
+    name: 'Agu — the Agula Quiz snow leopard',
+    lobbyHost: 'Waiting for players. Share the PIN!',
+    lost: 'Even Agu couldn’t find this page. Let’s head home.',
   },
   notFound: {
     title: 'Page not found',

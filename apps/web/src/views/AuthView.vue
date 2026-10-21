@@ -88,6 +88,9 @@ async function submit(): Promise<void> {
       <button type="submit" class="btn-primary py-3 text-base" :disabled="!valid || busy">
         {{ busy ? t('common.loading') : isRegister ? t('auth.register') : t('auth.login') }}
       </button>
+      <RouterLink v-if="!isRegister" :to="{ name: 'forgot-password' }" class="text-center text-sm font-semibold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white">
+        {{ t('auth.forgot') }}
+      </RouterLink>
       <RouterLink
         :to="{ name: isRegister ? 'login' : 'register', query: route.query }"
         class="text-center text-sm font-bold text-brand-700 dark:text-brand-300 underline"

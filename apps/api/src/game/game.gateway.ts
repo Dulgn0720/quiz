@@ -14,6 +14,7 @@ import {
   GAME_ERRORS,
   hostJoinSchema,
   joinRoomSchema,
+  reactionSchema,
   submitAnswerSchema,
   type GameErrorCode,
 } from '@quiz/shared';
@@ -48,6 +49,8 @@ export class GameGateway
   private readonly logger = new Logger(GameGateway.name);
   /** Open sockets per player, so a player with two tabs only goes offline when both close. */
   private readonly connections = new Map<string, Set<string>>();
+  /** Recent reaction times per player, for a small token bucket (5 per 4 s). */
+  private readonly reactionTimes = new Map<string, number[]>();
   private readonly trustProxy: boolean;
 
   constructor(
@@ -71,6 +74,8 @@ export class GameGateway
   }
 
   handleDisconnect(socket: GameSocket): void {
+    const { pin, playerId } = socket.data;
+    if (pin && playerId) this.reactionTimes.delete(this.key(pin, playerId));
     this.detach(socket);
   }
 
@@ -145,6 +150,24 @@ export class GameGateway
     const parsed = submitAnswerSchema.safeParse(body);
     if (!parsed.success) return failure(GAME_ERRORS.invalidPayload);
     return toAck(engine.submitAnswer(playerId, parsed.data.questionIndex, parsed.data.answer));
+  }
+
+  @SubscribeMessage('player:react')
+  react(@ConnectedSocket() socket: GameSocket, @MessageBody() body: unknown): void {
+    const { pin, role, playerId } = socket.data;
+    const engine = pin ? this.games.get(pin) : undefined;
+    if (!engine || !pin || role !== 'player' || !playerId) return;
+    const parsed = reactionSchema.safeParse(body);
+    if (!parsed.success) return;
+    const now = Date.now();
+    const key = this.key(pin, playerId);
+    const recent = (this.reactionTimes.get(key) ?? []).filter((t) => now - t < 4000);
+    if (recent.length >= 5) return;
+    recent.push(now);
+    this.reactionTimes.set(key, recent);
+    const player = engine.snapshot.players.find((p) => p.id === playerId);
+    if (!player) return;
+    this.broadcaster.reaction(pin, { emoji: parsed.data.emoji, playerId, avatar: player.avatar });
   }
 
   @SubscribeMessage('host:kick')

@@ -6,6 +6,7 @@ import { useRouter } from 'vue-router';
 import { quizzesApi } from '@/api/quizzes';
 import { quizTheme, shortTitle } from '@/brand/topics';
 import HostGameDialog from '@/components/game/HostGameDialog.vue';
+import Mascot from '@/components/Mascot.vue';
 import { useAuthStore } from '@/stores/auth';
 
 const { t } = useI18n();
@@ -76,6 +77,7 @@ onMounted(async () => {
         class="dark stage order-first animate-rise overflow-hidden rounded-[2rem] p-6 shadow-2xl [animation-delay:120ms] sm:p-10 lg:order-none"
         @submit.prevent="join"
       >
+        <Mascot mood="wave" :size="96" class="pointer-events-none absolute -right-2 -top-1 hidden sm:block" />
         <p class="font-display text-2xl font-bold">{{ $t('home.joinTitle') }}</p>
         <p class="mt-2 text-ink-300">{{ $t('home.joinSubtitle') }}</p>
         <label class="mt-8 block">

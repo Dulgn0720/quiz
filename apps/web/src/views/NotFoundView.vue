@@ -1,7 +1,13 @@
+<script setup lang="ts">
+import Mascot from '@/components/Mascot.vue';
+</script>
+
 <template>
-  <section class="mx-auto max-w-md px-4 py-24 text-center">
-    <p class="text-6xl font-black text-brand-600">404</p>
-    <h1 class="mt-4 text-2xl font-black">{{ $t('notFound.title') }}</h1>
+  <section class="mx-auto flex max-w-md flex-col items-center px-4 py-20 text-center">
+    <Mascot mood="thinking" :size="160" />
+    <p class="mt-2 font-display text-6xl font-bold text-brand-500">404</p>
+    <h1 class="mt-3 text-2xl font-bold">{{ $t('notFound.title') }}</h1>
+    <p class="mt-2 text-slate-600 dark:text-slate-300">{{ $t('mascot.lost') }}</p>
     <RouterLink to="/" class="btn-primary mt-8">{{ $t('notFound.home') }}</RouterLink>
   </section>
 </template>

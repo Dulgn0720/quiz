@@ -18,7 +18,8 @@ export type SoundEffect =
   | 'join'
   | 'whoosh'
   | 'fanfare'
-  | 'timeUp';
+  | 'timeUp'
+  | 'pop';
 
 export type MusicTrack = 'lobby' | 'question';
 
@@ -99,6 +100,9 @@ class SoundEngine {
         break;
       case 'join':
         this.slide(600, 950, t, 0.1, 'sine', 0.2);
+        break;
+      case 'pop':
+        this.slide(900, 1400, t, 0.06, 'sine', 0.12);
         break;
       case 'correct':
         [C5, E5, G5].forEach((n, i) => this.tone(NOTE(n), t + i * 0.08, 0.14, 'triangle', 0.3));

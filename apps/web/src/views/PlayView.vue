@@ -15,6 +15,8 @@ import QuestionHeader from '@/components/game/QuestionHeader.vue';
 import RevealedAnswer from '@/components/game/RevealedAnswer.vue';
 import LevelBar from '@/components/LevelBar.vue';
 import LockedAnswer from '@/components/game/LockedAnswer.vue';
+import ReactionBar from '@/components/game/ReactionBar.vue';
+import Mascot from '@/components/Mascot.vue';
 import RoundSummaryPanel from '@/components/game/RoundSummaryPanel.vue';
 import SoundToggles from '@/components/SoundToggles.vue';
 import { useGameSounds } from '@/game/useGameSounds';
@@ -112,12 +114,18 @@ function leave(): void {
       <Transition name="phase" mode="out-in">
       <div :key="phaseKey" class="flex flex-1 flex-col">
         <div v-if="phase.phase === 'lobby'" class="flex flex-1 flex-col items-center justify-center gap-6 text-center">
-          <p class="animate-pop text-7xl" aria-hidden="true">{{ me.avatar }}</p>
+          <div class="relative">
+            <Mascot mood="wave" :size="140" />
+            <span class="absolute -right-4 bottom-2 grid h-14 w-14 animate-pop place-items-center rounded-full bg-white/10 text-4xl ring-2 ring-brand-400" aria-hidden="true">
+              {{ me.avatar }}
+            </span>
+          </div>
           <div>
-            <h1 class="text-3xl font-black">{{ t('game.player.youAreIn') }}</h1>
-            <p class="mt-2 font-semibold text-slate-600 dark:text-slate-300">{{ t('game.player.waitingForHost') }}</p>
+            <h1 class="text-3xl font-bold">{{ t('game.player.youAreIn') }}</h1>
+            <p class="mt-2 font-semibold text-slate-300">{{ t('game.player.waitingForHost') }}</p>
           </div>
           <PlayerChips v-if="game.room" :players="game.room.players" :highlight-id="myId" />
+          <ReactionBar />
         </div>
 
         <CountdownCard v-else-if="phase.phase === 'countdown'" :countdown="phase" />
@@ -142,11 +150,12 @@ function leave(): void {
         </div>
 
         <div v-else-if="phase.phase === 'reveal'" class="flex flex-1 flex-col justify-center gap-6">
-          <PlayerResult v-if="phase.you" :result="phase.you" />
+          <PlayerResult v-if="phase.you" :result="phase.you" :seed="phase.question.globalIndex" />
           <RevealedAnswer :question="phase.question" :answer="phase.reveal.answer" />
           <p v-if="phase.reveal.explanation" class="rounded-2xl bg-sky-500/10 p-4 text-sky-100 ring-1 ring-sky-400/20">
             <span aria-hidden="true">💡</span> {{ phase.reveal.explanation }}
           </p>
+          <ReactionBar />
         </div>
 
         <div v-else-if="phase.phase === 'leaderboard'" class="flex flex-col gap-6">
@@ -158,12 +167,16 @@ function leave(): void {
             </p>
           </div>
           <LeaderboardList :entries="phase.leaderboard" :highlight-id="myId" />
+          <ReactionBar />
         </div>
 
         <RoundSummaryPanel v-else-if="phase.phase === 'round_summary'" :round="phase.round" :leaderboard="phase.leaderboard" :highlight-id="myId" />
 
         <div v-else-if="phase.phase === 'podium'" class="flex flex-col gap-8">
-          <h1 class="text-center text-3xl font-black">{{ t('game.podium.title') }}</h1>
+          <div class="flex flex-col items-center">
+            <Mascot :mood="phase.you && phase.you.rank <= 3 ? 'celebrate' : 'happy'" :size="120" />
+            <h1 class="text-center text-3xl font-bold">{{ t('game.podium.title') }}</h1>
+          </div>
           <PodiumPanel :results="phase.results" :highlight-id="myId" />
           <dl v-if="phase.you" class="grid grid-cols-2 gap-3">
             <div class="card p-4 text-center">
@@ -202,6 +215,7 @@ function leave(): void {
           <RouterLink v-else-if="!auth.user" to="/register" class="card block p-4 text-center font-bold text-brand-700 dark:text-brand-300">
             {{ t('profile.signUpForXp') }}
           </RouterLink>
+          <ReactionBar />
           <button type="button" class="btn-primary" @click="leave">{{ t('game.ended.joinAnother') }}</button>
         </div>
       </div>

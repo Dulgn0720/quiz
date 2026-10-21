@@ -18,11 +18,12 @@ defineEmits<{ kick: [player: PlayerPublic] }>();
     move-class="transition duration-300"
   >
     <li
-      v-for="player in players"
+      v-for="(player, i) in players"
       :key="player.id"
+      :style="size === 'lg' ? { animationDelay: `${0.4 + (i % 7) * 0.35}s` } : undefined"
       class="flex items-center gap-2 rounded-full bg-white font-bold shadow-sm ring-1 ring-slate-200 dark:bg-white/[0.06] dark:ring-white/10"
       :class="[
-        size === 'lg' ? 'py-2.5 pl-3 pr-4 text-xl' : 'py-1.5 pl-2 pr-3',
+        size === 'lg' ? 'chip-float py-2.5 pl-3 pr-4 text-xl' : 'py-1.5 pl-2 pr-3',
         { 'opacity-50': !player.connected },
         player.id === highlightId ? 'ring-2 ring-brand-500' : '',
       ]"
@@ -42,3 +43,13 @@ defineEmits<{ kick: [player: PlayerPublic] }>();
     </li>
   </TransitionGroup>
 </template>
+
+<style scoped>
+.chip-float {
+  animation: chip-float 3s ease-in-out infinite;
+}
+@keyframes chip-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+</style>

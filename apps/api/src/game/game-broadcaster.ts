@@ -3,6 +3,7 @@ import type {
   ClientToServerEvents,
   PhasePayload,
   PlayerProgressUpdate,
+  ReactionEvent,
   RoomState,
   ServerToClientEvents,
 } from '@quiz/shared';
@@ -47,6 +48,10 @@ export class GameBroadcaster {
 
   answerCount(pin: string, payload: { answered: number; total: number }): void {
     this.server?.to(rooms.game(pin)).emit('game:answer-count', payload);
+  }
+
+  reaction(pin: string, payload: ReactionEvent): void {
+    this.server?.to(rooms.host(pin)).emit('game:reaction', payload);
   }
 
   progress(pin: string, playerId: string, payload: PlayerProgressUpdate): void {

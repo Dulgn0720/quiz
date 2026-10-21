@@ -49,6 +49,8 @@ services:
       # Comma-separated admin emails; with RESTRICT_QUIZ_EDITING=true only they can create or change quizzes.
       ADMIN_EMAILS: ${ADMIN_EMAILS:-}
       RESTRICT_QUIZ_EDITING: ${RESTRICT_QUIZ_EDITING:-false}
+      # Password reset mail; without SMTP_URL reset links are printed in the api log.
+      SMTP_URL: ${SMTP_URL:-}
     ports:
       - '3000:3000'
     volumes:

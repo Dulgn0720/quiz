@@ -1,5 +1,8 @@
 import { z } from 'zod';
 
+/** docker-compose passes unset variables as empty strings. */
+const emptyToUndefined = (value: unknown) => (value === '' ? undefined : value);
+
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   API_PORT: z.coerce.number().int().positive().default(3000),
@@ -40,6 +43,18 @@ const envSchema = z.object({
     .enum(['true', 'false', '1', '0'])
     .default('false')
     .transform((v) => v === 'true' || v === '1'),
+  /** Outgoing mail, e.g. smtp://user:pass@smtp.example.com:587. Unset: reset links are written to the log. */
+  SMTP_URL: z.preprocess(emptyToUndefined, z.string().url().optional()),
+  MAIL_FROM: z.string().min(3).default('Agula Quiz <no-reply@localhost>'),
+  /** Address of the web app, used in links sent by email. Defaults to the first CORS origin. */
+  PUBLIC_WEB_URL: z.preprocess(
+    emptyToUndefined,
+    z
+      .string()
+      .url()
+      .optional()
+      .transform((url) => url?.replace(/\/+$/, '')),
+  ),
   /** Signs login tokens. Required in production; development falls back to a fixed, public value. */
   JWT_SECRET: z.string().min(32, 'must be at least 32 characters').optional(),
 });

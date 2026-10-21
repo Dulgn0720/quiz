@@ -63,11 +63,18 @@ export const useAuthStore = defineStore('auth', () => {
     if (profile.value) profile.value = { ...profile.value, ...user.value };
   }
 
+  async function resetPassword(token: string, password: string): Promise<void> {
+    const res = await authApi.resetPassword(token, password);
+    setAuthToken(res.token);
+    user.value = res.user;
+    void refresh().catch(() => undefined);
+  }
+
   function logout(): void {
     setAuthToken(null);
     user.value = null;
     profile.value = null;
   }
 
-  return { user, profile, restoring, settings, signedIn, canEditQuizzes, restore, refresh, login, register, update, logout };
+  return { user, profile, restoring, settings, signedIn, canEditQuizzes, restore, refresh, login, register, resetPassword, update, logout };
 });

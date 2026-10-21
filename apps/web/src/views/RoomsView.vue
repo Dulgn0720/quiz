@@ -4,6 +4,7 @@ import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ApiError } from '@/api/client';
 import { gamesApi } from '@/api/games';
+import Mascot from '@/components/Mascot.vue';
 
 const REFRESH_MS = 5000;
 
@@ -41,7 +42,7 @@ onBeforeUnmount(() => clearInterval(timer));
 
     <p v-if="error" class="mt-8 rounded-2xl bg-red-50 dark:bg-red-950/40 p-4 text-center font-bold text-red-700 dark:text-red-300" role="alert">{{ error }}</p>
     <div v-else-if="loaded && rooms.length === 0" class="card mx-auto mt-12 max-w-md p-8 text-center">
-      <p class="text-5xl" aria-hidden="true">🎮</p>
+      <div class="flex justify-center"><Mascot mood="thinking" :size="130" /></div>
       <p class="mt-4 text-lg font-bold">{{ t('rooms.empty') }}</p>
       <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{{ t('rooms.emptyHint') }}</p>
       <div class="mt-6 flex flex-wrap justify-center gap-2">

@@ -4,12 +4,13 @@ import { AuthController } from './auth.controller';
 import { AuthMiddleware } from './auth.middleware';
 import { AuthService } from './auth.service';
 import { RequireAuthGuard } from './current-user';
+import { PasswordResetService } from './password-reset.service';
 import { SettingsController } from './settings.controller';
 
 @Global()
 @Module({
   controllers: [AuthController, SettingsController],
-  providers: [AuthService, AuthMiddleware, RequireAuthGuard, AccessPolicy],
+  providers: [AuthService, AuthMiddleware, RequireAuthGuard, AccessPolicy, PasswordResetService],
   exports: [AuthService, AuthMiddleware, RequireAuthGuard, AccessPolicy],
 })
 export class AuthModule {}
