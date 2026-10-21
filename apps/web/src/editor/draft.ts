@@ -9,7 +9,9 @@ import {
   type QuestionInput,
   type QuestionType,
   type QuizDetail,
+  type QuizCategory,
   type QuizInput,
+  type QuizVisibility,
   type RoundType,
 } from '@quiz/shared';
 import type { ZodIssue } from 'zod';
@@ -65,6 +67,8 @@ export interface DraftQuiz {
   description: string;
   coverImageUrl: string;
   language: Locale;
+  category: QuizCategory;
+  visibility: QuizVisibility;
   rounds: DraftRound[];
 }
 
@@ -112,7 +116,15 @@ export function createRound(name: string): DraftRound {
 }
 
 export function createQuiz(language: Locale, firstRoundName: string): DraftQuiz {
-  return { title: '', description: '', coverImageUrl: '', language, rounds: [createRound(firstRoundName)] };
+  return {
+    title: '',
+    description: '',
+    coverImageUrl: '',
+    language,
+    category: 'other',
+    visibility: 'private',
+    rounds: [createRound(firstRoundName)],
+  };
 }
 
 export function cloneQuestion(question: DraftQuestion): DraftQuestion {
@@ -153,6 +165,8 @@ export function detailToDraft(detail: QuizDetail): DraftQuiz {
     description: detail.description ?? '',
     coverImageUrl: detail.coverImageUrl ?? '',
     language: detail.language,
+    category: detail.category,
+    visibility: detail.visibility,
     rounds: detail.rounds.map((round) => ({
       key: uid(),
       name: round.name,
@@ -209,6 +223,8 @@ export function draftToInput(draft: DraftQuiz): QuizInput {
     description: optionalText(draft.description),
     coverImageUrl: optionalText(draft.coverImageUrl),
     language: draft.language,
+    category: draft.category,
+    visibility: draft.visibility,
     rounds: draft.rounds.map((round) => ({
       name: round.name,
       type: round.type,

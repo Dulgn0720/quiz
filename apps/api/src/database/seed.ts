@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { quizInputSchema } from '@quiz/shared';
 import { contentToCreateData } from '../quizzes/quiz.mapper';
-import { SAMPLE_QUIZZES } from './sample-quizzes';
+import { LIBRARY_QUIZZES as SAMPLE_QUIZZES } from './library';
 
 /** Idempotent: inserts or refreshes the sample quizzes and removes retired ones. Run with `pnpm db:seed`. */
 async function main(): Promise<void> {

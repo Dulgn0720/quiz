@@ -14,6 +14,9 @@ import { Throttle } from '@nestjs/throttler';
 import {
   EXPORT_FORMATS,
   LIMITS,
+  QUIZ_CATEGORIES,
+  QUIZ_SCOPES,
+  QUIZ_SORTS,
   quizInputSchema,
   type ImportQuizRequest,
   type Paginated,
@@ -36,6 +39,9 @@ const listQuerySchema = z.object({
     .enum(['true', 'false', '1', '0'])
     .optional()
     .transform((v) => v === 'true' || v === '1'),
+  scope: z.enum(QUIZ_SCOPES).optional(),
+  category: z.enum(QUIZ_CATEGORIES).optional(),
+  sort: z.enum(QUIZ_SORTS).optional(),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(50).default(20),
 });
@@ -78,8 +84,8 @@ export class QuizzesController {
   }
 
   @Get(':id')
-  get(@Param('id') id: string): Promise<QuizDetail> {
-    return this.quizzes.get(id);
+  get(@Param('id') id: string, @CurrentUserId() userId?: string): Promise<QuizDetail> {
+    return this.quizzes.get(id, userId);
   }
 
   @Put(':id')
@@ -107,8 +113,9 @@ export class QuizzesController {
     @Param('id') id: string,
     @Query(new ZodValidationPipe(exportQuerySchema)) { format }: z.output<typeof exportQuerySchema>,
     @Res({ passthrough: true }) res: Response,
+    @CurrentUserId() userId?: string,
   ): Promise<string> {
-    const file = await this.quizzes.export(id, format);
+    const file = await this.quizzes.export(id, format, userId);
     const asciiName = file.filename.replace(/[^\x20-\x7e]/g, '_').replace(/"/g, "'");
     res.setHeader('Content-Type', file.contentType);
     res.setHeader(

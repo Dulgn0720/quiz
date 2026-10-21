@@ -12,6 +12,17 @@ export const QUESTION_TYPES = [
 export type QuestionType = (typeof QUESTION_TYPES)[number];
 
 export const ROUND_TYPES = ['normal', 'speed', 'double', 'elimination'] as const;
+
+/** Topic shelves for the quiz library. */
+export const QUIZ_CATEGORIES = ['agula', 'insurance', 'mongolia', 'world', 'fun', 'other'] as const;
+export type QuizCategory = (typeof QUIZ_CATEGORIES)[number];
+
+/**
+ * Private quizzes are seen only by their owner (drafts, team-only quizzes);
+ * public ones appear in everyone's library. Quizzes without an owner are always public.
+ */
+export const QUIZ_VISIBILITIES = ['private', 'public'] as const;
+export type QuizVisibility = (typeof QUIZ_VISIBILITIES)[number];
 export type RoundType = (typeof ROUND_TYPES)[number];
 
 /** Question types whose answer is picked from a list of options. */
@@ -212,6 +223,8 @@ export const quizInputSchema = z.object({
   description: optional(z.string().trim().max(LIMITS.descriptionMax)),
   coverImageUrl: optional(urlSchema),
   language: z.enum(SUPPORTED_LOCALES).default('mn'),
+  category: z.enum(QUIZ_CATEGORIES).default('other'),
+  visibility: z.enum(QUIZ_VISIBILITIES).default('private'),
   rounds: z.array(roundSchema).min(1).max(LIMITS.roundsMax),
 });
 

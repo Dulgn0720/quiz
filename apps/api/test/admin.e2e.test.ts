@@ -54,6 +54,7 @@ afterAll(() => {
 
 const quiz = {
   title: `Admin only ${unique}`,
+  visibility: 'public',
   rounds: [{ name: 'R1', questions: [{ type: 'true_false', prompt: 'Admins edit?', correct: true }] }],
 };
 

@@ -120,3 +120,31 @@ const RULES: Record<BadgeCode, (c: BadgeContext) => boolean> = {
 export function qualifyingBadges(context: BadgeContext): BadgeCode[] {
   return BADGES.map((b) => b.code).filter((code) => RULES[code](context));
 }
+
+/**
+ * Ranks by level, named after the titles of Mongolian wrestling at Naadam:
+ * every player starts as a rookie and works up to «Аварга» (titan).
+ */
+export const RANKS = [
+  { code: 'rookie', minLevel: 1, icon: '🌱' },
+  { code: 'nachin', minLevel: 3, icon: '🐦' },
+  { code: 'kharchaga', minLevel: 5, icon: '🦅' },
+  { code: 'zaan', minLevel: 8, icon: '🐘' },
+  { code: 'garid', minLevel: 11, icon: '🌟' },
+  { code: 'arslan', minLevel: 15, icon: '🦁' },
+  { code: 'avarga', minLevel: 20, icon: '👑' },
+] as const;
+
+export type RankCode = (typeof RANKS)[number]['code'];
+export type Rank = (typeof RANKS)[number];
+
+export function rankForLevel(level: number): Rank {
+  let rank: Rank = RANKS[0];
+  for (const r of RANKS) if (level >= r.minLevel) rank = r;
+  return rank;
+}
+
+/** The rank after this one, or undefined at the top. */
+export function nextRank(level: number): Rank | undefined {
+  return RANKS.find((r) => r.minLevel > level);
+}

@@ -10,7 +10,10 @@ import {
   type ExportFormat,
   type ImportQuizRequest,
   type Paginated,
+  type QuizCategory,
   type QuizContent,
+  type QuizScope,
+  type QuizSort,
   type QuizDetail,
   type QuizSummary,
 } from '@quiz/shared';
@@ -18,6 +21,7 @@ import { ProgressionService } from '../account/progression.service';
 import { AccessPolicy } from '../auth/access-policy';
 import { PrismaService } from '../prisma/prisma.service';
 import {
+  QUIZ_SUMMARY_INCLUDE,
   QUIZ_WITH_CONTENT,
   contentToCreateData,
   toQuizContent,
@@ -27,8 +31,11 @@ import {
 
 export interface ListQuizzesParams {
   search?: string;
-  /** Only quizzes owned by `userId`. */
+  /** Only quizzes owned by `userId` (same as scope `mine`). */
   mine?: boolean;
+  scope?: QuizScope;
+  category?: QuizCategory;
+  sort?: QuizSort;
   userId?: string;
   page: number;
   pageSize: number;
@@ -54,23 +61,41 @@ export class QuizzesService {
     private readonly access: AccessPolicy,
   ) {}
 
-  async list({ search, mine, userId, page, pageSize }: ListQuizzesParams): Promise<Paginated<QuizSummary>> {
-    const where: Prisma.QuizWhereInput = {
-      ...(search
-        ? {
-            OR: [
-              { title: { contains: search, mode: 'insensitive' } },
-              { description: { contains: search, mode: 'insensitive' } },
-            ],
-          }
-        : {}),
-      ...(mine ? { ownerId: userId ?? '-' } : {}),
+  async list({ search, mine, scope, category, sort, userId, page, pageSize }: ListQuizzesParams): Promise<Paginated<QuizSummary>> {
+    const shelf = mine ? 'mine' : (scope ?? 'all');
+    const visible: Prisma.QuizWhereInput = {
+      OR: [{ visibility: 'public' }, { ownerId: null }, ...(userId ? [{ ownerId: userId }] : [])],
     };
+    const shelves: Record<QuizScope, Prisma.QuizWhereInput> = {
+      all: visible,
+      official: { isSample: true },
+      community: { isSample: false, OR: [{ visibility: 'public' }, { ownerId: null }] },
+      mine: { ownerId: userId ?? '-' },
+    };
+    const where: Prisma.QuizWhereInput = {
+      AND: [
+        shelves[shelf],
+        search
+          ? {
+              OR: [
+                { title: { contains: search, mode: 'insensitive' } },
+                { description: { contains: search, mode: 'insensitive' } },
+              ],
+            }
+          : {},
+        category ? { category } : {},
+      ],
+    };
+    const orderBy: Prisma.QuizOrderByWithRelationInput[] =
+      sort === 'popular'
+        ? [{ games: { _count: 'desc' } }, { updatedAt: 'desc' }]
+        : [{ isSample: 'asc' }, { updatedAt: 'desc' }];
     const [total, rows] = await this.prisma.$transaction([
       this.prisma.quiz.count({ where }),
       this.prisma.quiz.findMany({
         where,
-        orderBy: [{ isSample: 'asc' }, { updatedAt: 'desc' }],
+        orderBy,
+        include: QUIZ_SUMMARY_INCLUDE,
         skip: (page - 1) * pageSize,
         take: pageSize,
       }),
@@ -78,9 +103,13 @@ export class QuizzesService {
     return { items: rows.map(toQuizSummary), total, page, pageSize };
   }
 
-  async get(id: string): Promise<QuizDetail> {
+  /** Private quizzes are only found by their owner (and admins). */
+  async get(id: string, userId?: string): Promise<QuizDetail> {
     const row = await this.prisma.quiz.findUnique({ where: { id }, include: QUIZ_WITH_CONTENT });
     if (!row) throw new NotFoundException('Quiz not found');
+    if (row.visibility === 'private' && row.ownerId && row.ownerId !== userId && !(await this.access.isAdmin(userId))) {
+      throw new NotFoundException('Quiz not found');
+    }
     return toQuizDetail(row);
   }
 
@@ -88,7 +117,7 @@ export class QuizzesService {
   async create(content: QuizContent, ownerId?: string): Promise<QuizDetail> {
     await this.access.assertCanEditQuizzes(ownerId);
     const row = await this.prisma.quiz.create({
-      data: { ...contentToCreateData(content), ownerId: ownerId ?? null },
+      data: { ...contentToCreateData(await this.normalize(content, ownerId ?? null, ownerId)), ownerId: ownerId ?? null },
       include: QUIZ_WITH_CONTENT,
     });
     if (ownerId) await this.progression.refreshBadges(ownerId).catch(() => undefined);
@@ -98,11 +127,11 @@ export class QuizzesService {
   /** Replaces the quiz's content. Rounds and questions are rewritten, so their ids change. */
   async update(id: string, content: QuizContent, userId?: string): Promise<QuizDetail> {
     const row = await this.prisma.$transaction(async (tx) => {
-      await this.assertEditable(tx, id, userId);
+      const ownerId = await this.assertEditable(tx, id, userId);
       await tx.round.deleteMany({ where: { quizId: id } });
       return tx.quiz.update({
         where: { id },
-        data: contentToCreateData(content),
+        data: contentToCreateData(await this.normalize(content, ownerId, userId)),
         include: QUIZ_WITH_CONTENT,
       });
     });
@@ -114,15 +143,16 @@ export class QuizzesService {
     await this.prisma.quiz.delete({ where: { id } });
   }
 
+  /** Copies start private, so the new owner can rework them before sharing. */
   async duplicate(id: string, userId?: string): Promise<QuizDetail> {
-    const content = toQuizContent(await this.get(id));
+    const content = toQuizContent(await this.get(id, userId));
     const suffix = ' (copy)';
     const title = content.title.slice(0, LIMITS.titleMax - suffix.length) + suffix;
-    return this.create({ ...content, title }, userId);
+    return this.create({ ...content, title, visibility: 'private' }, userId);
   }
 
-  async export(id: string, format: ExportFormat): Promise<QuizFile> {
-    const content = toQuizContent(await this.get(id));
+  async export(id: string, format: ExportFormat, userId?: string): Promise<QuizFile> {
+    const content = toQuizContent(await this.get(id, userId));
     const base = content.title.replace(/[\\/:*?"<>|\u0000-\u001f]+/g, ' ').trim() || 'quiz';
     return format === 'csv'
       ? { filename: `${base}.csv`, contentType: 'text/csv; charset=utf-8', body: quizToCsv(content) }
@@ -145,7 +175,18 @@ export class QuizzesService {
     return this.create(result.quiz, userId);
   }
 
-  private async assertEditable(db: Prisma.TransactionClient, id: string, userId?: string): Promise<void> {
+  /**
+   * A guest's quiz has nobody who could see it while private, so it is always public.
+   * The «Агула» shelf is reserved for admins.
+   */
+  private async normalize(content: QuizContent, ownerId: string | null, userId?: string): Promise<QuizContent> {
+    const visibility = ownerId ? content.visibility : 'public';
+    const category = content.category === 'agula' && !(await this.access.isAdmin(userId)) ? 'other' : content.category;
+    return { ...content, visibility, category };
+  }
+
+  /** Returns the quiz's owner id (null for guest quizzes). */
+  private async assertEditable(db: Prisma.TransactionClient, id: string, userId?: string): Promise<string | null> {
     const quiz = await db.quiz.findUnique({ where: { id }, select: { isSample: true, ownerId: true } });
     if (!quiz) throw new NotFoundException('Quiz not found');
     if (quiz.isSample) {
@@ -156,5 +197,6 @@ export class QuizzesService {
     if (quiz.ownerId && quiz.ownerId !== userId && !(await this.access.isAdmin(userId))) {
       throw new ForbiddenException('Only the owner can change this quiz. Duplicate it to make your own copy.');
     }
+    return quiz.ownerId;
   }
 }

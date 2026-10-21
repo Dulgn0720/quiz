@@ -15,6 +15,9 @@ export const quizzesApi = {
     const params = new URLSearchParams();
     if (query.search) params.set('search', query.search);
     if (query.mine) params.set('mine', 'true');
+    if (query.scope && query.scope !== 'all') params.set('scope', query.scope);
+    if (query.category) params.set('category', query.category);
+    if (query.sort) params.set('sort', query.sort);
     if (query.page) params.set('page', String(query.page));
     if (query.pageSize) params.set('pageSize', String(query.pageSize));
     const qs = params.toString();

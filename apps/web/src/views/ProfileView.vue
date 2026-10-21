@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { AVATARS, BADGES, type GameHistoryEntry } from '@quiz/shared';
+import { AVATARS, BADGES, nextRank, rankForLevel, type GameHistoryEntry } from '@quiz/shared';
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
@@ -112,6 +112,17 @@ function formatDate(iso: string): string {
             </div>
           </form>
           <LevelBar class="mt-4" :progress="profile.progress" :xp="profile.xp" />
+          <RouterLink
+            to="/leaderboard"
+            class="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-2xl bg-brand-500/10 px-4 py-2.5 text-sm ring-1 ring-brand-500/20 transition hover:bg-brand-500/15"
+          >
+            <span class="text-2xl" aria-hidden="true">{{ rankForLevel(profile.level).icon }}</span>
+            <span class="font-extrabold">{{ t('profile.rank', { rank: t(`ranks.${rankForLevel(profile.level).code}`) }) }}</span>
+            <span v-if="nextRank(profile.level)" class="text-slate-600 dark:text-slate-300">
+              · {{ t('profile.nextRank', { rank: t(`ranks.${nextRank(profile.level)!.code}`), n: nextRank(profile.level)!.minLevel }) }}
+            </span>
+            <span class="ml-auto font-bold text-brand-700 dark:text-brand-300">{{ t('nav.leaderboard') }} →</span>
+          </RouterLink>
         </div>
         <div v-if="!editing" class="flex gap-2 sm:flex-col">
           <button type="button" class="btn-secondary" @click="startEdit">{{ t('common.edit') }}</button>

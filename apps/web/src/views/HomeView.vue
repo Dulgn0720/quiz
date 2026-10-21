@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PIN_LENGTH, type QuizSummary } from '@quiz/shared';
+import { PIN_LENGTH, QUIZ_CATEGORIES, type QuizSummary } from '@quiz/shared';
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
@@ -21,6 +21,19 @@ const hosting = ref<QuizSummary | null>(null);
 
 const totalQuestions = computed(() => quizzes.value.reduce((n, q) => n + q.questionCount, 0));
 
+/** A taste of every shelf: take quizzes round-robin across categories. */
+const featured = computed(() => {
+  const byCategory = QUIZ_CATEGORIES.map((c) => quizzes.value.filter((q) => q.category === c)).filter((l) => l.length);
+  const picked: QuizSummary[] = [];
+  for (let i = 0; picked.length < 6 && byCategory.some((l) => l.length > i); i++) {
+    for (const list of byCategory) if (list[i] && picked.length < 6) picked.push(list[i]!);
+  }
+  return picked;
+});
+const categoryCounts = computed(() =>
+  QUIZ_CATEGORIES.map((c) => ({ code: c, count: quizzes.value.filter((q) => q.category === c).length })).filter((c) => c.count > 0),
+);
+
 function onPinInput(event: Event): void {
   pin.value = (event.target as HTMLInputElement).value.replace(/\D/g, '').slice(0, PIN_LENGTH);
 }
@@ -31,9 +44,8 @@ function join(): void {
 
 onMounted(async () => {
   try {
-    const res = await quizzesApi.list({ page: 1, pageSize: 24 });
-    // Company quizzes first.
-    quizzes.value = [...res.items].sort((a, b) => Number(b.isSample) - Number(a.isSample));
+    const res = await quizzesApi.list({ scope: 'official', page: 1, pageSize: 50 });
+    quizzes.value = res.items;
   } catch {
     // The home page still works without the list.
   } finally {
@@ -124,12 +136,24 @@ onMounted(async () => {
         <RouterLink to="/quizzes" class="btn-secondary">{{ $t('home.seeAll', { n: quizzes.length }) }} →</RouterLink>
       </div>
 
+      <nav v-if="categoryCounts.length" class="mt-6 flex gap-2 overflow-x-auto pb-1" :aria-label="$t('quizList.categoryLabel')">
+        <RouterLink
+          v-for="c in categoryCounts"
+          :key="c.code"
+          :to="{ name: 'quizzes', query: { category: c.code } }"
+          class="chip shrink-0 px-4 py-2 text-sm ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:bg-white dark:ring-white/15 dark:hover:bg-white/5"
+        >
+          {{ $t(`categories.${c.code}.icon`) }} {{ $t(`categories.${c.code}.name`) }}
+          <span class="text-slate-400">{{ c.count }}</span>
+        </RouterLink>
+      </nav>
+
       <ul v-if="!loaded" class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-hidden="true">
         <li v-for="i in 6" :key="i" class="card h-48 animate-pulse" />
       </ul>
       <ul v-else class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <li
-          v-for="(quiz, i) in quizzes.slice(0, 6)"
+          v-for="(quiz, i) in featured"
           :key="quiz.id"
           class="card group flex animate-rise flex-col overflow-hidden transition duration-300 hover:-translate-y-1 hover:shadow-xl"
           :style="{ animationDelay: `${Math.min(i, 8) * 50}ms` }"
@@ -168,6 +192,19 @@ onMounted(async () => {
     </section>
 
 
+
+    <!-- Leaderboard teaser -->
+    <RouterLink
+      to="/leaderboard"
+      class="card group mt-12 flex items-center gap-4 overflow-hidden p-5 transition hover:-translate-y-0.5 hover:shadow-xl sm:p-6"
+    >
+      <span class="text-5xl transition group-hover:scale-110" aria-hidden="true">🏆</span>
+      <span class="min-w-0 flex-1">
+        <span class="block font-display text-xl font-bold">{{ $t('home.leaderboardTitle') }}</span>
+        <span class="block text-ink-600 dark:text-ink-300">{{ $t('home.leaderboardText') }}</span>
+      </span>
+      <span class="hidden text-3xl sm:block" aria-hidden="true">🐦 🦅 🐘 🌟 🦁 👑</span>
+    </RouterLink>
 
     <HostGameDialog :quiz="hosting" @close="hosting = null" />
   </div>

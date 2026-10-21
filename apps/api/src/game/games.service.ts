@@ -71,7 +71,7 @@ export class GamesService implements OnModuleInit, OnModuleDestroy {
   }
 
   async create(input: CreateGameOptions, hostId?: string): Promise<CreateGameResponse> {
-    const quiz = await this.quizzes.get(input.quizId);
+    const quiz = await this.quizzes.get(input.quizId, hostId);
     if (quiz.rounds.every((r) => r.questions.length === 0)) {
       throw new BadRequestException('This quiz has no questions');
     }

@@ -7,6 +7,7 @@ import type {
   PlayerProgressUpdate,
   QuizDetail,
   QuizSummary,
+  TopPlayersResponse,
   UserProfile,
 } from '@quiz/shared';
 import { spawn, type ChildProcess } from 'node:child_process';
@@ -92,6 +93,7 @@ describe('accounts', () => {
     // Ownership: only Ann may change Ann's quiz; anyone may duplicate it.
     const quizBody = {
       title: `Owned ${unique}`,
+      visibility: 'public',
       rounds: [
         {
           name: 'R1',
@@ -167,6 +169,15 @@ describe('accounts', () => {
     expect(profile.body.badges.map((b) => b.code)).toEqual(
       expect.arrayContaining(['first_game', 'first_win', 'quiz_maker', 'host']),
     );
+
+    // The global leaderboard shows Ann's own row, all-time and for the last 30 days, without her email.
+    const board = await api<TopPlayersResponse>('/leaderboard', { token });
+    expect(board.status).toBe(200);
+    expect(board.body.you).toMatchObject({ displayName: 'Ann', isYou: true, xp: profile.body.xp, gamesPlayed: 1, wins: 1 });
+    expect(JSON.stringify(board.body)).not.toContain(email);
+    const month = await api<TopPlayersResponse>('/leaderboard?period=month', { token });
+    expect(month.body.you?.xp).toBe(progress!.xpEarned);
+    expect((await api('/leaderboard?period=year')).status).toBe(400);
 
     const history = await api<Paginated<GameHistoryEntry>>('/me/games', { token });
     expect(history.body.items).toHaveLength(1);

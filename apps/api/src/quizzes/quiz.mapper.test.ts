@@ -1,7 +1,7 @@
 import type { Prisma } from '@prisma/client';
 import { quizInputSchema } from '@quiz/shared';
 import { describe, expect, it } from 'vitest';
-import { SAMPLE_QUIZZES } from '../database/sample-quizzes';
+import { LIBRARY_QUIZZES as SAMPLE_QUIZZES } from '../database/library';
 import { contentToCreateData, toQuizContent, toQuizDetail, type QuizWithContent } from './quiz.mapper';
 
 /** Builds what Prisma would return after `contentToCreateData` was written. */
@@ -13,10 +13,13 @@ function fakeRow(id: string, data: ReturnType<typeof contentToCreateData>): Quiz
     description: data.description,
     coverImageUrl: data.coverImageUrl,
     language: data.language,
+    category: data.category,
+    visibility: data.visibility,
     isSample: false,
     roundCount: data.roundCount,
     questionCount: data.questionCount,
     ownerId: null,
+    owner: null,
     createdAt: now,
     updatedAt: now,
     rounds: data.rounds.create.map((round, ri) => ({

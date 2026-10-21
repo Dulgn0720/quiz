@@ -72,6 +72,7 @@ const pages = [
   ['home', '/'],
   ['quizzes', '/quizzes'],
   ['rooms', '/rooms'],
+  ['leaderboard', '/leaderboard'],
   ['join', '/join'],
   ['login', '/login'],
   ['register', '/register'],

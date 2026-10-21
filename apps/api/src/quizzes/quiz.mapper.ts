@@ -1,7 +1,8 @@
-import type { Prisma, Quiz as QuizRow } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
 import {
   countQuestions,
   type Locale,
+  type QuizCategory,
   type Question,
   type QuizContent,
   type QuizDetail,
@@ -9,13 +10,22 @@ import {
   type SavedQuestion,
 } from '@quiz/shared';
 
+/** Author name and number of finished games, for library cards. */
+export const QUIZ_SUMMARY_INCLUDE = {
+  owner: { select: { displayName: true } },
+  _count: { select: { games: { where: { status: 'finished' } } } },
+} satisfies Prisma.QuizInclude;
+
 /** Prisma include that loads a quiz with its ordered rounds and questions. */
 export const QUIZ_WITH_CONTENT = {
+  owner: { select: { displayName: true } },
   rounds: {
     orderBy: { position: 'asc' },
     include: { questions: { orderBy: { position: 'asc' } } },
   },
 } satisfies Prisma.QuizInclude;
+
+export type QuizSummaryRow = Prisma.QuizGetPayload<{ include: typeof QUIZ_SUMMARY_INCLUDE }>;
 
 export type QuizWithContent = Prisma.QuizGetPayload<{ include: typeof QUIZ_WITH_CONTENT }>;
 type QuestionRow = QuizWithContent['rounds'][number]['questions'][number];
@@ -65,6 +75,8 @@ export function contentToCreateData(content: QuizContent) {
     description: content.description ?? null,
     coverImageUrl: content.coverImageUrl ?? null,
     language: content.language,
+    category: content.category,
+    visibility: content.visibility,
     roundCount: content.rounds.length,
     questionCount: countQuestions(content),
     rounds: {
@@ -97,7 +109,7 @@ function rowToQuestion(row: QuestionRow): SavedQuestion {
   } as unknown as SavedQuestion;
 }
 
-export function toQuizSummary(row: QuizRow): QuizSummary {
+export function toQuizSummary(row: QuizSummaryRow): QuizSummary {
   return {
     id: row.id,
     title: row.title,
@@ -106,6 +118,10 @@ export function toQuizSummary(row: QuizRow): QuizSummary {
     language: row.language as Locale,
     isSample: row.isSample,
     ownerId: row.ownerId ?? undefined,
+    authorName: row.owner?.displayName,
+    category: row.category as QuizCategory,
+    visibility: row.visibility,
+    playCount: row._count.games,
     roundCount: row.roundCount,
     questionCount: row.questionCount,
     createdAt: row.createdAt.toISOString(),
@@ -120,8 +136,11 @@ export function toQuizDetail(row: QuizWithContent): QuizDetail {
     description: row.description ?? undefined,
     coverImageUrl: row.coverImageUrl ?? undefined,
     language: row.language as Locale,
+    category: row.category as QuizCategory,
+    visibility: row.visibility,
     isSample: row.isSample,
     ownerId: row.ownerId ?? undefined,
+    authorName: row.owner?.displayName,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     rounds: row.rounds.map((round) => ({
@@ -144,6 +163,8 @@ export function toQuizContent(detail: QuizDetail): QuizContent {
     description: detail.description,
     coverImageUrl: detail.coverImageUrl,
     language: detail.language,
+    category: detail.category,
+    visibility: detail.visibility,
     rounds: detail.rounds,
   };
 }

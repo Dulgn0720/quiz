@@ -49,6 +49,8 @@ jobs:
         run: pnpm build
       - name: Migrate database
         run: pnpm --filter @quiz/api prisma:deploy
+      - name: Seed the quiz library
+        run: pnpm --filter @quiz/api prisma:seed
       - name: End-to-end tests
         run: pnpm --filter @quiz/api test:e2e
       - name: Validate deploy config

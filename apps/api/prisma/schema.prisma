@@ -32,6 +32,11 @@ enum RoomVisibility {
   public
 }
 
+enum QuizVisibility {
+  private
+  public
+}
+
 enum GameStatus {
   lobby
   in_progress
@@ -79,6 +84,10 @@ model Quiz {
   language      String   @default("mn")
   /// Seeded sample quizzes are read-only; users duplicate them to edit.
   isSample      Boolean  @default(false)
+  /// Topic shelf in the library (QUIZ_CATEGORIES in @quiz/shared).
+  category      String   @default("other")
+  /// Private quizzes are listed only for their owner. Owner-less quizzes are always public.
+  visibility    QuizVisibility @default(public)
   /// Denormalized for list views; kept in sync whenever rounds are written.
   roundCount    Int      @default(0)
   questionCount Int      @default(0)
@@ -92,6 +101,7 @@ model Quiz {
 
   @@index([ownerId])
   @@index([updatedAt])
+  @@index([visibility, category])
 }
 
 model Round {

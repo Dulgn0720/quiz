@@ -19,7 +19,7 @@ export interface QuizExportFile {
   format: typeof QUIZ_EXPORT_FORMAT;
   version: typeof QUIZ_EXPORT_VERSION;
   exportedAt: string;
-  quiz: QuizContent;
+  quiz: Omit<QuizContent, 'visibility'>;
 }
 
 export interface ImportIssue {
@@ -44,10 +44,14 @@ function zodIssues(issues: ZodIssue[], rowFor?: (path: (string | number)[]) => n
   }));
 }
 
-/** Round and question ids are dropped: an imported quiz always gets fresh ones. */
-function stripIds(quiz: QuizContent): QuizContent {
+/**
+ * Round and question ids are dropped: an imported quiz always gets fresh ones.
+ * Visibility is dropped too, so an imported copy starts private.
+ */
+function stripIds(quiz: QuizContent): Omit<QuizContent, 'visibility'> {
+  const { visibility: _visibility, ...rest } = quiz;
   return {
-    ...quiz,
+    ...rest,
     rounds: quiz.rounds.map(({ id: _roundId, ...round }) => ({
       ...round,
       questions: round.questions.map(({ id: _questionId, ...q }) => q),

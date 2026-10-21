@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { QuizDetail, QuizSummary } from '@quiz/shared';
-import { onMounted, ref, watch } from 'vue';
+import { QUIZ_CATEGORIES, type QuizCategory, type QuizDetail, type QuizScope, type QuizSort, type QuizSummary } from '@quiz/shared';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { quizzesApi } from '@/api/quizzes';
 import ImportQuizDialog from '@/components/ImportQuizDialog.vue';
@@ -16,6 +16,7 @@ const PAGE_SIZE = 24;
 
 const { t, locale } = useI18n();
 const router = useRouter();
+const route = useRoute();
 const toast = useToast();
 
 const items = ref<QuizSummary[]>([]);
@@ -23,8 +24,24 @@ const total = ref(0);
 const page = ref(1);
 const search = ref('');
 const auth = useAuthStore();
-const mine = ref(false);
-watch(mine, () => void load(true));
+
+// Shelf, topic and order come from the URL so links like /quizzes?category=mongolia work.
+const queryValue = <T extends string>(value: unknown, allowed: readonly T[]): T | undefined =>
+  typeof value === 'string' && (allowed as readonly string[]).includes(value) ? (value as T) : undefined;
+const scope = ref<QuizScope>(queryValue(route.query.scope, ['all', 'official', 'community', 'mine'] as const) ?? 'all');
+const category = ref<QuizCategory | undefined>(queryValue(route.query.category, QUIZ_CATEGORIES));
+const sort = ref<QuizSort>(queryValue(route.query.sort, ['recent', 'popular'] as const) ?? 'recent');
+watch([scope, category, sort], () => {
+  void router.replace({
+    query: {
+      ...(scope.value !== 'all' ? { scope: scope.value } : {}),
+      ...(category.value ? { category: category.value } : {}),
+      ...(sort.value !== 'recent' ? { sort: sort.value } : {}),
+    },
+  });
+  void load(true);
+});
+const scopes = computed<QuizScope[]>(() => (auth.user ? ['all', 'official', 'community', 'mine'] : ['all', 'official', 'community']));
 
 /** Sample quizzes and other people's quizzes can only be duplicated (admins may change any non-sample quiz). */
 function canEdit(quiz: QuizSummary): boolean {
@@ -46,7 +63,14 @@ async function load(reset: boolean): Promise<void> {
   loadError.value = '';
   const nextPage = reset ? 1 : page.value + 1;
   try {
-    const result = await quizzesApi.list({ search: search.value.trim() || undefined, mine: mine.value || undefined, page: nextPage, pageSize: PAGE_SIZE });
+    const result = await quizzesApi.list({
+      search: search.value.trim() || undefined,
+      scope: scope.value,
+      category: category.value,
+      sort: sort.value,
+      page: nextPage,
+      pageSize: PAGE_SIZE,
+    });
     items.value = reset ? result.items : [...items.value, ...result.items];
     total.value = result.total;
     page.value = nextPage;
@@ -115,17 +139,48 @@ function onImported(quiz: QuizDetail): void {
       <span class="sr-only">{{ t('quizList.search') }}</span>
       <input v-model="search" type="search" class="input" :placeholder="t('quizList.search')" />
     </label>
-    <div v-if="auth.user" class="mt-3 flex gap-1" role="group" :aria-label="t('quizList.filter')">
+    <div class="mt-4 flex flex-wrap items-center gap-2">
+      <div class="flex flex-wrap gap-1 rounded-full bg-slate-100 p-1 dark:bg-white/5" role="group" :aria-label="t('quizList.filter')">
+        <button
+          v-for="option in scopes"
+          :key="option"
+          type="button"
+          class="rounded-full px-4 py-2 text-sm font-bold transition"
+          :class="scope === option ? 'bg-white text-ink-950 shadow-sm dark:bg-white/15 dark:text-white' : 'text-slate-600 hover:text-ink-950 dark:text-slate-300 dark:hover:text-white'"
+          :aria-pressed="scope === option"
+          @click="scope = option"
+        >
+          {{ t(`quizList.scopes.${option}`) }}
+        </button>
+      </div>
+      <label class="ml-auto flex items-center gap-2 text-sm font-bold text-slate-600 dark:text-slate-300">
+        {{ t('quizList.sortLabel') }}
+        <select v-model="sort" class="input w-auto py-2">
+          <option value="recent">{{ t('quizList.sorts.recent') }}</option>
+          <option value="popular">{{ t('quizList.sorts.popular') }}</option>
+        </select>
+      </label>
+    </div>
+    <div class="mt-3 flex gap-2 overflow-x-auto pb-1" role="group" :aria-label="t('quizList.categoryLabel')">
       <button
-        v-for="option in [false, true]"
-        :key="String(option)"
         type="button"
-        class="btn-ghost"
-        :class="mine === option ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100' : ''"
-        :aria-pressed="mine === option"
-        @click="mine = option"
+        class="chip shrink-0 px-3 py-1.5 text-sm ring-1 transition"
+        :class="!category ? 'bg-ink-900 text-white ring-ink-900 dark:bg-white dark:text-ink-950' : 'ring-slate-200 hover:bg-slate-50 dark:ring-white/15 dark:hover:bg-white/5'"
+        :aria-pressed="!category"
+        @click="category = undefined"
       >
-        {{ option ? t('quizList.mine') : t('quizList.all') }}
+        {{ t('quizList.allCategories') }}
+      </button>
+      <button
+        v-for="code in QUIZ_CATEGORIES"
+        :key="code"
+        type="button"
+        class="chip shrink-0 px-3 py-1.5 text-sm ring-1 transition"
+        :class="category === code ? 'bg-ink-900 text-white ring-ink-900 dark:bg-white dark:text-ink-950' : 'ring-slate-200 hover:bg-slate-50 dark:ring-white/15 dark:hover:bg-white/5'"
+        :aria-pressed="category === code"
+        @click="category = category === code ? undefined : code"
+      >
+        {{ t(`categories.${code}.icon`) }} {{ t(`categories.${code}.name`) }}
       </button>
     </div>
 
@@ -145,9 +200,10 @@ function onImported(quiz: QuizDetail): void {
           <span class="absolute -bottom-3 right-4 text-6xl drop-shadow-lg transition duration-300 group-hover:-rotate-6 group-hover:scale-110" aria-hidden="true">
             {{ quizTheme(quiz.title).icon }}
           </span>
-          <div class="flex gap-1.5">
+          <div class="flex flex-wrap gap-1.5">
             <span v-if="quiz.isSample" class="chip bg-black/25 text-white backdrop-blur">{{ t('quizList.sample') }}</span>
-            <span class="chip bg-black/25 uppercase text-white backdrop-blur">{{ quiz.language }}</span>
+            <span v-if="quiz.visibility === 'private'" class="chip bg-black/40 text-white backdrop-blur">🔒 {{ t('quizList.private') }}</span>
+            <span class="chip bg-black/25 text-white backdrop-blur">{{ t(`categories.${quiz.category}.name`) }}</span>
           </div>
         </div>
         <div class="flex flex-1 flex-col p-5">
@@ -164,7 +220,11 @@ function onImported(quiz: QuizDetail): void {
           {{ t('quizList.rounds', { n: quiz.roundCount }, quiz.roundCount) }} ·
           {{ t('quizList.questions', { n: quiz.questionCount }, quiz.questionCount) }}
         </p>
-        <p class="mb-4 text-xs text-slate-400">{{ t('quizList.updated', { date: formatDate(quiz.updatedAt) }) }}</p>
+        <p class="mb-4 text-xs text-slate-400">
+          <template v-if="quiz.authorName && !quiz.isSample">{{ t('quizList.by', { name: quiz.authorName }) }} · </template>
+          <template v-if="quiz.playCount > 0">{{ t('quizList.plays', { n: quiz.playCount }) }} · </template>
+          {{ t('quizList.updated', { date: formatDate(quiz.updatedAt) }) }}
+        </p>
         <div class="mt-auto flex flex-wrap gap-1 border-t border-slate-100 pt-3 dark:border-white/10">
           <button
             type="button"

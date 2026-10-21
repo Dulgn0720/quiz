@@ -28,6 +28,7 @@ export const router = createRouter({
       props: (route) => ({ token: typeof route.query.token === 'string' ? route.query.token : '' }),
     },
     { path: '/me', name: 'profile', component: () => import('@/views/ProfileView.vue'), meta: { requiresAuth: true } },
+    { path: '/leaderboard', name: 'leaderboard', component: () => import('@/views/LeaderboardView.vue') },
     { path: '/rooms', name: 'rooms', component: () => import('@/views/RoomsView.vue') },
     { path: '/join', name: 'join', component: () => import('@/views/JoinView.vue') },
     { path: '/join/:pin(\\d{6})', name: 'join-pin', component: () => import('@/views/JoinView.vue'), props: true },

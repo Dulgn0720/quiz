@@ -109,3 +109,26 @@ export interface PlayerProgressUpdate {
   progress: LevelProgress;
   newBadges: { code: BadgeCode; icon: string }[];
 }
+
+export const TOP_PLAYER_PERIODS = ['all', 'month'] as const;
+export type TopPlayerPeriod = (typeof TOP_PLAYER_PERIODS)[number];
+
+/** A row of the global leaderboard (`GET /api/leaderboard`). */
+export interface TopPlayer {
+  rank: number;
+  displayName: string;
+  avatar?: string;
+  level: number;
+  /** All-time XP, or XP earned in the period for `month`. */
+  xp: number;
+  gamesPlayed: number;
+  wins: number;
+  isYou: boolean;
+}
+
+export interface TopPlayersResponse {
+  period: TopPlayerPeriod;
+  players: TopPlayer[];
+  /** The signed-in player's own row, also when outside the top list. */
+  you?: TopPlayer;
+}
