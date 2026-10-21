@@ -8,6 +8,7 @@ import { quizzesApi } from '@/api/quizzes';
 import ImportQuizDialog from '@/components/ImportQuizDialog.vue';
 import HostGameDialog from '@/components/game/HostGameDialog.vue';
 import { useToast } from '@/composables/useToast';
+import { useAuthStore } from '@/stores/auth';
 
 const PAGE_SIZE = 24;
 
@@ -19,6 +20,14 @@ const items = ref<QuizSummary[]>([]);
 const total = ref(0);
 const page = ref(1);
 const search = ref('');
+const auth = useAuthStore();
+const mine = ref(false);
+watch(mine, () => void load(true));
+
+/** Sample quizzes and other people's quizzes can only be duplicated. */
+function canEdit(quiz: QuizSummary): boolean {
+  return !quiz.isSample && (!quiz.ownerId || quiz.ownerId === auth.user?.id);
+}
 const loading = ref(false);
 const loadError = ref('');
 const importOpen = ref(false);
@@ -34,7 +43,7 @@ async function load(reset: boolean): Promise<void> {
   loadError.value = '';
   const nextPage = reset ? 1 : page.value + 1;
   try {
-    const result = await quizzesApi.list({ search: search.value.trim() || undefined, page: nextPage, pageSize: PAGE_SIZE });
+    const result = await quizzesApi.list({ search: search.value.trim() || undefined, mine: mine.value || undefined, page: nextPage, pageSize: PAGE_SIZE });
     items.value = reset ? result.items : [...items.value, ...result.items];
     total.value = result.total;
     page.value = nextPage;
@@ -101,6 +110,19 @@ function onImported(quiz: QuizDetail): void {
       <span class="sr-only">{{ t('quizList.search') }}</span>
       <input v-model="search" type="search" class="input" :placeholder="t('quizList.search')" />
     </label>
+    <div v-if="auth.user" class="mt-3 flex gap-1" role="group" :aria-label="t('quizList.filter')">
+      <button
+        v-for="option in [false, true]"
+        :key="String(option)"
+        type="button"
+        class="btn-ghost"
+        :class="mine === option ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100' : ''"
+        :aria-pressed="mine === option"
+        @click="mine = option"
+      >
+        {{ option ? t('quizList.mine') : t('quizList.all') }}
+      </button>
+    </div>
 
     <div v-if="loadError" class="mt-8 rounded-2xl bg-red-50 dark:bg-red-950/40 p-6 text-center text-red-700 dark:text-red-300" role="alert">
       <p class="font-bold">{{ loadError }}</p>
@@ -143,13 +165,13 @@ function onImported(quiz: QuizDetail): void {
           >
             ▶ {{ t('quizList.host') }}
           </button>
-          <RouterLink v-if="!quiz.isSample" :to="{ name: 'quiz-edit', params: { id: quiz.id } }" class="btn-ghost">
+          <RouterLink v-if="canEdit(quiz)" :to="{ name: 'quiz-edit', params: { id: quiz.id } }" class="btn-ghost">
             {{ t('common.edit') }}
           </RouterLink>
           <button type="button" class="btn-ghost" @click="duplicate(quiz)">{{ t('common.duplicate') }}</button>
           <a :href="quizzesApi.exportUrl(quiz.id, 'json')" class="btn-ghost" :title="t('quizList.exportJson')">JSON</a>
           <a :href="quizzesApi.exportUrl(quiz.id, 'csv')" class="btn-ghost" :title="t('quizList.exportCsv')">CSV</a>
-          <button v-if="!quiz.isSample" type="button" class="btn-danger ml-auto" @click="remove(quiz)">
+          <button v-if="canEdit(quiz)" type="button" class="btn-danger ml-auto" @click="remove(quiz)">
             {{ t('common.delete') }}
           </button>
         </div>

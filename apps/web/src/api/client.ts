@@ -1,4 +1,5 @@
 import type { ApiErrorBody, ImportIssue } from '@quiz/shared';
+import { authToken } from '@/auth/token';
 
 export const API_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:3000').replace(/\/+$/, '');
 
@@ -27,6 +28,8 @@ export async function request<T>(path: string, init: RequestInit = {}): Promise<
   if (init.body !== undefined && !(init.body instanceof FormData)) {
     headers.set('Content-Type', 'application/json');
   }
+  const token = authToken();
+  if (token && !headers.has('Authorization')) headers.set('Authorization', `Bearer ${token}`);
   let response: Response;
   try {
     response = await fetch(apiUrl(path), { ...init, headers });

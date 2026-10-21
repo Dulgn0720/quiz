@@ -6,6 +6,7 @@ import {
   type ClientToServerEvents,
   type GameErrorCode,
   type PhasePayload,
+  type PlayerProgressUpdate,
   type RoomState,
 } from '@quiz/shared';
 import { defineStore } from 'pinia';
@@ -52,6 +53,8 @@ export const useGameStore = defineStore('game', () => {
   const room = shallowRef<RoomState | null>(null);
   const phase = shallowRef<PhasePayload | null>(null);
   const answerCount = ref({ answered: 0, total: 0 });
+  /** XP, level and badges earned in this game (signed-in players, after the podium). */
+  const progress = shallowRef<PlayerProgressUpdate | null>(null);
   const me = ref<{ playerId: string; nickname: string; avatar: string } | null>(null);
   /** Answer sent for the current question (before the server confirms it via a phase update). */
   const submitted = shallowRef<{ questionIndex: number; answer: AnswerPayload } | null>(null);
@@ -76,6 +79,7 @@ export const useGameStore = defineStore('game', () => {
     phase.value = null;
     me.value = null;
     submitted.value = null;
+    progress.value = null;
     answerCount.value = { answered: 0, total: 0 };
   }
 
@@ -98,6 +102,9 @@ export const useGameStore = defineStore('game', () => {
     });
     s.on('game:answer-count', (count) => {
       answerCount.value = count;
+    });
+    s.on('player:progress', (update) => {
+      progress.value = update;
     });
     s.on('room:kicked', () => {
       ended.value = 'kicked';
@@ -253,6 +260,7 @@ export const useGameStore = defineStore('game', () => {
     room,
     phase,
     answerCount,
+    progress,
     me,
     submitted,
     isHost,

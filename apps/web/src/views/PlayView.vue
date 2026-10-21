@@ -13,11 +13,13 @@ import PlayerResult from '@/components/game/PlayerResult.vue';
 import PodiumPanel from '@/components/game/PodiumPanel.vue';
 import QuestionHeader from '@/components/game/QuestionHeader.vue';
 import RevealedAnswer from '@/components/game/RevealedAnswer.vue';
+import LevelBar from '@/components/LevelBar.vue';
 import RoundSummaryPanel from '@/components/game/RoundSummaryPanel.vue';
 import SoundToggles from '@/components/SoundToggles.vue';
 import ThemeToggle from '@/components/ThemeToggle.vue';
 import { useGameSounds } from '@/game/useGameSounds';
 import { useToast } from '@/composables/useToast';
+import { useAuthStore } from '@/stores/auth';
 import { useGameStore } from '@/stores/game';
 
 const props = defineProps<{ pin: string }>();
@@ -26,6 +28,7 @@ const { t } = useI18n();
 const router = useRouter();
 const toast = useToast();
 const game = useGameStore();
+const auth = useAuthStore();
 useGameSounds();
 
 function enter(pin: string): void {
@@ -178,6 +181,25 @@ function leave(): void {
               <dd class="text-3xl font-black">🔥 {{ phase.you.bestStreak }}</dd>
             </div>
           </dl>
+          <div v-if="game.progress" class="card animate-pop p-5" role="status">
+            <p class="text-center text-2xl font-black text-brand-700 dark:text-brand-300">+{{ game.progress.xpEarned }} XP</p>
+            <p v-if="game.progress.level > game.progress.previousLevel" class="text-center font-black text-amber-600">
+              🎉 {{ t('profile.levelUp', { n: game.progress.level }) }}
+            </p>
+            <LevelBar class="mt-3" :progress="game.progress.progress" :xp="game.progress.xp" />
+            <ul v-if="game.progress.newBadges.length" class="mt-4 flex flex-wrap justify-center gap-2">
+              <li
+                v-for="badge in game.progress.newBadges"
+                :key="badge.code"
+                class="flex items-center gap-2 rounded-full bg-amber-100 dark:bg-amber-900/40 px-3 py-1 font-bold text-amber-900 dark:text-amber-200"
+              >
+                <span aria-hidden="true">{{ badge.icon }}</span> {{ t(`badges.${badge.code}.name`) }}
+              </li>
+            </ul>
+          </div>
+          <RouterLink v-else-if="!auth.user" to="/register" class="card block p-4 text-center font-bold text-brand-700 dark:text-brand-300">
+            {{ t('profile.signUpForXp') }}
+          </RouterLink>
           <button type="button" class="btn-primary" @click="leave">{{ t('game.ended.joinAnother') }}</button>
         </div>
       </div>

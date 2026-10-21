@@ -25,6 +25,8 @@ export type SaveResult = { ok: true; quiz: QuizDetail } | { ok: false; reason: '
 export const useEditorStore = defineStore('editor', () => {
   const quizId = ref<string | null>(null);
   const isSample = ref(false);
+  /** Owner of the loaded quiz, if it belongs to an account. */
+  const ownerId = ref<string | undefined>(undefined);
   const draft = ref<DraftQuiz>(createQuiz('mn', ''));
   const selection = ref<EditorSelection>({ kind: 'question', roundIndex: 0, questionIndex: 0 });
   /** JSON of the draft as last loaded or saved; the draft is dirty when it differs. */
@@ -46,6 +48,7 @@ export const useEditorStore = defineStore('editor', () => {
   function startNew(language: Locale, roundName: string): void {
     quizId.value = null;
     isSample.value = false;
+    ownerId.value = undefined;
     replaceDraft(createQuiz(language, roundName));
     selection.value = { kind: 'quiz' };
   }
@@ -54,6 +57,7 @@ export const useEditorStore = defineStore('editor', () => {
     const detail = await quizzesApi.get(id);
     quizId.value = detail.id;
     isSample.value = detail.isSample;
+    ownerId.value = detail.ownerId;
     replaceDraft(detailToDraft(detail));
     selection.value = { kind: 'question', roundIndex: 0, questionIndex: 0 };
   }
@@ -143,6 +147,7 @@ export const useEditorStore = defineStore('editor', () => {
   return {
     quizId,
     isSample,
+    ownerId,
     draft,
     selection,
     dirty,

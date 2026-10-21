@@ -1,6 +1,9 @@
 <script setup lang="ts">
+import { useAuthStore } from '@/stores/auth';
 import LocaleSwitch from './LocaleSwitch.vue';
 import ThemeToggle from './ThemeToggle.vue';
+
+const auth = useAuthStore();
 </script>
 
 <template>
@@ -14,6 +17,9 @@ import ThemeToggle from './ThemeToggle.vue';
         <RouterLink to="/join" class="btn-ghost" active-class="bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100">
           {{ $t('nav.join') }}
         </RouterLink>
+        <RouterLink to="/rooms" class="btn-ghost hidden md:inline-flex" active-class="bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100">
+          {{ $t('nav.rooms') }}
+        </RouterLink>
         <RouterLink to="/quizzes" class="btn-ghost hidden sm:inline-flex" active-class="bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100">
           {{ $t('nav.quizzes') }}
         </RouterLink>
@@ -23,6 +29,19 @@ import ThemeToggle from './ThemeToggle.vue';
           <span class="sr-only sm:hidden">{{ $t('nav.create') }}</span>
         </RouterLink>
       </nav>
+      <RouterLink
+        v-if="auth.user"
+        to="/me"
+        class="btn-ghost px-2"
+        :aria-label="$t('nav.profile', { name: auth.user.displayName })"
+        :title="auth.user.displayName"
+      >
+        <span class="text-xl" aria-hidden="true">{{ auth.user.avatar ?? '🙂' }}</span>
+        <span class="hidden rounded-full bg-brand-100 dark:bg-brand-900/40 px-2 text-xs font-black text-brand-800 dark:text-brand-200 lg:inline">
+          {{ $t('profile.levelShort', { n: auth.user.level }) }}
+        </span>
+      </RouterLink>
+      <RouterLink v-else-if="!auth.restoring" to="/login" class="btn-ghost">{{ $t('nav.signIn') }}</RouterLink>
       <ThemeToggle />
       <LocaleSwitch />
     </div>

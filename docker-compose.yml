@@ -43,6 +43,8 @@ services:
       CORS_ORIGINS: http://localhost:5173
       UPLOAD_DIR: /data/uploads
       PUBLIC_API_URL: http://localhost:3000
+      # Signs login tokens. Set your own (32+ characters) for any real deployment.
+      JWT_SECRET: ${JWT_SECRET:-local-docker-secret-change-me-0123456789abcdef}
     ports:
       - '3000:3000'
     volumes:

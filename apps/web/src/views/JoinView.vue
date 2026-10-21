@@ -6,6 +6,7 @@ import { useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { gamesApi } from '@/api/games';
 import { session } from '@/game/session';
+import { useAuthStore } from '@/stores/auth';
 import { useGameStore } from '@/stores/game';
 
 const props = defineProps<{ pin?: string }>();
@@ -20,7 +21,10 @@ const checking = ref(false);
 const joining = ref(false);
 const message = ref('');
 
-const identity = session.lastIdentity();
+const auth = useAuthStore();
+const identity =
+  session.lastIdentity() ??
+  (auth.user ? { nickname: auth.user.displayName.slice(0, LIMITS.nicknameMax), avatar: auth.user.avatar ?? '' } : null);
 const nickname = ref(identity?.nickname ?? '');
 const avatar = ref<string>(
   identity && (AVATARS as readonly string[]).includes(identity.avatar)
@@ -155,6 +159,12 @@ watch(
         {{ joining ? t('game.join.joining') : t('game.join.submit') }}
       </button>
       <p v-if="message" id="join-message" class="text-center font-bold text-red-600 dark:text-red-400" role="alert">{{ message }}</p>
+      <p v-if="!auth.user" class="text-center text-sm text-slate-500 dark:text-slate-400">
+        {{ t('game.join.guestHint') }}
+        <RouterLink :to="{ name: 'login', query: { redirect: `/join/${room.pin}` } }" class="font-bold text-brand-700 dark:text-brand-300 underline">
+          {{ t('nav.signIn') }}
+        </RouterLink>
+      </p>
       <button type="button" class="btn-ghost" @click="changePin">{{ t('game.join.changePin') }}</button>
     </form>
   </section>

@@ -14,6 +14,7 @@ export const quizzesApi = {
   list(query: ListQuizzesQuery = {}): Promise<Paginated<QuizSummary>> {
     const params = new URLSearchParams();
     if (query.search) params.set('search', query.search);
+    if (query.mine) params.set('mine', 'true');
     if (query.page) params.set('page', String(query.page));
     if (query.pageSize) params.set('pageSize', String(query.pageSize));
     const qs = params.toString();

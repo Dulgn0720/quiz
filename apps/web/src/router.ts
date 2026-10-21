@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import { authToken } from '@/auth/token';
 import HomeView from '@/views/HomeView.vue';
 
 export const router = createRouter({
@@ -17,6 +18,10 @@ export const router = createRouter({
       component: () => import('@/views/QuizEditorView.vue'),
       props: true,
     },
+    { path: '/login', name: 'login', component: () => import('@/views/AuthView.vue'), props: { mode: 'login' } },
+    { path: '/register', name: 'register', component: () => import('@/views/AuthView.vue'), props: { mode: 'register' } },
+    { path: '/me', name: 'profile', component: () => import('@/views/ProfileView.vue'), meta: { requiresAuth: true } },
+    { path: '/rooms', name: 'rooms', component: () => import('@/views/RoomsView.vue') },
     { path: '/join', name: 'join', component: () => import('@/views/JoinView.vue') },
     { path: '/join/:pin(\\d{6})', name: 'join-pin', component: () => import('@/views/JoinView.vue'), props: true },
     {
@@ -31,4 +36,9 @@ export const router = createRouter({
     { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('@/views/NotFoundView.vue') },
   ],
   scrollBehavior: () => ({ top: 0 }),
+});
+
+router.beforeEach((to) => {
+  if (to.meta.requiresAuth && !authToken()) return { name: 'login', query: { redirect: to.fullPath } };
+  return true;
 });
