@@ -1,0 +1,67 @@
+name: Visual QA
+
+# Builds the app, plays a real game in Chromium and uploads screenshots of every screen.
+on:
+  workflow_dispatch:
+  push:
+    branches: ['**']
+    paths: ['apps/web/**', 'packages/shared/**', '.github/workflows/visual.yml']
+
+concurrency:
+  group: visual-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  screenshots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: quiz
+          POSTGRES_PASSWORD: quiz
+          POSTGRES_DB: quiz
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U quiz -d quiz" --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://quiz:quiz@localhost:5432/quiz?schema=public
+      REDIS_URL: redis://localhost:6379
+      CORS_ORIGINS: http://localhost:5173
+      VITE_API_URL: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm build
+      - name: Migrate and seed
+        run: |
+          pnpm --filter @quiz/api prisma:deploy
+          cd apps/api && node dist/database/seed.js
+      - name: Start API and web
+        run: |
+          (cd apps/api && UPLOAD_DIR=$RUNNER_TEMP/uploads node dist/main.js > $RUNNER_TEMP/api.log 2>&1 &)
+          (cd apps/web && pnpm exec vite preview --port 5173 --strictPort > $RUNNER_TEMP/web.log 2>&1 &)
+          for i in $(seq 1 60); do curl -sf localhost:3000/api/health && curl -sf localhost:5173 >/dev/null && break; sleep 1; done
+      - name: Install Chromium
+        run: pnpm --filter @quiz/web exec playwright install --with-deps chromium
+      - name: Take screenshots
+        run: pnpm --filter @quiz/web screenshots "$GITHUB_WORKSPACE/screenshots"
+      - name: Server logs
+        if: always()
+        run: tail -n 80 $RUNNER_TEMP/api.log $RUNNER_TEMP/web.log || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshots
+          path: screenshots/
+          retention-days: 14
