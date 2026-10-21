@@ -10,6 +10,9 @@ import LocaleSwitch from './LocaleSwitch.vue';
         {{ $t('app.name') }}
       </RouterLink>
       <nav class="flex items-center gap-1" :aria-label="$t('nav.home')">
+        <RouterLink to="/join" class="btn-ghost" active-class="bg-slate-100 text-slate-900">
+          {{ $t('nav.join') }}
+        </RouterLink>
         <RouterLink to="/quizzes" class="btn-ghost hidden sm:inline-flex" active-class="bg-slate-100 text-slate-900">
           {{ $t('nav.quizzes') }}
         </RouterLink>

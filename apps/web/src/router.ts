@@ -17,6 +17,17 @@ export const router = createRouter({
       component: () => import('@/views/QuizEditorView.vue'),
       props: true,
     },
+    { path: '/join', name: 'join', component: () => import('@/views/JoinView.vue') },
+    { path: '/join/:pin(\\d{6})', name: 'join-pin', component: () => import('@/views/JoinView.vue'), props: true },
+    {
+      path: '/play/:pin(\\d{6})',
+      name: 'play',
+      component: () => import('@/views/PlayView.vue'),
+      props: true,
+      // Phones need every pixel: the player screen has its own header.
+      meta: { fullscreen: true },
+    },
+    { path: '/host/:pin(\\d{6})', name: 'host', component: () => import('@/views/HostView.vue'), props: true },
     { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('@/views/NotFoundView.vue') },
   ],
   scrollBehavior: () => ({ top: 0 }),

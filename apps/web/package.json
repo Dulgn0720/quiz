@@ -13,6 +13,8 @@
   "dependencies": {
     "@quiz/shared": "workspace:*",
     "pinia": "^2.3.0",
+    "qrcode": "^1.5.4",
+    "socket.io-client": "^4.8.1",
     "vue": "^3.5.13",
     "vue-i18n": "^10.0.5",
     "vue-router": "^4.5.0",
@@ -20,6 +22,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
+    "@types/qrcode": "^1.5.5",
     "@vitejs/plugin-vue": "^5.2.1",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.49",

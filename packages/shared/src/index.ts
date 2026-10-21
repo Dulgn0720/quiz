@@ -4,3 +4,5 @@ export * from './csv';
 export * from './quiz-io';
 export * from './api';
 export * from './game';
+export * from './random';
+export * from './scoring';

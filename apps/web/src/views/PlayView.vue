@@ -1,0 +1,173 @@
+<script setup lang="ts">
+import { GAME_ERRORS, type AnswerPayload } from '@quiz/shared';
+import { computed, onMounted, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
+import AnswerForm from '@/components/game/AnswerForm.vue';
+import ConnectionBanner from '@/components/game/ConnectionBanner.vue';
+import CountdownCard from '@/components/game/CountdownCard.vue';
+import GameTimer from '@/components/game/GameTimer.vue';
+import LeaderboardList from '@/components/game/LeaderboardList.vue';
+import PlayerChips from '@/components/game/PlayerChips.vue';
+import PlayerResult from '@/components/game/PlayerResult.vue';
+import PodiumPanel from '@/components/game/PodiumPanel.vue';
+import QuestionHeader from '@/components/game/QuestionHeader.vue';
+import RevealedAnswer from '@/components/game/RevealedAnswer.vue';
+import RoundSummaryPanel from '@/components/game/RoundSummaryPanel.vue';
+import { useToast } from '@/composables/useToast';
+import { useGameStore } from '@/stores/game';
+
+const props = defineProps<{ pin: string }>();
+
+const { t } = useI18n();
+const router = useRouter();
+const toast = useToast();
+const game = useGameStore();
+
+function enter(pin: string): void {
+  if (!game.resume(pin)) void router.replace({ name: 'join-pin', params: { pin } });
+}
+onMounted(() => enter(props.pin));
+watch(() => props.pin, enter);
+
+const phase = computed(() => game.phase);
+const me = computed(() => game.me);
+const myId = computed(() => me.value?.playerId);
+const myScore = computed(() => game.room?.players.find((p) => p.id === myId.value)?.score ?? 0);
+
+/** The answer this player gave to the open question, from the server or just sent. */
+const lockedAnswer = computed(() => {
+  const p = phase.value;
+  if (p?.phase !== 'question') return undefined;
+  if (p.yourAnswer) return p.yourAnswer;
+  return game.submitted?.questionIndex === p.question.globalIndex ? game.submitted.answer : undefined;
+});
+
+const fatalError = computed(() => {
+  const e = game.error;
+  return e === GAME_ERRORS.notFound || e === GAME_ERRORS.finished || e === GAME_ERRORS.kicked ? e : null;
+});
+
+async function submit(answer: AnswerPayload): Promise<void> {
+  const result = await game.submitAnswer(answer);
+  if (!result.ok && result.error !== GAME_ERRORS.alreadyAnswered) toast.error(t(`game.errors.${result.error}`));
+}
+
+function leave(): void {
+  if (phase.value?.phase !== 'podium' && !window.confirm(t('game.player.leaveConfirm'))) return;
+  game.leave();
+  void router.push({ name: 'home' });
+}
+</script>
+
+<template>
+  <section class="mx-auto flex min-h-dvh max-w-xl flex-col px-4 pb-6">
+    <ConnectionBanner />
+
+    <div v-if="game.ended || fatalError" class="card mt-16 p-8 text-center" role="alert">
+      <p class="text-5xl" aria-hidden="true">{{ game.ended === 'kicked' || fatalError === 'kicked' ? '🚪' : '👋' }}</p>
+      <p class="mt-4 text-lg font-bold">
+        {{
+          game.ended === 'kicked'
+            ? t('game.ended.kicked')
+            : game.ended === 'closed'
+              ? t('game.ended.closed')
+              : t(`game.errors.${fatalError}`)
+        }}
+      </p>
+      <RouterLink :to="{ name: 'join' }" class="btn-primary mt-6">{{ t('game.ended.joinAnother') }}</RouterLink>
+    </div>
+
+    <p v-else-if="!phase || !me" class="mt-16 text-center text-slate-500">{{ t('common.loading') }}</p>
+
+    <template v-else>
+      <header class="sticky top-0 z-10 -mx-4 mb-4 flex items-center gap-3 border-b border-slate-200 bg-slate-50/95 px-4 py-3 backdrop-blur">
+        <span class="text-3xl leading-none" aria-hidden="true">{{ me.avatar }}</span>
+        <span class="mr-auto truncate font-black">{{ me.nickname }}</span>
+        <span class="rounded-full bg-brand-600 px-3 py-1 font-black tabular-nums text-white" :aria-label="t('game.player.score')">
+          {{ myScore }}
+        </span>
+        <button type="button" class="btn-icon" :aria-label="t('game.player.leave')" @click="leave">✕</button>
+      </header>
+
+      <div class="flex flex-1 flex-col">
+        <div v-if="phase.phase === 'lobby'" class="flex flex-1 flex-col items-center justify-center gap-6 text-center">
+          <p class="animate-pop text-7xl" aria-hidden="true">{{ me.avatar }}</p>
+          <div>
+            <h1 class="text-3xl font-black">{{ t('game.player.youAreIn') }}</h1>
+            <p class="mt-2 font-semibold text-slate-600">{{ t('game.player.waitingForHost') }}</p>
+          </div>
+          <PlayerChips v-if="game.room" :players="game.room.players" :highlight-id="myId" />
+        </div>
+
+        <CountdownCard v-else-if="phase.phase === 'countdown'" :countdown="phase" />
+
+        <div v-else-if="phase.phase === 'question'" class="flex flex-1 flex-col gap-4">
+          <QuestionHeader :question="phase.question" />
+          <div class="flex items-center gap-3">
+            <h2 class="flex-1 text-xl font-black leading-snug">{{ phase.question.prompt }}</h2>
+            <GameTimer :ends-at="phase.question.endsAt" :paused-remaining-ms="phase.question.pausedRemainingMs" :total="phase.question.timeLimit" />
+          </div>
+          <img v-if="phase.question.imageUrl" :src="phase.question.imageUrl" alt="" class="max-h-48 self-center rounded-xl object-contain" />
+
+          <div v-if="phase.you?.eliminated" class="card flex flex-1 flex-col items-center justify-center p-8 text-center">
+            <p class="text-5xl" aria-hidden="true">👀</p>
+            <p class="mt-3 text-lg font-bold">{{ t('game.player.eliminated') }}</p>
+          </div>
+          <div v-else-if="lockedAnswer" class="card flex flex-1 animate-pop flex-col items-center justify-center p-8 text-center" role="status">
+            <p class="text-5xl" aria-hidden="true">⏳</p>
+            <p class="mt-3 text-xl font-black">{{ t('game.player.answerLocked') }}</p>
+            <p class="mt-1 font-semibold text-slate-500">{{ t('game.player.waitingForOthers') }}</p>
+          </div>
+          <p v-else-if="phase.question.pausedRemainingMs !== undefined" class="card p-8 text-center text-lg font-bold" role="status">
+            ❚❚ {{ t('game.player.paused') }}
+          </p>
+          <AnswerForm v-else :question="phase.question" @submit="submit" />
+        </div>
+
+        <div v-else-if="phase.phase === 'reveal'" class="flex flex-1 flex-col justify-center gap-6">
+          <PlayerResult v-if="phase.you" :result="phase.you" />
+          <RevealedAnswer :question="phase.question" :answer="phase.reveal.answer" />
+          <p v-if="phase.reveal.explanation" class="rounded-2xl bg-sky-50 p-4 text-center text-sky-900">💡 {{ phase.reveal.explanation }}</p>
+        </div>
+
+        <div v-else-if="phase.phase === 'leaderboard'" class="flex flex-col gap-6">
+          <div v-if="phase.you" class="card p-6 text-center">
+            <p class="text-sm font-bold uppercase tracking-wide text-slate-500">{{ t('game.player.yourRank') }}</p>
+            <p class="text-6xl font-black tabular-nums">#{{ phase.you.rank }}</p>
+            <p v-if="phase.you.rank < phase.you.previousRank" class="font-bold text-emerald-600">
+              ▲ {{ t('game.player.climbed', { n: phase.you.previousRank - phase.you.rank }) }}
+            </p>
+          </div>
+          <LeaderboardList :entries="phase.leaderboard" :highlight-id="myId" />
+        </div>
+
+        <RoundSummaryPanel v-else-if="phase.phase === 'round_summary'" :round="phase.round" :leaderboard="phase.leaderboard" :highlight-id="myId" />
+
+        <div v-else-if="phase.phase === 'podium'" class="flex flex-col gap-8">
+          <h1 class="text-center text-3xl font-black">{{ t('game.podium.title') }}</h1>
+          <PodiumPanel :results="phase.results" :highlight-id="myId" />
+          <dl v-if="phase.you" class="grid grid-cols-2 gap-3">
+            <div class="card p-4 text-center">
+              <dt class="text-sm font-bold text-slate-500">{{ t('game.player.yourRank') }}</dt>
+              <dd class="text-3xl font-black">#{{ phase.you.rank }}</dd>
+            </div>
+            <div class="card p-4 text-center">
+              <dt class="text-sm font-bold text-slate-500">{{ t('game.podium.score') }}</dt>
+              <dd class="text-3xl font-black tabular-nums">{{ phase.you.score }}</dd>
+            </div>
+            <div class="card p-4 text-center">
+              <dt class="text-sm font-bold text-slate-500">{{ t('game.podium.correct') }}</dt>
+              <dd class="text-3xl font-black">{{ phase.you.correctCount }}/{{ phase.you.questionCount }}</dd>
+            </div>
+            <div class="card p-4 text-center">
+              <dt class="text-sm font-bold text-slate-500">{{ t('game.podium.bestStreak') }}</dt>
+              <dd class="text-3xl font-black">🔥 {{ phase.you.bestStreak }}</dd>
+            </div>
+          </dl>
+          <button type="button" class="btn-primary" @click="leave">{{ t('game.ended.joinAnother') }}</button>
+        </div>
+      </div>
+    </template>
+  </section>
+</template>

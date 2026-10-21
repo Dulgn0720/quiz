@@ -6,6 +6,7 @@ import { useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { quizzesApi } from '@/api/quizzes';
 import ImportQuizDialog from '@/components/ImportQuizDialog.vue';
+import HostGameDialog from '@/components/game/HostGameDialog.vue';
 import { useToast } from '@/composables/useToast';
 
 const PAGE_SIZE = 24;
@@ -21,6 +22,7 @@ const search = ref('');
 const loading = ref(false);
 const loadError = ref('');
 const importOpen = ref(false);
+const hosting = ref<QuizSummary | null>(null);
 
 function errorText(error: unknown): string {
   if (error instanceof ApiError && error.isNetworkError) return t('common.networkError');
@@ -132,6 +134,15 @@ function onImported(quiz: QuizDetail): void {
         </p>
         <p class="text-xs text-slate-400">{{ t('quizList.updated', { date: formatDate(quiz.updatedAt) }) }}</p>
         <div class="mt-4 flex flex-wrap gap-1 border-t border-slate-100 pt-3">
+          <button
+            type="button"
+            class="btn-primary"
+            :disabled="quiz.questionCount === 0"
+            :title="quiz.questionCount === 0 ? t('quizList.hostEmpty') : undefined"
+            @click="hosting = quiz"
+          >
+            ▶ {{ t('quizList.host') }}
+          </button>
           <RouterLink v-if="!quiz.isSample" :to="{ name: 'quiz-edit', params: { id: quiz.id } }" class="btn-ghost">
             {{ t('common.edit') }}
           </RouterLink>
@@ -151,5 +162,6 @@ function onImported(quiz: QuizDetail): void {
     </div>
 
     <ImportQuizDialog :open="importOpen" @close="importOpen = false" @imported="onImported" />
+    <HostGameDialog :quiz="hosting" @close="hosting = null" />
   </section>
 </template>

@@ -14,6 +14,11 @@ const envSchema = z.object({
         .map((origin) => origin.trim())
         .filter(Boolean),
     ),
+  /** Behind a reverse proxy: take client addresses (for join rate limits) from X-Forwarded-For. */
+  TRUST_PROXY: z
+    .enum(['true', 'false', '1', '0'])
+    .default('false')
+    .transform((v) => v === 'true' || v === '1'),
   UPLOAD_DIR: z.string().min(1).default('./uploads'),
   PUBLIC_API_URL: z
     .string()
