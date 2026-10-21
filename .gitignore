@@ -12,3 +12,5 @@ apps/api/uploads/
 
 # Database backups written by the production backup service
 deploy/backups/
+deploy/portal/backups/
+deploy/portal/.env

@@ -35,7 +35,7 @@ export class AccessPolicy {
     }
   }
 
-  settings(): AppSettings {
+  settings(): Pick<AppSettings, 'restrictQuizEditing'> {
     return { restrictQuizEditing: this.restrictQuizEditing };
   }
 }

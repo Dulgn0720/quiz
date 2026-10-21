@@ -12,7 +12,7 @@ export const useAuthStore = defineStore('auth', () => {
   /** True until the saved token has been checked. */
   const restoring = ref(authToken() !== null);
 
-  const settings = ref<AppSettings>({ restrictQuizEditing: false });
+  const settings = ref<AppSettings>({ restrictQuizEditing: false, portalSignIn: false });
 
   const signedIn = computed(() => user.value !== null);
   /** False when the server only lets admins create or change quizzes and this user is not one. */
@@ -70,11 +70,18 @@ export const useAuthStore = defineStore('auth', () => {
     void refresh().catch(() => undefined);
   }
 
+  async function portalSignIn(token: string): Promise<void> {
+    const res = await authApi.portalSignIn(token);
+    setAuthToken(res.token);
+    user.value = res.user;
+    void refresh().catch(() => undefined);
+  }
+
   function logout(): void {
     setAuthToken(null);
     user.value = null;
     profile.value = null;
   }
 
-  return { user, profile, restoring, settings, signedIn, canEditQuizzes, restore, refresh, login, register, resetPassword, update, logout };
+  return { user, profile, restoring, settings, signedIn, canEditQuizzes, restore, refresh, login, register, resetPassword, portalSignIn, update, logout };
 });

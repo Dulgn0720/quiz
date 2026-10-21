@@ -50,6 +50,7 @@ services:
       PUBLIC_WEB_URL: https://${DOMAIN}
       SMTP_URL: ${SMTP_URL:-}
       MAIL_FROM: ${MAIL_FROM:-Agula Quiz <no-reply@agula.mn>}
+      PORTAL_SSO_SECRET: ${PORTAL_SSO_SECRET:-}
     volumes:
       - uploads:/data/uploads
     healthcheck:
@@ -113,6 +114,7 @@ services:
       - '443:443'
     environment:
       DOMAIN: ${DOMAIN}
+      FRAME_ANCESTORS: ${FRAME_ANCESTORS:-}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data

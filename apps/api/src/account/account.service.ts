@@ -50,7 +50,11 @@ export class AccountService {
   async update(userId: string, input: UpdateProfileRequest): Promise<UserPublic> {
     const user = await this.prisma.user.update({
       where: { id: userId },
-      data: { displayName: input.displayName, avatar: input.avatar },
+      data: {
+        displayName: input.displayName,
+        avatar: input.avatar,
+        ...(input.department !== undefined ? { department: input.department || null } : {}),
+      },
     });
     return toUserPublic(user, this.access.isAdminEmail(user.email));
   }

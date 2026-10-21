@@ -9,8 +9,10 @@ const props = defineProps<{ pin: string }>();
 const { t } = useI18n();
 const toast = useToast();
 
-const joinUrl = computed(() => `${window.location.origin}/join/${props.pin}`);
-const displayUrl = computed(() => `${window.location.host}/join`);
+// BASE_URL keeps the links right when the app is served under a sub-path such as "/quiz/".
+const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
+const joinUrl = computed(() => `${window.location.origin}${base}/join/${props.pin}`);
+const displayUrl = computed(() => `${window.location.host}${base}/join`);
 const qr = ref('');
 
 watchEffect(() => {

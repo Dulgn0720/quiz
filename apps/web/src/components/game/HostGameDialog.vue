@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { gamesApi } from '@/api/games';
+import { isEmbedded } from '@/embed';
 import { session } from '@/game/session';
 
 const props = defineProps<{ quiz: Pick<QuizSummary, 'id' | 'title'> | null }>();
@@ -34,6 +35,9 @@ async function submit(): Promise<void> {
   if (!props.quiz) return;
   busy.value = true;
   message.value = '';
+  // Inside the portal the projector screen gets its own tab. The tab is opened now, while the click
+  // still counts as a user action, so pop-up blockers allow it.
+  const projector = isEmbedded ? window.open('', '_blank') : null;
   try {
     const game = await gamesApi.create({
       quizId: props.quiz.id,
@@ -42,8 +46,11 @@ async function submit(): Promise<void> {
     });
     session.saveHostToken(game.pin, game.hostToken);
     emit('close');
-    await router.push({ name: 'host', params: { pin: game.pin } });
+    const target = router.resolve({ name: 'host', params: { pin: game.pin } });
+    if (projector) projector.location.href = target.href;
+    else await router.push(target);
   } catch (error) {
+    projector?.close();
     message.value =
       error instanceof ApiError && error.isNetworkError ? t('common.networkError') : (error as Error).message;
   } finally {
@@ -88,6 +95,9 @@ async function submit(): Promise<void> {
         </span>
       </label>
 
+      <p v-if="isEmbedded" class="rounded-xl bg-sky-50 p-3 text-sm font-semibold text-sky-800 dark:bg-sky-950/40 dark:text-sky-200">
+        🖥️ {{ t('game.hostDialog.newTab') }}
+      </p>
       <p v-if="message" class="rounded-xl bg-red-50 dark:bg-red-950/40 p-3 text-sm font-bold text-red-700 dark:text-red-300" role="alert">{{ message }}</p>
 
       <div class="flex justify-end gap-2">

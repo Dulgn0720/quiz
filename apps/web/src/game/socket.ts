@@ -6,7 +6,10 @@ import { authToken } from '@/auth/token';
 export type GameSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
 export function createGameSocket(): GameSocket {
-  return io(API_URL, {
+  // Split the API address into host and path, so an API under a sub-path ("/quiz") uses "/quiz/socket.io".
+  const base = new URL(API_URL || '/', window.location.href);
+  return io(base.origin, {
+    path: `${base.pathname.replace(/\/+$/, '')}/socket.io`,
     autoConnect: false,
     // Read on every (re)connect, so signing in or out takes effect on the next connection.
     auth: (cb) => cb({ token: authToken() ?? undefined }),

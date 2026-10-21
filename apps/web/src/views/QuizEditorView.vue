@@ -19,7 +19,7 @@ const props = defineProps<{ id?: string }>();
 const editor = useEditorStore();
 const router = useRouter();
 const toast = useToast();
-const { t, locale } = useI18n();
+const { t } = useI18n();
 const { fieldError } = useFieldErrors();
 
 const loading = ref(false);
@@ -36,7 +36,7 @@ let justCreatedId: string | null = null;
 async function init(): Promise<void> {
   loadError.value = null;
   if (!props.id) {
-    editor.startNew(locale.value === 'en' ? 'en' : 'mn', t('editor.roundDefaultName', { n: 1 }));
+    editor.startNew('mn', t('editor.roundDefaultName', { n: 1 }));
     return;
   }
   if (justCreatedId === props.id) {

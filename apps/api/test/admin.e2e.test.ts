@@ -60,7 +60,7 @@ const quiz = {
 
 describe('restricted quiz editing', () => {
   it('lets only admins change quizzes, and everyone host', async () => {
-    expect((await api<AppSettings>('/settings')).body).toEqual({ restrictQuizEditing: true });
+    expect((await api<AppSettings>('/settings')).body).toEqual({ restrictQuizEditing: true, portalSignIn: false });
 
     const admin = await api<AuthResponse>('/auth/register', {
       method: 'POST',

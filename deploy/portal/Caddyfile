@@ -1,0 +1,26 @@
+# Internal gateway for the portal setup: plain HTTP on port 80 inside the stack, published on
+# 127.0.0.1:${QUIZ_PORT}. The portal's own web server (which owns HTTPS) forwards /quiz/ here
+# with the /quiz prefix removed.
+{
+	servers {
+		# Keep the real client address that the portal's proxy puts in X-Forwarded-For.
+		trusted_proxies static private_ranges
+	}
+}
+
+:80 {
+	encode zstd gzip
+
+	# API, live games (WebSocket) and uploaded images.
+	@api path /api/* /socket.io/* /uploads/*
+	reverse_proxy @api api:3000
+
+	# Everything else is the web app.
+	reverse_proxy web:80
+
+	header {
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Content-Security-Policy "frame-ancestors 'self' {$PORTAL_ORIGIN}"
+	}
+}

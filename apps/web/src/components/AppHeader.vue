@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/stores/auth';
 import BrandMark from './BrandMark.vue';
-import LocaleSwitch from './LocaleSwitch.vue';
 import ThemeToggle from './ThemeToggle.vue';
 
 const auth = useAuthStore();
@@ -49,7 +48,6 @@ const navActive = 'bg-ink-900/5 text-ink-950 dark:bg-white/10 dark:text-white';
       </RouterLink>
       <RouterLink v-else-if="!auth.restoring" to="/login" class="btn-ghost px-3">{{ $t('nav.signIn') }}</RouterLink>
       <ThemeToggle />
-      <LocaleSwitch />
     </div>
   </header>
 </template>

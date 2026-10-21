@@ -13,6 +13,7 @@
 		Strict-Transport-Security "max-age=31536000"
 		X-Content-Type-Options "nosniff"
 		Referrer-Policy "strict-origin-when-cross-origin"
-		X-Frame-Options "SAMEORIGIN"
+		# Pages may be framed only by this site and the sites in FRAME_ANCESTORS (e.g. the employee portal).
+		Content-Security-Policy "frame-ancestors 'self' {$FRAME_ANCESTORS}"
 	}
 }

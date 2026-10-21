@@ -127,6 +127,11 @@ No personal data or credentials from the documents are used. Re-seeding updates 
 
 ## Production
 
+Two ways to run it, both free of paid services:
+
+- **Own domain** (`https://quiz.agula.mn`): [`deploy/`](deploy/README.md).
+- **Inside the employee portal** (`https://portal.agula.mn/quiz/`, opened from a portal menu item, shown in an `<iframe>` or a new tab, with portal sign-in): [`deploy/portal/`](deploy/portal/README.md). The web app is built for a sub-path with `VITE_BASE_PATH=/quiz/` and `VITE_API_URL=/quiz`; `PORTAL_SSO_SECRET` lets the portal sign employees in with a short-lived HS256 token.
+
 [`deploy/`](deploy/README.md) has a ready setup for one server: Docker Compose with Caddy for automatic HTTPS on your domain, secrets in `deploy/.env`, and backup commands.
 
 ## Environment variables (API)
@@ -143,6 +148,7 @@ No personal data or credentials from the documents are used. Re-seeding updates 
 | `PUBLIC_WEB_URL` | first `CORS_ORIGINS` entry | Web address used in password reset links |
 | `SMTP_URL` | — | e.g. `smtp://user:pass@smtp.gmail.com:587`. Without it, reset links are written to the API log |
 | `MAIL_FROM` | `Agula Quiz <no-reply@localhost>` | Sender of password reset emails |
+| `PORTAL_SSO_SECRET` | — | Shared secret for sign-in from the employee portal (`POST /api/auth/portal`); see deploy/portal/README.md |
 | `TRUST_PROXY` | `false` | Use `X-Forwarded-For` behind a reverse proxy |
 | `UPLOAD_DIR`, `PUBLIC_API_URL` | `./uploads`, `http://localhost:3000` | Uploaded images |
 
@@ -199,7 +205,7 @@ Server → client: `room:state` (room settings and player list), `game:phase` (w
 - **Reveal commentary:** on the projector, Агу reacts to how the room did on each question.
 - **Special awards:** after the podium, the big screen hands out ⚡ Quickest, 🔥 Streak champion and 🎯 Sharpshooter.
 - **Practice mode** (`/practice/<quiz id>`, the 🎯 button on every quiz): play any quiz alone on a phone with the same timer and scoring, see the explanation after each answer, earn up to three stars and beat your personal best (kept in the browser).
-- **Languages:** Mongolian (default) and English everywhere, switchable in the header.
+- **Language:** the interface is Mongolian only, in everyday office Mongolian: common terms stay in English («Quiz», «Level», «streak», «badge», «Leaderboard»).
 
 ## Accounts and progression
 

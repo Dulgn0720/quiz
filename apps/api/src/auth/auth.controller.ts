@@ -3,11 +3,13 @@ import { Throttle } from '@nestjs/throttler';
 import {
   forgotPasswordSchema,
   loginSchema,
+  portalSignInSchema,
   registerSchema,
   resetPasswordSchema,
   type AuthResponse,
   type ForgotPasswordRequest,
   type LoginRequest,
+  type PortalSignInRequest,
   type RegisterRequest,
   type ResetPasswordRequest,
 } from '@quiz/shared';
@@ -33,6 +35,12 @@ export class AuthController {
   @HttpCode(200)
   login(@Body(new ZodValidationPipe(loginSchema)) body: LoginRequest): Promise<AuthResponse> {
     return this.auth.login(body);
+  }
+
+  @Post('portal')
+  @HttpCode(200)
+  portal(@Body(new ZodValidationPipe(portalSignInSchema)) body: PortalSignInRequest): Promise<AuthResponse> {
+    return this.auth.portalSignIn(body.token);
   }
 
   /** Always 204, so the response doesn't reveal which emails have accounts. */

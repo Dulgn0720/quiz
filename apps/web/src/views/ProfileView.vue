@@ -9,7 +9,7 @@ import Mascot from '@/components/Mascot.vue';
 import { useToast } from '@/composables/useToast';
 import { useAuthStore } from '@/stores/auth';
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
 const auth = useAuthStore();
 const router = useRouter();
 const toast = useToast();
@@ -21,6 +21,7 @@ const loading = ref(true);
 const editing = ref(false);
 const nameDraft = ref('');
 const avatarDraft = ref<string | null>(null);
+const departmentDraft = ref('');
 
 const profile = computed(() => auth.profile);
 const earned = computed(() => new Map(profile.value?.badges.map((b) => [b.code, b]) ?? []));
@@ -47,12 +48,17 @@ async function loadMore(): Promise<void> {
 function startEdit(): void {
   nameDraft.value = auth.user?.displayName ?? '';
   avatarDraft.value = auth.user?.avatar ?? null;
+  departmentDraft.value = auth.user?.department ?? '';
   editing.value = true;
 }
 
 async function saveEdit(): Promise<void> {
   try {
-    await auth.update({ displayName: nameDraft.value, avatar: (avatarDraft.value ?? null) as (typeof AVATARS)[number] | null });
+    await auth.update({
+      displayName: nameDraft.value,
+      avatar: (avatarDraft.value ?? null) as (typeof AVATARS)[number] | null,
+      department: departmentDraft.value,
+    });
     editing.value = false;
     toast.success(t('common.saved'));
   } catch {
@@ -66,7 +72,7 @@ function logout(): void {
 }
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString(locale.value === 'mn' ? 'mn-MN' : 'en-US', {
+  return new Date(iso).toLocaleString('mn-MN', {
     dateStyle: 'medium',
     timeStyle: 'short',
   });
@@ -85,12 +91,18 @@ function formatDate(iso: string): string {
         <div class="flex-1">
           <template v-if="!editing">
             <h1 class="text-3xl font-black">{{ profile.displayName }}</h1>
-            <p class="text-sm text-slate-500 dark:text-slate-400">{{ profile.email }}</p>
+            <p class="text-sm text-slate-500 dark:text-slate-400">
+              {{ profile.email }}<template v-if="profile.department"> · {{ profile.department }}</template>
+            </p>
           </template>
           <form v-else class="flex flex-col gap-3" @submit.prevent="saveEdit">
             <label class="block">
               <span class="label">{{ t('auth.displayName') }}</span>
               <input v-model="nameDraft" class="input" maxlength="40" required />
+            </label>
+            <label class="block">
+              <span class="label">{{ t('profile.department') }}</span>
+              <input v-model="departmentDraft" class="input" maxlength="40" :placeholder="t('profile.departmentPlaceholder')" />
             </label>
             <div class="grid grid-cols-8 gap-1" role="radiogroup" :aria-label="t('game.join.avatar')">
               <button

@@ -1,17 +1,19 @@
 import type { AuthResponse, ClientToServerEvents, CreateGameResponse, QuizDetail, ReactionEvent, ServerToClientEvents } from '@quiz/shared';
 import { spawn, type ChildProcess } from 'node:child_process';
+import { createHmac } from 'node:crypto';
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { io, type Socket } from 'socket.io-client';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-/** Password reset (link read from the log, as admins do without SMTP) and live reactions. */
+/** Password reset (link read from the log, as admins do without SMTP), portal sign-in and live reactions. */
 
 const PORT = 5500 + Math.floor(Math.random() * 400);
 const BASE = `http://127.0.0.1:${PORT}`;
 const unique = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
 let server: ChildProcess;
+const PORTAL_SECRET = 'portal-secret-that-is-long-enough-0123456789';
 let log = '';
 
 async function api<T>(path: string, init: RequestInit = {}): Promise<{ status: number; body: T }> {
@@ -29,6 +31,7 @@ beforeAll(async () => {
       UPLOAD_DIR: mkdtempSync(join(tmpdir(), 'quiz-e2e-')),
       PUBLIC_WEB_URL: 'https://quiz.example.mn',
       SMTP_URL: '',
+      PORTAL_SSO_SECRET: PORTAL_SECRET,
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
@@ -109,5 +112,41 @@ describe('reactions', () => {
       host.disconnect();
       player.disconnect();
     }
+  });
+});
+
+/** A token the way the portal makes it (see deploy/portal/README.md). */
+function portalToken(claims: object, secret = PORTAL_SECRET): string {
+  const b64 = (o: object) => Buffer.from(JSON.stringify(o)).toString('base64url');
+  const head = b64({ typ: 'JWT', alg: 'HS256' });
+  const body = b64(claims);
+  return `${head}.${body}.${createHmac('sha256', secret).update(`${head}.${body}`).digest('base64url')}`;
+}
+
+describe('portal sign-in', () => {
+  it('creates the employee on first visit, keeps name and department in sync, and rejects bad tokens', async () => {
+    expect((await api<{ portalSignIn: boolean }>('/settings')).body.portalSignIn).toBe(true);
+    const email = `Portal${unique}@Agula.mn`;
+    const exp = Math.floor(Date.now() / 1000) + 300;
+    const first = await api<AuthResponse>('/auth/portal', {
+      method: 'POST',
+      body: JSON.stringify({ token: portalToken({ email, name: 'Болд', department: 'Нөхөн төлбөр', exp }) }),
+    });
+    expect(first.status).toBe(200);
+    expect(first.body.user).toMatchObject({ email: email.toLowerCase(), displayName: 'Болд', department: 'Нөхөн төлбөр' });
+
+    const again = await api<AuthResponse>('/auth/portal', {
+      method: 'POST',
+      body: JSON.stringify({ token: portalToken({ email, name: 'Болд Б.', department: 'IT', exp }) }),
+    });
+    expect(again.body.user).toMatchObject({ id: first.body.user.id, displayName: 'Болд Б.', department: 'IT' });
+
+    const bad = async (token: string) => (await api('/auth/portal', { method: 'POST', body: JSON.stringify({ token }) })).status;
+    expect(await bad(portalToken({ email, exp }, 'another-secret-that-is-long-enough-0123456789'))).toBe(401);
+    expect(await bad(portalToken({ email, exp: Math.floor(Date.now() / 1000) - 5 }))).toBe(401);
+    expect(await bad(portalToken({ email, exp: Math.floor(Date.now() / 1000) + 3600 }))).toBe(401);
+    expect(await bad(portalToken({ name: 'No email', exp }))).toBe(401);
+    // Portal accounts have no usable password.
+    expect((await api('/auth/login', { method: 'POST', body: JSON.stringify({ email, password: 'portal$anything' }) })).status).toBe(401);
   });
 });

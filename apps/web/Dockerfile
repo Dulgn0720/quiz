@@ -11,6 +11,9 @@ COPY packages/shared packages/shared
 COPY apps/web apps/web
 ARG VITE_API_URL=http://localhost:3000
 ENV VITE_API_URL=$VITE_API_URL
+# Set to e.g. /quiz/ when the app is served under a sub-path of another site.
+ARG VITE_BASE_PATH=/
+ENV VITE_BASE_PATH=$VITE_BASE_PATH
 RUN pnpm --filter @quiz/web build
 
 FROM nginx:1.27-alpine

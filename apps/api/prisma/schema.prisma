@@ -50,6 +50,8 @@ model User {
   passwordHash String
   displayName  String
   avatar       String?
+  /// Team for department games; filled in by portal sign-in or by the user.
+  department   String?
   xp           Int      @default(0)
   level        Int      @default(1)
   createdAt    DateTime @default(now())

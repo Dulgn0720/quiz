@@ -1,13 +1,16 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Prisma, type User } from '@prisma/client';
-import type { AuthResponse, LoginRequest, RegisterRequest, UserPublic } from '@quiz/shared';
+import { portalClaimsSchema, type AuthResponse, type LoginRequest, type RegisterRequest, type UserPublic } from '@quiz/shared';
+import { randomBytes } from 'node:crypto';
 import type { Env } from '../config/env';
 import { PrismaService } from '../prisma/prisma.service';
 import { AccessPolicy } from './access-policy';
-import { hashPassword, signToken, verifyPassword, verifyToken } from './crypto';
+import { hashPassword, signToken, verifyForeignToken, verifyPassword, verifyToken } from './crypto';
 
 const TOKEN_TTL_SECONDS = 30 * 24 * 60 * 60;
+/** Portal tokens may live at most this long, so a leaked link stops working quickly. */
+const PORTAL_TOKEN_MAX_SECONDS = 10 * 60;
 
 export function toUserPublic(user: User, isAdmin = false): UserPublic {
   return {
@@ -15,6 +18,7 @@ export function toUserPublic(user: User, isAdmin = false): UserPublic {
     email: user.email,
     displayName: user.displayName,
     avatar: user.avatar ?? undefined,
+    department: user.department ?? undefined,
     xp: user.xp,
     level: user.level,
     isAdmin,
@@ -25,6 +29,7 @@ export function toUserPublic(user: User, isAdmin = false): UserPublic {
 @Injectable()
 export class AuthService {
   private readonly secret: string;
+  private readonly portalSecret: string | undefined;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -32,6 +37,36 @@ export class AuthService {
     config: ConfigService<Env, true>,
   ) {
     this.secret = config.get('JWT_SECRET', { infer: true });
+    this.portalSecret = config.get('PORTAL_SSO_SECRET', { infer: true });
+  }
+
+  get portalSignInEnabled(): boolean {
+    return this.portalSecret !== undefined;
+  }
+
+  /**
+   * Signs in an employee the portal vouches for: its token names the email (and optionally the
+   * display name and department). The account is created on first visit; the portal's name and
+   * department are copied on every visit so they stay current.
+   */
+  async portalSignIn(token: string): Promise<AuthResponse> {
+    if (!this.portalSecret) throw new NotFoundException('Portal sign-in is not set up');
+    const claims = verifyForeignToken(token, this.portalSecret, PORTAL_TOKEN_MAX_SECONDS);
+    const parsed = portalClaimsSchema.safeParse(claims ?? {});
+    if (!claims || !parsed.success) throw new UnauthorizedException('Invalid or expired portal sign-in link');
+    const { email, name, department } = parsed.data;
+    const user = await this.prisma.user.upsert({
+      where: { email },
+      create: {
+        email,
+        displayName: name || email.split('@')[0]!.slice(0, 40),
+        department: department || null,
+        // No usable password: portal accounts sign in through the portal (or set one via "forgot password").
+        passwordHash: `portal$${randomBytes(24).toString('base64url')}`,
+      },
+      update: { ...(name ? { displayName: name } : {}), ...(department ? { department } : {}) },
+    });
+    return this.issue(user);
   }
 
   async register(input: Required<RegisterRequest>): Promise<AuthResponse> {

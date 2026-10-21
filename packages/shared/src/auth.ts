@@ -8,6 +8,7 @@ export const AUTH_LIMITS = {
   passwordMin: 8,
   passwordMax: 128,
   displayNameMax: 40,
+  departmentMax: 40,
   emailMax: 254,
 } as const;
 
@@ -39,9 +40,27 @@ export const resetPasswordSchema = z.object({
 });
 export type ResetPasswordRequest = z.input<typeof resetPasswordSchema>;
 
+const department = z
+  .string()
+  .transform((s) => s.normalize('NFKC').replace(/\s+/g, ' ').trim())
+  .pipe(z.string().max(AUTH_LIMITS.departmentMax));
+
 export const updateProfileSchema = z.object({
   displayName: displayName.optional(),
   avatar: z.enum(AVATARS).nullable().optional(),
+  /** Empty string clears it. */
+  department: department.optional(),
+});
+
+/** Sign-in from the employee portal with a short-lived token it signed (see deploy/portal/README.md). */
+export const portalSignInSchema = z.object({ token: z.string().trim().min(20).max(4000) });
+export type PortalSignInRequest = z.input<typeof portalSignInSchema>;
+
+/** What the portal's token must carry. */
+export const portalClaimsSchema = z.object({
+  email,
+  name: displayName.optional(),
+  department: department.optional(),
 });
 export type UpdateProfileRequest = z.input<typeof updateProfileSchema>;
 
@@ -50,6 +69,7 @@ export interface UserPublic {
   email: string;
   displayName: string;
   avatar?: string;
+  department?: string;
   xp: number;
   level: number;
   /** Listed in the server's ADMIN_EMAILS. */
@@ -61,6 +81,8 @@ export interface UserPublic {
 export interface AppSettings {
   /** Only admins may create, edit, import or delete quizzes. */
   restrictQuizEditing: boolean;
+  /** The employee portal can sign people in (PORTAL_SSO_SECRET is set). */
+  portalSignIn: boolean;
 }
 
 export interface AuthResponse {

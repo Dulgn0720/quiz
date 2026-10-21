@@ -14,7 +14,7 @@ import { useAuthStore } from '@/stores/auth';
 
 const PAGE_SIZE = 24;
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
 const router = useRouter();
 const route = useRoute();
 const toast = useToast();
@@ -90,7 +90,7 @@ watch(search, () => {
 onMounted(() => void load(true));
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(locale.value === 'mn' ? 'mn-MN' : 'en-US', {
+  return new Date(iso).toLocaleDateString('mn-MN', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',

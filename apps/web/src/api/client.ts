@@ -1,6 +1,10 @@
 import type { ApiErrorBody, ImportIssue } from '@quiz/shared';
 import { authToken } from '@/auth/token';
 
+/**
+ * Where the API lives: an absolute URL ("https://quiz.example.mn"), or a path on this site ("/quiz")
+ * when the app is served under a sub-path of another site.
+ */
 export const API_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:3000').replace(/\/+$/, '');
 
 export class ApiError extends Error {

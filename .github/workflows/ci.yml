@@ -62,3 +62,5 @@ jobs:
         run: |
           docker compose -f docker-compose.prod.yml config -q
           docker run --rm -e DOMAIN -v "$PWD/Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+          PORTAL_HOST=portal.example.mn docker compose -f portal/docker-compose.portal.yml config -q
+          docker run --rm -e PORTAL_ORIGIN=https://portal.example.mn -v "$PWD/portal/Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile

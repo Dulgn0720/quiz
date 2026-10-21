@@ -69,3 +69,32 @@ export function verifyToken(token: string, secret: string, now = Date.now()): To
     return null;
   }
 }
+
+/**
+ * Verifies an HS256 JWT made by another system (the employee portal) and returns its payload.
+ * Unlike {@link verifyToken} it accepts any standard header with `alg: HS256`, and it requires a
+ * short lifetime so a leaked link stops working quickly.
+ */
+export function verifyForeignToken(
+  token: string,
+  secret: string,
+  maxLifetimeSeconds: number,
+  now = Date.now(),
+): Record<string, unknown> | null {
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+  const [header, payload, sig] = parts as [string, string, string];
+  try {
+    const head = JSON.parse(Buffer.from(header, 'base64url').toString('utf8')) as { alg?: unknown };
+    if (head.alg !== 'HS256') return null;
+    const expected = signature(`${header}.${payload}`, secret);
+    const given = Buffer.from(sig, 'base64url');
+    if (given.length !== expected.length || !timingSafeEqual(given, expected)) return null;
+    const claims = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as Record<string, unknown>;
+    const exp = claims.exp;
+    if (typeof exp !== 'number' || exp * 1000 <= now || exp * 1000 - now > maxLifetimeSeconds * 1000) return null;
+    return claims;
+  } catch {
+    return null;
+  }
+}

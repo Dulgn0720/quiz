@@ -3,7 +3,7 @@ import { authToken } from '@/auth/token';
 import HomeView from '@/views/HomeView.vue';
 
 export const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     { path: '/', name: 'home', component: HomeView },
     { path: '/quizzes', name: 'quizzes', component: () => import('@/views/QuizListView.vue') },
@@ -26,6 +26,15 @@ export const router = createRouter({
       name: 'reset-password',
       component: () => import('@/views/ResetPasswordView.vue'),
       props: (route) => ({ token: typeof route.query.token === 'string' ? route.query.token : '' }),
+    },
+    {
+      path: '/portal',
+      name: 'portal',
+      component: () => import('@/views/PortalSignInView.vue'),
+      props: (route) => ({
+        token: typeof route.query.token === 'string' ? route.query.token : '',
+        next: typeof route.query.next === 'string' ? route.query.next : '/',
+      }),
     },
     { path: '/me', name: 'profile', component: () => import('@/views/ProfileView.vue'), meta: { requiresAuth: true } },
     { path: '/leaderboard', name: 'leaderboard', component: () => import('@/views/LeaderboardView.vue') },

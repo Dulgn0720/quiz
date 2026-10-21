@@ -27,6 +27,9 @@ export const authApi = {
   resetPassword(token: string, password: string): Promise<AuthResponse> {
     return request('/auth/reset-password', { method: 'POST', body: JSON.stringify({ token, password }) });
   },
+  portalSignIn(token: string): Promise<AuthResponse> {
+    return request('/auth/portal', { method: 'POST', body: JSON.stringify({ token }) });
+  },
   me(): Promise<UserProfile> {
     return request('/me');
   },

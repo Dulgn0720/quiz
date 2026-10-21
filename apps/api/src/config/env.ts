@@ -55,6 +55,11 @@ const envSchema = z.object({
       .optional()
       .transform((url) => url?.replace(/\/+$/, '')),
   ),
+  /**
+   * Shared secret with the employee portal. When set, the portal can sign employees in with a short-lived
+   * HS256 token (see deploy/portal/README.md). Unset: portal sign-in is off.
+   */
+  PORTAL_SSO_SECRET: z.preprocess(emptyToUndefined, z.string().min(32, 'must be at least 32 characters').optional()),
   /** Signs login tokens. Required in production; development falls back to a fixed, public value. */
   JWT_SECRET: z.string().min(32, 'must be at least 32 characters').optional(),
 });
