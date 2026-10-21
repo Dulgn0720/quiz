@@ -18,7 +18,7 @@ const THEMES: { match: RegExp; theme: QuizTheme }[] = [
   { match: /байгаль/i, theme: { icon: '🏔️', gradient: 'from-cyan-400 via-sky-500 to-blue-700' } },
   { match: /наадам|ёс заншил/i, theme: { icon: '🐎', gradient: 'from-sky-500 via-blue-600 to-brand-500' } },
   { match: /монгол хэл|зүйр/i, theme: { icon: '📖', gradient: 'from-teal-400 via-cyan-600 to-indigo-700' } },
-  { match: /технологи ба интернет/i, theme: { icon: '📱', gradient: 'from-fuchsia-500 via-purple-600 to-indigo-700' } },
+  { match: /технологи ба интерн/i, theme: { icon: '📱', gradient: 'from-fuchsia-500 via-purple-600 to-indigo-700' } },
   { match: /ерөнхий мэдлэг/i, theme: { icon: '🧠', gradient: 'from-violet-500 via-indigo-500 to-sky-500' } },
   { match: /сонин хачин/i, theme: { icon: '🤯', gradient: 'from-yellow-400 via-orange-500 to-pink-600' } },
   { match: /домог/i, theme: { icon: '🧐', gradient: 'from-purple-500 via-fuchsia-500 to-rose-500' } },
