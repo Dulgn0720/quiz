@@ -19,10 +19,12 @@ import AwardsPanel from '@/components/game/AwardsPanel.vue';
 import RevealMascot from '@/components/game/RevealMascot.vue';
 import TipCarousel from '@/components/game/TipCarousel.vue';
 import TeamRace from '@/components/game/TeamRace.vue';
+import HardestQuestions from '@/components/game/HardestQuestions.vue';
 import BrandMark from '@/components/BrandMark.vue';
 import SoundToggles from '@/components/SoundToggles.vue';
 import { shortTitle } from '@/brand/topics';
 import { useGameSounds } from '@/game/useGameSounds';
+import { downloadFile, questionRecord, reportCsv, type QuestionRecord } from '@/game/report';
 import { useToast } from '@/composables/useToast';
 import { useGameStore, type Ack } from '@/stores/game';
 
@@ -95,6 +97,54 @@ function onKey(event: KeyboardEvent): void {
     void togglePause();
   }
 }
+// How the room did on each question, for the knowledge-gap list and the downloadable report.
+// Kept in sessionStorage so a refreshed projector tab still has the earlier questions.
+const questionRecords = ref<QuestionRecord[]>([]);
+const recordsKey = computed(() => `quiz.report.${props.pin}`);
+function loadRecords(): void {
+  try {
+    questionRecords.value = JSON.parse(sessionStorage.getItem(recordsKey.value) ?? '[]') as QuestionRecord[];
+  } catch {
+    questionRecords.value = [];
+  }
+}
+loadRecords();
+watch(recordsKey, loadRecords);
+watch(phase, (p) => {
+  if (p?.phase !== 'reveal') return;
+  const record = questionRecord(p.question, p.reveal);
+  questionRecords.value = [...questionRecords.value.filter((q) => q.number !== record.number), record];
+  try {
+    sessionStorage.setItem(recordsKey.value, JSON.stringify(questionRecords.value));
+  } catch {
+    // Private mode or full storage: the report just covers this tab's questions.
+  }
+});
+
+function downloadReport(): void {
+  const p = phase.value;
+  if (p?.phase !== 'podium' || !room.value) return;
+  const teams = new Map(room.value.players.filter((pl) => pl.team).map((pl) => [pl.id, pl.team!]));
+  const csv = reportCsv(room.value.quizTitle, p.results, questionRecords.value, teams, {
+    players: t('game.report.players'),
+    questions: t('game.report.questions'),
+    rank: t('game.report.rank'),
+    player: t('game.podium.player'),
+    team: t('game.report.team'),
+    score: t('game.podium.score'),
+    correct: t('game.podium.correct'),
+    answered: t('game.report.answered'),
+    bestStreak: t('game.podium.bestStreak'),
+    avgSeconds: t('game.report.avgSeconds'),
+    number: t('game.report.number'),
+    round: t('game.report.round'),
+    question: t('game.report.question'),
+    correctPercent: t('game.report.correctPercent'),
+  });
+  const date = new Date().toISOString().slice(0, 10);
+  downloadFile(`quiz-${props.pin}-${date}.csv`, csv);
+}
+
 // An empty lobby for a while sends the mascot to sleep, until someone joins.
 const lobbySleepy = ref(false);
 let sleepTimer: ReturnType<typeof setTimeout> | undefined;
@@ -229,6 +279,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
           </div>
           <PodiumPanel :results="phase.results" />
           <AwardsPanel :results="phase.results" />
+          <HardestQuestions :questions="questionRecords" />
           <ResultsTable :results="phase.results" size="lg" />
         </div>
         </Transition>
@@ -249,6 +300,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
           </button>
         </template>
         <template v-else-if="phase.phase === 'podium'">
+          <button type="button" class="btn-secondary" @click="downloadReport">⬇ {{ t('game.report.download') }}</button>
           <RouterLink to="/quizzes" class="btn-primary">{{ t('game.podium.backToQuizzes') }}</RouterLink>
         </template>
         <template v-else>

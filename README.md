@@ -205,6 +205,8 @@ Server → client: `room:state` (room settings and player list), `game:phase` (w
 - **Reveal commentary:** on the projector, Агу reacts to how the room did on each question.
 - **Special awards:** after the podium, the big screen hands out ⚡ Quickest, 🔥 Streak champion and 🎯 Sharpshooter.
 - **Department battle:** with «Хэлтэс хоорондын тоглолт» on, every player joins a team (their profile or portal department is suggested, spellings like «it» / «IT» merge). Teams are ranked by their members' average score, shown as racing bars next to the leaderboard, in round summaries and on the podium with the winning team.
+- **Game report:** the podium on the host screen lists the three questions the room found hardest (worth going over together) and downloads the results as CSV that Excel opens directly: every player's rank, team, score, correct answers, best streak and average time, then each question's correct rate.
+- **Install as an app:** a web manifest and icons let phones and desktops add Agula Quiz to the home screen; it opens full screen, also under the portal's `/quiz/` path.
 - **Practice mode** (`/practice/<quiz id>`, the 🎯 button on every quiz): play any quiz alone on a phone with the same timer and scoring, see the explanation after each answer, earn up to three stars and beat your personal best (kept in the browser).
 - **Language:** the interface is Mongolian only, in everyday office Mongolian: common terms stay in English («Quiz», «Level», «streak», «badge», «Leaderboard»).
 

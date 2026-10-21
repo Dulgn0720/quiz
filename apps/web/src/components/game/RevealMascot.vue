@@ -4,25 +4,19 @@ import { computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Mascot, { type MascotMood } from '@/components/Mascot.vue';
 import { useEmojiRain } from '@/composables/useEmojiRain';
+import { correctCount } from '@/game/reveal-stats';
 
 /** The mascot comments on how the room did, on the host screen after each reveal. */
 const props = defineProps<{ reveal: QuestionReveal; seed: number }>();
 const { tm, rt } = useI18n();
 
-/** Players who got it right, when the distribution tells us (not for multiple choice). */
-const correctCount = computed<number | null>(() => {
-  const { answer, distribution } = props.reveal;
-  if (answer.type === 'single' || answer.type === 'image') return distribution[answer.optionIds[0]!] ?? 0;
-  if (answer.type === 'true_false') return distribution[String(answer.value)] ?? 0;
-  if (answer.type === 'type_answer' || answer.type === 'ordering') return distribution.correct ?? 0;
-  return null;
-});
+const correct = computed(() => correctCount(props.reveal));
 
 const tier = computed<'none' | 'all' | 'most' | 'half' | 'few' | 'unknown'>(() => {
   const { answeredCount, playerCount } = props.reveal;
   if (answeredCount === 0) return 'none';
-  if (correctCount.value === null || playerCount === 0) return 'unknown';
-  const share = correctCount.value / playerCount;
+  if (correct.value === null || playerCount === 0) return 'unknown';
+  const share = correct.value / playerCount;
   if (share >= 1) return 'all';
   if (share >= 0.7) return 'most';
   if (share >= 0.35) return 'half';
