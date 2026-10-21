@@ -34,6 +34,12 @@ docker compose up --build
 
 On start the API applies database migrations and seeds the sample quizzes.
 
+If a port is already in use on your machine (for example a local Redis on 6379 or PostgreSQL on 5432), pick other host ports:
+
+```bash
+REDIS_PORT=6380 POSTGRES_PORT=5433 docker compose up --build
+```
+
 ## Local development
 
 Requirements: Node.js 20+ and pnpm 10 (`corepack enable`).
