@@ -155,7 +155,7 @@ onBeforeUnmount(() => clearInterval(timer));
         :title="t('daily.best', { n: streak.best })"
       >
         <span :class="streak.current > 0 ? 'flame' : 'grayscale'" aria-hidden="true">🔥</span>
-        {{ t('daily.streak', { n: streak.current }) }}
+        {{ streak.current > 0 ? t('daily.streak', { n: streak.current }) : t('daily.startStreak') }}
       </span>
     </div>
 

@@ -549,6 +549,7 @@ const mn = {
     true: 'Үнэн',
     false: 'Худал',
     streak: '{n} өдөр дараалан',
+    startStreak: 'Streak-ээ эхлүүлээрэй',
     best: 'Хамгийн урт нь: {n} өдөр',
     correct: 'Гоё! Зөв хариуллаа.',
     correctStreak: '{n} өдөр дараалан! Галтай байна!',
