@@ -145,8 +145,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
           <div v-if="players.length === 0" class="flex justify-center">
             <Mascot mood="wave" :size="150" :say="t('mascot.lobbyHost')" />
           </div>
-          <PlayerChips :players="players" kickable size="lg" @kick="kick" />
           <TipCarousel v-if="players.length" size="lg" />
+          <PlayerChips :players="players" kickable size="lg" @kick="kick" />
         </div>
 
         <CountdownCard v-else-if="phase.phase === 'countdown'" :countdown="phase" />

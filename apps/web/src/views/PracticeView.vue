@@ -177,7 +177,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
   <div class="dark stage min-h-dvh">
     <section class="mx-auto flex min-h-dvh max-w-xl flex-col px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
       <header class="sticky top-0 z-10 -mx-4 mb-4 flex items-center gap-3 bg-ink-950/70 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-xl">
-        <span class="chip bg-brand-500/15 px-3 py-1 text-brand-300 ring-1 ring-brand-400/30">🎯 {{ t('practice.badge') }}</span>
+        <span class="chip shrink-0 whitespace-nowrap bg-brand-500/15 px-3 py-1 text-brand-300 ring-1 ring-brand-400/30">🎯 {{ t('practice.badge') }}</span>
         <span class="mr-auto truncate font-bold">{{ quiz ? shortTitle(quiz.title) : '' }}</span>
         <span
           v-if="stage !== 'intro' && stage !== 'loading' && stage !== 'error'"

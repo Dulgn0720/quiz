@@ -34,7 +34,7 @@ const message = computed(() => {
 
 <template>
   <div class="flex flex-col items-center">
-    <Mascot :mood="mood" :size="110" class="-mb-6 relative z-10" />
+    <Mascot :mood="mood" :size="110" class="relative z-[1] -mb-6" />
     <div
       class="flex w-full animate-pop flex-col items-center gap-2 rounded-3xl px-6 pb-7 pt-9 text-center text-white shadow-lg"
       :class="
