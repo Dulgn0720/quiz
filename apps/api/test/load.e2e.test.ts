@@ -42,11 +42,18 @@ afterAll(() => {
   server?.kill('SIGTERM');
 });
 
+/** Latest phase each socket has seen, so a phase that arrived before we started waiting still counts. */
+const latest = new WeakMap<ClientSocket, PhasePayload>();
+
 function connect(): ClientSocket {
-  return io(BASE, { transports: ['websocket'], forceNew: true });
+  const socket: ClientSocket = io(BASE, { transports: ['websocket'], forceNew: true });
+  socket.on('game:phase', (p) => latest.set(socket, p));
+  return socket;
 }
 
 function waitFor(socket: ClientSocket, test: (p: PhasePayload) => boolean, what: string, ms = 30_000): Promise<PhasePayload> {
+  const current = latest.get(socket);
+  if (current && test(current)) return Promise.resolve(current);
   return new Promise((resolvePhase, reject) => {
     const timer = setTimeout(() => reject(new Error(`timed out waiting for ${what}`)), ms);
     const handler = (p: PhasePayload) => {
