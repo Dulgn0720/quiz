@@ -86,7 +86,7 @@ onMounted(async () => {
             autocomplete="off"
             :maxlength="PIN_LENGTH"
             placeholder="000000"
-            class="w-full rounded-2xl border-0 bg-white/10 px-5 py-4 text-center font-display text-4xl font-bold tracking-[0.35em] text-white outline-none ring-1 ring-white/15 placeholder:text-white/25 focus:ring-2 focus:ring-brand-400"
+            class="w-full rounded-2xl border-0 bg-white/10 px-3 py-4 text-center font-display text-3xl font-bold tracking-[0.2em] text-white sm:px-5 sm:text-4xl sm:tracking-[0.35em] outline-none ring-1 ring-white/15 placeholder:text-white/25 focus:ring-2 focus:ring-brand-400"
             @input="onPinInput"
           />
         </label>

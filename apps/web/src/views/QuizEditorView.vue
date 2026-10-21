@@ -168,7 +168,7 @@ const statusText = computed(() => {
     <!-- Title bar -->
     <div class="flex flex-wrap items-center gap-3">
       <RouterLink to="/quizzes" class="btn-icon" :aria-label="t('common.back')" :title="t('common.back')">←</RouterLink>
-      <label class="min-w-0 flex-1">
+      <label class="min-w-[min(100%,16rem)] flex-1">
         <span class="sr-only">{{ t('editor.titlePlaceholder') }}</span>
         <input
           v-model="editor.draft.title"
@@ -205,7 +205,7 @@ const statusText = computed(() => {
 
     <div class="mt-6 grid gap-6 lg:grid-cols-[18rem_1fr]">
       <!-- Outline -->
-      <nav class="space-y-3 lg:sticky lg:top-24 lg:max-h-[calc(100dvh-7rem)] lg:overflow-auto" :aria-label="t('editor.quizSettings')">
+      <nav class="min-w-0 space-y-3 lg:sticky lg:top-24 lg:max-h-[calc(100dvh-7rem)] lg:overflow-auto" :aria-label="t('editor.quizSettings')">
         <button
           type="button"
           class="w-full rounded-xl px-3 py-2.5 text-left font-bold transition"

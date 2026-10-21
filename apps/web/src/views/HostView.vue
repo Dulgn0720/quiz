@@ -173,7 +173,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
 
       <!-- Host controls -->
       <nav
-        class="sticky bottom-0 -mx-4 mt-8 flex flex-wrap items-center justify-center gap-2 border-t border-slate-200 dark:border-slate-700 bg-slate-50/95 dark:bg-slate-950/95 px-4 py-3 backdrop-blur"
+        class="sticky bottom-4 mx-auto mt-8 flex w-fit max-w-full flex-wrap items-center justify-center gap-2 rounded-full bg-ink-900/70 px-3 py-2 shadow-2xl ring-1 ring-white/10 backdrop-blur-xl"
         :aria-label="t('game.controls.label')"
       >
         <template v-if="phase.phase === 'lobby'">

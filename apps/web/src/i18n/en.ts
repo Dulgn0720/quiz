@@ -80,7 +80,7 @@ export default {
     loadMore: 'Load more',
     host: 'Host',
     hostEmpty: 'Add questions before hosting this quiz.',
-    sampleReadOnly: 'Sample quizzes are read-only — duplicate one to edit it.',
+    sampleReadOnly: 'Official Agula quizzes can’t be edited directly — duplicate one to change it.',
   },
   importDialog: {
     title: 'Import a quiz',
@@ -116,7 +116,7 @@ export default {
     untitledQuestion: 'Untitled question',
     fixErrors: 'Fix the highlighted problems before saving.',
     saveFailed: 'Saving failed.',
-    readOnly: 'This is a sample quiz and cannot be edited.',
+    readOnly: 'This is an official Agula quiz, so it can’t be edited directly. Duplicate it to make changes.',
     duplicateToEdit: 'Duplicate to edit',
     notFound: 'This quiz does not exist.',
     hasErrors: 'Has problems',

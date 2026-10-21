@@ -26,7 +26,7 @@ function removeOption(index: number): void {
     <p class="mb-3 text-sm text-slate-500 dark:text-slate-400">
       {{ multiple ? t('question.correctHintMultiple') : t('question.correctHintSingle') }}
     </p>
-    <ul class="grid gap-3 sm:grid-cols-2">
+    <ul class="grid gap-3">
       <li
         v-for="(option, i) in question.options"
         :key="option.id"

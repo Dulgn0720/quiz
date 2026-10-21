@@ -7,7 +7,8 @@ import { SAMPLE_QUIZZES } from './sample-quizzes';
 async function main(): Promise<void> {
   const prisma = new PrismaClient();
   try {
-    for (const sample of SAMPLE_QUIZZES) {
+    // Lists show the most recently updated first, so seed in reverse to keep the file's order on screen.
+    for (const sample of [...SAMPLE_QUIZZES].reverse()) {
       const data = { ...contentToCreateData(quizInputSchema.parse(sample.quiz)), isSample: true };
       await prisma.$transaction(async (tx) => {
         await tx.round.deleteMany({ where: { quizId: sample.id } });

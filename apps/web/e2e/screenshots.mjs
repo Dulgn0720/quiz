@@ -30,9 +30,29 @@ function watch(page, label) {
   page.on('requestfailed', (r) => problems.push(`${label}: request failed: ${r.url()} ${r.failure()?.errorText}`));
 }
 
+/** Flags the page if anything sticks out past the right edge (what makes phones scroll sideways). */
 async function checkOverflow(page, label) {
-  const over = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
-  if (over > 1) problems.push(`${label}: horizontal overflow of ${over}px`);
+  const offenders = await page.evaluate(() => {
+    const width = document.documentElement.clientWidth;
+    const out = [];
+    for (const el of document.body.querySelectorAll('*')) {
+      const r = el.getBoundingClientRect();
+      if (r.width === 0 || r.right <= width + 1) continue;
+      // Skip children of something already reported, and things clipped by a scroll container.
+      if (out.some((o) => o.el.contains(el))) continue;
+      let clipped = false;
+      for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) {
+        const o = getComputedStyle(p).overflowX;
+        if (o === 'hidden' || o === 'auto' || o === 'scroll' || o === 'clip') {
+          clipped = true;
+          break;
+        }
+      }
+      if (!clipped) out.push({ el, desc: `${el.tagName.toLowerCase()}.${[...el.classList].slice(0, 3).join('.')} (+${Math.round(r.right - width)}px)` });
+    }
+    return out.slice(0, 3).map((o) => o.desc);
+  });
+  if (offenders.length) problems.push(`${label}: overflows the screen: ${offenders.join(', ')}`);
 }
 
 async function newPage(options, theme, label) {
@@ -175,13 +195,14 @@ for (const [name, theme] of [
   players.push(p);
 }
 await shot(players[0], 'game-player-lobby');
+await checkOverflow(players[0], 'player lobby');
 await shot(host, 'game-host-lobby');
 
 await host.getByRole('button', { name: 'Тоглоом эхлүүлэх' }).click();
 await host.waitForTimeout(600);
 await shot(host, 'game-host-countdown');
 
-const HOST_NEXT = ['Дараагийн асуулт', 'Дараагийн тойрог', 'Үр дүн харах', 'Үргэлжлүүлэх'];
+const HOST_NEXT = [/^Дараагийн асуулт/, /^Дараагийн тойрог/, /^Үр дүн харах/, /^Үргэлжлүүлэх/];
 let question = 0;
 for (let step = 0; step < 60; step++) {
   // Players answer whatever is on screen.
@@ -190,6 +211,7 @@ for (let step = 0; step < 60; step++) {
     question++;
     await shot(host, `game-host-question-${question}`);
     await shot(players[0], `game-player-question-${question}`);
+    await checkOverflow(players[0], `player question ${question}`);
     for (const p of players) {
       const f = p.locator('form').first();
       if (await f.locator('#typed-answer').count()) {
@@ -210,7 +232,7 @@ for (let step = 0; step < 60; step++) {
     await host.waitForTimeout(2000); // reveal follows shortly after everyone answers
   }
 
-  const next = HOST_NEXT.map((n) => host.getByRole('button', { name: n, exact: true }));
+  const next = HOST_NEXT.map((n) => host.getByRole('button', { name: n }));
   let clicked = false;
   for (const button of next) {
     if (await button.isVisible().catch(() => false)) {

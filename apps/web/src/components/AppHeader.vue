@@ -11,7 +11,7 @@ const navActive = 'bg-ink-900/5 text-ink-950 dark:bg-white/10 dark:text-white';
 <template>
   <header class="sticky top-0 z-30 px-3 pt-3">
     <div
-      class="mx-auto flex h-16 max-w-6xl items-center gap-1 rounded-full bg-white/70 pl-3 pr-2 shadow-soft ring-1 ring-ink-900/5 backdrop-blur-xl dark:bg-ink-900/60 dark:ring-white/10"
+      class="mx-auto flex h-16 max-w-6xl items-center gap-0.5 rounded-full sm:gap-1 bg-white/70 pl-3 pr-2 shadow-soft ring-1 ring-ink-900/5 backdrop-blur-xl dark:bg-ink-900/60 dark:ring-white/10"
     >
       <RouterLink to="/" class="mr-auto flex items-center gap-2.5 rounded-full pr-2" :aria-label="$t('nav.home')">
         <BrandMark :size="38" />
@@ -20,10 +20,13 @@ const navActive = 'bg-ink-900/5 text-ink-950 dark:bg-white/10 dark:text-white';
         </span>
       </RouterLink>
       <nav class="flex items-center gap-0.5" :aria-label="$t('nav.home')">
-        <RouterLink to="/join" class="btn-ghost px-3" :active-class="navActive">{{ $t('nav.join') }}</RouterLink>
+        <RouterLink to="/join" class="btn-ghost px-3" :active-class="navActive">
+          <span class="sm:hidden">{{ $t('home.joinCta') }}</span>
+          <span class="hidden sm:inline">{{ $t('nav.join') }}</span>
+        </RouterLink>
         <RouterLink to="/rooms" class="btn-ghost hidden px-3 md:inline-flex" :active-class="navActive">{{ $t('nav.rooms') }}</RouterLink>
         <RouterLink to="/quizzes" class="btn-ghost hidden px-3 sm:inline-flex" :active-class="navActive">{{ $t('nav.quizzes') }}</RouterLink>
-        <RouterLink v-if="auth.canEditQuizzes" to="/quizzes/new" class="btn-primary ml-1 px-4">
+        <RouterLink v-if="auth.canEditQuizzes" to="/quizzes/new" class="btn-primary ml-1 hidden px-4 sm:inline-flex">
           <span aria-hidden="true">＋</span>
           <span class="hidden lg:inline">{{ $t('nav.create') }}</span>
           <span class="sr-only lg:hidden">{{ $t('nav.create') }}</span>
