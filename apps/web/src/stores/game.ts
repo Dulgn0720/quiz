@@ -246,7 +246,9 @@ export const useGameStore = defineStore('game', () => {
   function leave(): void {
     if (role.value === 'player') {
       socket?.emit('room:leave');
-      session.clearPlayer(pin.value);
+      // Mid-game the server keeps the seat and score; keep the token so rejoining puts the player back in it.
+      const p = phase.value?.phase;
+      if (!p || p === 'lobby' || p === 'podium') session.clearPlayer(pin.value);
     }
     reset();
   }

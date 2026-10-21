@@ -188,8 +188,8 @@ for (const [name, theme] of [
   const p = await newPage(PHONE, theme, `player-${name}`);
   await p.goto(`${WEB}/join/${game.pin}`, { waitUntil: 'networkidle' });
   if (players.length === 0) await shot(p, 'game-player-join-form');
-  await p.getByLabel('Хоч нэр').fill(name);
-  await p.getByRole('button', { name: 'Эхэлцгээе!' }).click();
+  await p.getByLabel('Тоглогчийн нэр').fill(name);
+  await p.getByRole('button', { name: 'Нэгдэх', exact: true }).click();
   await p.waitForURL('**/play/**');
   await p.waitForLoadState('networkidle');
   players.push(p);
@@ -202,7 +202,7 @@ await host.getByRole('button', { name: 'Тоглоом эхлүүлэх' }).clic
 await host.waitForTimeout(600);
 await shot(host, 'game-host-countdown');
 
-const HOST_NEXT = [/^Дараагийн асуулт/, /^Дараагийн тойрог/, /^Үр дүн харах/, /^Үргэлжлүүлэх/];
+const HOST_NEXT = [/^Дараагийн асуулт/, /^Дараагийн тойрог/, /^Үр дүн/, /^Үргэлжлүүлэх/];
 let question = 0;
 for (let step = 0; step < 60; step++) {
   // Players answer whatever is on screen.
