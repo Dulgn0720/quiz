@@ -603,3 +603,54 @@ describe('team games', () => {
     expect(board.phase === 'leaderboard' && board.teams).toBeUndefined();
   });
 });
+
+describe('power-ups', () => {
+  it('50/50 hides all wrong options but one, double points doubles a right answer, each once', () => {
+    const engine = makeEngine({ powerUps: true });
+    const a = joinConnected(engine, 'Anu');
+    const b = joinConnected(engine, 'Bat');
+    startToQuestion(engine);
+    const index = currentIndex(engine);
+
+    const before = phaseOf(a);
+    expect(before.phase === 'question' && before.powerUps).toEqual({ available: ['fifty', 'double'] });
+
+    expect(engine.usePowerUp(a, index, 'fifty').ok).toBe(true);
+    expect(engine.usePowerUp(a, index, 'double').ok).toBe(true);
+    expect(engine.usePowerUp(a, index, 'fifty')).toEqual({ ok: false, error: 'power_up_unavailable' });
+    const armed = phaseOf(a);
+    if (armed.phase !== 'question') throw new Error(armed.phase);
+    expect(armed.powerUps!.available).toEqual([]);
+    expect(armed.powerUps!.double).toBe(true);
+    expect(armed.powerUps!.hidden).toHaveLength(2);
+    expect(armed.powerUps!.hidden).not.toContain('b');
+
+    expect(engine.submitAnswer(a, index, { type: 'single', optionIds: ['b'] }).ok).toBe(true);
+    expect(engine.usePowerUp(b, index + 1, 'double')).toEqual({ ok: false, error: 'too_late' });
+    expect(engine.submitAnswer(b, index, { type: 'single', optionIds: ['b'] }).ok).toBe(true);
+    expect(engine.usePowerUp(b, index, 'double')).toEqual({ ok: false, error: 'already_answered' });
+    time.advance(GAME_TIMINGS.allAnsweredRevealDelayMs + 10);
+
+    const reveal = phaseOf(a);
+    if (reveal.phase !== 'reveal') throw new Error(reveal.phase);
+    expect(reveal.you!.breakdown.boost).toBeGreaterThan(0);
+    expect(reveal.you!.points).toBe(reveal.you!.breakdown.boost! * 2);
+    // Same speed bucket aside, Anu's boosted answer is worth about twice Bat's.
+    expect(engine.findPlayer(a)!.score).toBeGreaterThan(engine.findPlayer(b)!.score * 1.5);
+
+    // The next question (multiple choice) offers no 50/50.
+    while (engine.snapshot.phase !== 'countdown') expect(engine.next().ok).toBe(true);
+    time.advance(GAME_TIMINGS.countdownMs + 10);
+    expect(engine.snapshot.phase).toBe('question');
+    expect(engine.usePowerUp(b, currentIndex(engine), 'fifty')).toEqual({ ok: false, error: 'power_up_unavailable' });
+  });
+
+  it('are off unless the host turns them on', () => {
+    const engine = makeEngine();
+    const a = joinConnected(engine, 'Anu');
+    startToQuestion(engine);
+    expect(engine.usePowerUp(a, currentIndex(engine), 'double')).toEqual({ ok: false, error: 'power_up_unavailable' });
+    const q = phaseOf(a);
+    expect(q.phase === 'question' && q.powerUps).toBeUndefined();
+  });
+});

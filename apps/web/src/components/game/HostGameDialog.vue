@@ -17,6 +17,7 @@ const dialog = ref<HTMLDialogElement>();
 const visibility = ref<RoomVisibility>('private');
 const perPlayerShuffle = ref(true);
 const teamMode = ref(false);
+const powerUps = ref(true);
 const busy = ref(false);
 const message = ref('');
 
@@ -45,6 +46,7 @@ async function submit(): Promise<void> {
       visibility: visibility.value,
       perPlayerShuffle: perPlayerShuffle.value,
       teamMode: teamMode.value,
+      powerUps: powerUps.value,
     });
     session.saveHostToken(game.pin, game.hostToken);
     emit('close');
@@ -101,6 +103,13 @@ async function submit(): Promise<void> {
         <span>
           <span class="block font-bold">{{ t('game.hostDialog.teamMode') }}</span>
           <span class="block text-sm text-slate-600 dark:text-slate-300">{{ t('game.hostDialog.teamModeHelp') }}</span>
+        </span>
+      </label>
+      <label class="flex cursor-pointer items-start gap-3">
+        <input v-model="powerUps" type="checkbox" class="mt-1 h-4 w-4 accent-brand-600" />
+        <span>
+          <span class="block font-bold">{{ t('game.hostDialog.powerUps') }}</span>
+          <span class="block text-sm text-slate-600 dark:text-slate-300">{{ t('game.hostDialog.powerUpsHelp') }}</span>
         </span>
       </label>
 

@@ -4,7 +4,7 @@ import { computed, ref, watch } from 'vue';
 import { tileStyle } from '@/game/answers';
 
 /** Answer input on the player's phone, for every question type. */
-const props = defineProps<{ question: QuestionPublic; disabled?: boolean }>();
+const props = defineProps<{ question: QuestionPublic; disabled?: boolean; hidden?: string[] }>();
 const emit = defineEmits<{ submit: [answer: AnswerPayload] }>();
 
 const selected = ref<string[]>([]);
@@ -69,13 +69,15 @@ function submitOrder(): void {
           type="button"
           class="flex min-h-28 flex-col items-center justify-center gap-2 rounded-3xl p-3 text-lg font-extrabold shadow-lg transition duration-150 hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-4 disabled:opacity-60"
           :class="[
+            hidden?.includes(option.id) ? 'fifty-gone' : '',
             tileStyle(i).bg,
             tileStyle(i).fg,
             tileStyle(i).ring,
             selected.includes(option.id) ? 'scale-[0.97] ring-4 ring-white ring-offset-4 ring-offset-ink-950' : '',
           ]"
           :aria-pressed="isMultiple ? selected.includes(option.id) : undefined"
-          :disabled="disabled"
+          :disabled="disabled || hidden?.includes(option.id)"
+          :aria-hidden="hidden?.includes(option.id) ? 'true' : undefined"
           @click="pick(option.id)"
         >
           <span class="text-2xl" aria-hidden="true">{{ tileStyle(i).shape }}</span>
@@ -138,3 +140,28 @@ function submitOrder(): void {
     </div>
   </form>
 </template>
+
+<style scoped>
+/* Options removed by 50/50 crumple away but keep their place in the grid. */
+.fifty-gone {
+  animation: fifty-poof 0.55s cubic-bezier(0.5, 0, 0.75, 0) forwards;
+  pointer-events: none;
+}
+@keyframes fifty-poof {
+  30% {
+    transform: scale(1.06) rotate(-3deg);
+    filter: brightness(1.4);
+  }
+  100% {
+    transform: scale(0.2) rotate(14deg);
+    opacity: 0;
+    filter: blur(6px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fifty-gone {
+    animation: none;
+    opacity: 0;
+  }
+}
+</style>

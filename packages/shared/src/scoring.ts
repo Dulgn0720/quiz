@@ -98,6 +98,8 @@ export interface ScoreBreakdown {
   base: number;
   speed: number;
   streak: number;
+  /** Extra points from the double-points power-up. */
+  boost?: number;
   total: number;
 }
 

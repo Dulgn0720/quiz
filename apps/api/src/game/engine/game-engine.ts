@@ -3,6 +3,7 @@ import {
   GAME_ERRORS,
   GAME_LIMITS,
   GAME_TIMINGS,
+  POWER_UPS,
   competitionRanks,
   gameTimeLimit,
   hashSeed,
@@ -16,6 +17,8 @@ import {
   type LeaderboardEntry,
   type PhasePayload,
   type PlayerAnswerResult,
+  type PlayerPowerUps,
+  type PowerUp,
   type PlayerStanding,
   type PlayerStats,
   type QuestionPublic,
@@ -347,6 +350,10 @@ export class GameEngine {
       timeLimitMs,
       streak,
     });
+    if (correct && player.boost?.globalIndex === globalIndex && player.boost.double) {
+      breakdown.boost = breakdown.total;
+      breakdown.total *= 2;
+    }
     // Scores are applied when the question closes, so live scores never leak correctness.
     s.pending.push({
       playerId,
@@ -365,6 +372,56 @@ export class GameEngine {
     this.emitAnswerCount();
     this.checkAllAnswered();
     return ok;
+  }
+
+  /** Arms a power-up on the open question, before the player answers it. */
+  usePowerUp(playerId: string, globalIndex: number, powerUp: PowerUp): EngineResult {
+    const s = this.state;
+    const player = this.findPlayer(playerId);
+    if (!player) return fail(GAME_ERRORS.notJoined);
+    if (!s.settings.powerUps) return fail(GAME_ERRORS.powerUpUnavailable);
+    if (s.phase !== 'question') return fail(GAME_ERRORS.tooLate);
+    const current = this.current();
+    if (!current || current.globalIndex !== globalIndex) return fail(GAME_ERRORS.tooLate);
+    if (s.paused) return fail(GAME_ERRORS.paused);
+    if (player.eliminated) return fail(GAME_ERRORS.eliminated);
+    if (s.pending.some((a) => a.playerId === playerId)) return fail(GAME_ERRORS.alreadyAnswered);
+    if (player.powerUpsUsed?.includes(powerUp)) return fail(GAME_ERRORS.powerUpUnavailable);
+
+    const boost = player.boost?.globalIndex === globalIndex ? { ...player.boost } : { globalIndex };
+    if (powerUp === 'fifty') {
+      const hidden = this.fiftyFifty(current, playerId);
+      if (!hidden) return fail(GAME_ERRORS.powerUpUnavailable);
+      boost.hidden = hidden;
+    } else {
+      boost.double = true;
+    }
+    player.boost = boost;
+    player.powerUpsUsed = [...(player.powerUpsUsed ?? []), powerUp];
+    this.touch();
+    const viewer: Viewer = { kind: 'player', playerId };
+    this.deps.output.phase(viewer, this.view(viewer));
+    return ok;
+  }
+
+  /** Wrong options 50/50 hides, keeping one: only for single choice with three or more options. */
+  private fiftyFifty(current: CurrentQuestion, playerId: string): string[] | undefined {
+    const q = current.question;
+    if ((q.type !== 'single' && q.type !== 'image') || q.options.length < 3) return undefined;
+    const wrong = q.options.filter((o) => !q.correct.includes(o.id)).map((o) => o.id);
+    const keep = seededShuffle(wrong, `${this.state.seed}:fifty:${q.id}:${playerId}`)[0];
+    return wrong.filter((id) => id !== keep);
+  }
+
+  private powerUpsView(player: PlayerRecord): PlayerPowerUps | undefined {
+    if (!this.state.settings.powerUps) return undefined;
+    const current = this.current();
+    const boost = current && player.boost?.globalIndex === current.globalIndex ? player.boost : undefined;
+    return {
+      available: POWER_UPS.filter((p) => !player.powerUpsUsed?.includes(p)),
+      hidden: boost?.hidden,
+      double: boost?.double,
+    };
   }
 
   // -------------------------------------------------------------------------
@@ -456,6 +513,7 @@ export class GameEngine {
           phase: 'question',
           question: this.publicQuestion(viewer),
           yourAnswer: player ? s.pending.find((a) => a.playerId === player.id)?.answer : undefined,
+          powerUps: player ? this.powerUpsView(player) : undefined,
           you,
           answeredCount: s.pending.length,
         };

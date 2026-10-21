@@ -54,6 +54,9 @@ const message = computed(() => {
       <p v-if="result.correct && (result.breakdown.speed > 0 || result.breakdown.streak > 0)" class="text-base font-bold">
         {{ $t('game.reveal.breakdown', { base: result.breakdown.base, speed: result.breakdown.speed, streak: result.breakdown.streak }) }}
       </p>
+      <p v-if="result.correct && result.breakdown.boost" class="boost-banner rounded-full bg-gradient-to-r from-amber-400 to-pink-500 px-4 py-1 text-lg font-extrabold">
+        ×2 {{ $t('game.powerUps.doubled', { n: result.breakdown.boost }) }}
+      </p>
       <p v-if="onFire" class="fire-banner mt-1 rounded-full bg-black/25 px-4 py-1.5 text-lg font-extrabold">
         <span aria-hidden="true">🔥</span> {{ $t('game.reveal.onFire', { n: result.streak }) }}
       </p>
@@ -74,5 +77,14 @@ const message = computed(() => {
 @keyframes flicker {
   0%, 100% { transform: scale(1); box-shadow: 0 0 18px rgb(251 146 60 / 0.5); }
   50% { transform: scale(1.05); box-shadow: 0 0 32px rgb(251 146 60 / 0.8); }
+}
+.boost-banner {
+  animation: boost-in 0.7s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+@keyframes boost-in {
+  from {
+    transform: scale(0.3) rotate(-12deg);
+    opacity: 0;
+  }
 }
 </style>

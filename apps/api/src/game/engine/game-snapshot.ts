@@ -1,6 +1,7 @@
 import type {
   AnswerPayload,
   GamePhase,
+  PowerUp,
   GameStatus,
   RoomVisibility,
   SavedRound,
@@ -15,6 +16,8 @@ export interface GameSettings {
   perPlayerShuffle: boolean;
   /** Department battle (absent in snapshots from before team games). */
   teamMode?: boolean;
+  /** One 50/50 and one double-points boost per player (absent in older snapshots). */
+  powerUps?: boolean;
 }
 
 export interface PlayerRecord {
@@ -40,6 +43,10 @@ export interface PlayerRecord {
   previousRank: number;
   /** Points gained on the last question. */
   lastDelta: number;
+  /** Power-ups already used this game. */
+  powerUpsUsed?: PowerUp[];
+  /** Power-ups armed on one question. */
+  boost?: { globalIndex: number; double?: boolean; hidden?: string[] };
 }
 
 export interface AnswerRecord {

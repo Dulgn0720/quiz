@@ -63,6 +63,7 @@ export const GAME_ERRORS = {
   eliminated: 'eliminated',
   notJoined: 'not_joined',
   teamRequired: 'team_required',
+  powerUpUnavailable: 'power_up_unavailable',
 } as const;
 export type GameErrorCode = (typeof GAME_ERRORS)[keyof typeof GAME_ERRORS];
 
@@ -91,6 +92,8 @@ export const createGameSchema = z.object({
   perPlayerShuffle: z.boolean().default(true),
   /** Department battle: every player joins a team, and teams are ranked by their average score. */
   teamMode: z.boolean().default(false),
+  /** Every player gets one 50/50 and one double-points boost per game. */
+  powerUps: z.boolean().default(false),
 });
 export type CreateGameRequest = z.input<typeof createGameSchema>;
 export type CreateGameOptions = z.output<typeof createGameSchema>;
@@ -116,6 +119,25 @@ export const joinRoomSchema = z.object({
   team: teamSchema.optional(),
 });
 export type JoinRoomRequest = z.input<typeof joinRoomSchema>;
+
+/**
+ * Power-ups, each usable once per game, before answering a question:
+ * `fifty` hides all but one wrong option (single choice with 3+ options),
+ * `double` doubles the points of a correct answer.
+ */
+export const POWER_UPS = ['fifty', 'double'] as const;
+export type PowerUp = (typeof POWER_UPS)[number];
+export const powerUpRequestSchema = z.object({ questionIndex: z.number().int().min(0), powerUp: z.enum(POWER_UPS) });
+
+/** A player's power-ups on the open question. */
+export interface PlayerPowerUps {
+  /** Not used yet this game. */
+  available: PowerUp[];
+  /** Options hidden by 50/50 on this question. */
+  hidden?: string[];
+  /** Double points armed on this question. */
+  double?: boolean;
+}
 
 export const hostJoinSchema = z.object({ pin: pinSchema, hostToken: z.string().min(1).max(128) });
 
@@ -331,6 +353,8 @@ export type PhasePayload =
       question: QuestionPublic;
       /** Players only: their submitted answer, if any. */
       yourAnswer?: AnswerPayload;
+      /** Players only, in games with power-ups. */
+      powerUps?: PlayerPowerUps;
       you?: PlayerStanding;
       answeredCount: number;
     }
@@ -393,6 +417,7 @@ export interface ClientToServerEvents {
   'host:next': (ack?: CommandAck) => void;
   'host:end': (ack?: CommandAck) => void;
   'player:answer': (payload: z.input<typeof submitAnswerSchema>, ack: CommandAck) => void;
+  'player:power-up': (payload: z.input<typeof powerUpRequestSchema>, ack: CommandAck) => void;
   /** Fire-and-forget; rate limited per player. */
   'player:react': (payload: { emoji: Reaction }) => void;
 }

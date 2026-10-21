@@ -15,6 +15,7 @@ import {
   hostJoinSchema,
   joinRoomSchema,
   reactionSchema,
+  powerUpRequestSchema,
   submitAnswerSchema,
   type GameErrorCode,
 } from '@quiz/shared';
@@ -150,6 +151,16 @@ export class GameGateway
     const parsed = submitAnswerSchema.safeParse(body);
     if (!parsed.success) return failure(GAME_ERRORS.invalidPayload);
     return toAck(engine.submitAnswer(playerId, parsed.data.questionIndex, parsed.data.answer));
+  }
+
+  @SubscribeMessage('player:power-up')
+  powerUp(@ConnectedSocket() socket: GameSocket, @MessageBody() body: unknown): Ack {
+    const { pin, role, playerId } = socket.data;
+    const engine = pin ? this.games.get(pin) : undefined;
+    if (!engine || role !== 'player' || !playerId) return failure(GAME_ERRORS.notJoined);
+    const parsed = powerUpRequestSchema.safeParse(body);
+    if (!parsed.success) return failure(GAME_ERRORS.invalidPayload);
+    return toAck(engine.usePowerUp(playerId, parsed.data.questionIndex, parsed.data.powerUp));
   }
 
   @SubscribeMessage('player:react')

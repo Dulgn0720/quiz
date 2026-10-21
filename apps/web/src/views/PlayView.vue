@@ -11,6 +11,7 @@ import LeaderboardList from '@/components/game/LeaderboardList.vue';
 import PlayerChips from '@/components/game/PlayerChips.vue';
 import PlayerResult from '@/components/game/PlayerResult.vue';
 import PodiumPanel from '@/components/game/PodiumPanel.vue';
+import PowerUpBar from '@/components/game/PowerUpBar.vue';
 import QuestionHeader from '@/components/game/QuestionHeader.vue';
 import RevealedAnswer from '@/components/game/RevealedAnswer.vue';
 import LevelBar from '@/components/LevelBar.vue';
@@ -159,7 +160,10 @@ function leave(): void {
           <p v-else-if="phase.question.pausedRemainingMs !== undefined" class="card p-8 text-center text-lg font-bold" role="status">
             ❚❚ {{ t('game.player.paused') }}
           </p>
-          <AnswerForm v-else :question="phase.question" @submit="submit" />
+          <template v-else>
+            <PowerUpBar v-if="phase.powerUps" :question="phase.question" :power-ups="phase.powerUps" />
+            <AnswerForm :question="phase.question" :hidden="phase.powerUps?.hidden" @submit="submit" />
+          </template>
         </div>
 
         <div v-else-if="phase.phase === 'reveal'" class="flex flex-1 flex-col justify-center gap-6">

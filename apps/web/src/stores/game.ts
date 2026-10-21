@@ -7,6 +7,7 @@ import {
   type GameErrorCode,
   type PhasePayload,
   type PlayerProgressUpdate,
+  type PowerUp,
   type Reaction,
   type ReactionEvent,
   type RoomState,
@@ -246,6 +247,13 @@ export const useGameStore = defineStore('game', () => {
     return result;
   }
 
+  /** Arms a power-up on the open question; the server answers with a fresh question view. */
+  async function usePowerUp(powerUp: PowerUp): Promise<Ack> {
+    const current = phase.value;
+    if (current?.phase !== 'question') return { ok: false, error: GAME_ERRORS.tooLate };
+    return call('player:power-up', { questionIndex: current.question.globalIndex, powerUp });
+  }
+
   function command(event: HostCommand): Promise<Ack> {
     return call(event);
   }
@@ -279,6 +287,7 @@ export const useGameStore = defineStore('game', () => {
     answerCount,
     reactions,
     react,
+    usePowerUp,
     progress,
     me,
     submitted,
