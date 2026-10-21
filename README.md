@@ -102,6 +102,10 @@ No personal data or credentials from the documents are used. Re-seeding updates 
 
   Only `type` and `prompt` are required. `correct` holds 1-based option numbers or letters separated by `|` (`1|3`, `A|C`) for choice questions, `true`/`false` for true/false, and accepted answers separated by `|` for type-the-answer. For ordering questions, list the options in the correct order and leave `correct` empty. Option images are not supported in CSV. The import dialog has a downloadable template.
 
+## Production
+
+[`deploy/`](deploy/README.md) has a ready setup for one server: Docker Compose with Caddy for automatic HTTPS on your domain, secrets in `deploy/.env`, and backup commands.
+
 ## Environment variables (API)
 
 | Variable | Default | Purpose |

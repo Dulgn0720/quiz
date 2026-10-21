@@ -51,3 +51,12 @@ jobs:
         run: pnpm --filter @quiz/api prisma:deploy
       - name: End-to-end tests
         run: pnpm --filter @quiz/api test:e2e
+      - name: Validate deploy config
+        working-directory: deploy
+        env:
+          DOMAIN: quiz.example.mn
+          POSTGRES_PASSWORD: ci-password
+          JWT_SECRET: ci-jwt-secret-that-is-long-enough-0123456789
+        run: |
+          docker compose -f docker-compose.prod.yml config -q
+          docker run --rm -e DOMAIN -v "$PWD/Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
