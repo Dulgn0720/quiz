@@ -8,14 +8,14 @@ export interface QuizTheme {
 // First match wins, so specific topics come before broad ones ("мэдээллийн аюулгүй ажиллагаа" is security, not safety).
 const THEMES: { match: RegExp; theme: QuizTheme }[] = [
   // Library quizzes (general knowledge, Mongolia, insurance, fun).
+  { match: /байгаль/i, theme: { icon: '🏔️', gradient: 'from-cyan-400 via-sky-500 to-blue-700' } },
   { match: /газар зүй/i, theme: { icon: '🌍', gradient: 'from-sky-400 via-blue-500 to-indigo-600' } },
   { match: /сансар|шинжлэх ухаан/i, theme: { icon: '🔭', gradient: 'from-indigo-500 via-violet-600 to-fuchsia-600' } },
-  { match: /амьтан/i, theme: { icon: '🦒', gradient: 'from-lime-400 via-green-500 to-emerald-700' } },
+  { match: /амьт/i, theme: { icon: '🦒', gradient: 'from-lime-400 via-green-500 to-emerald-700' } },
   { match: /монголын түүх/i, theme: { icon: '🏹', gradient: 'from-amber-500 via-orange-600 to-red-700' } },
   { match: /түүх|нээлт/i, theme: { icon: '📜', gradient: 'from-amber-300 via-yellow-600 to-orange-800' } },
   { match: /соёл|хоол/i, theme: { icon: '🍜', gradient: 'from-rose-400 via-pink-500 to-fuchsia-600' } },
   { match: /спорт/i, theme: { icon: '⚽', gradient: 'from-emerald-400 via-teal-500 to-cyan-700' } },
-  { match: /байгаль/i, theme: { icon: '🏔️', gradient: 'from-cyan-400 via-sky-500 to-blue-700' } },
   { match: /наадам|ёс заншил/i, theme: { icon: '🐎', gradient: 'from-sky-500 via-blue-600 to-brand-500' } },
   { match: /монгол хэл|зүйр/i, theme: { icon: '📖', gradient: 'from-teal-400 via-cyan-600 to-indigo-700' } },
   { match: /технологи ба интерн/i, theme: { icon: '📱', gradient: 'from-fuchsia-500 via-purple-600 to-indigo-700' } },

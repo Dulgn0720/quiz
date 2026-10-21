@@ -83,6 +83,23 @@ Useful scripts (from the repo root):
 - Images are uploaded to the API (`POST /api/media/images`, PNG/JPEG/WebP/GIF up to 5 MB, verified by file signature) and served from `/uploads`.
 - Sample quizzes are read-only; duplicate one to edit it.
 
+### Library quizzes beyond Agula
+
+`apps/api/src/database/general-quizzes.ts` adds 18 official quizzes (324 questions) for parties, onboarding and fun, each with a normal, a speed and a double-points round. Every question was written and then fact-checked and language-edited by an independent reviewer; [docs/library-quiz-review.md](docs/library-quiz-review.md) lists every question with its answer for a final human check.
+
+| Shelf | Quizzes |
+| --- | --- |
+| 🛡️ Insurance | Insurance basics; everyday insurance scenarios; the Mongolian insurance sector |
+| 🐎 Mongolia | History; nature and geography; customs and Naadam; language and proverbs |
+| 🌍 World | Geography; science and space; animals; history and inventions; culture and food; sport; technology and the internet |
+| 🎉 Fun | Weird but true; myth or fact; logic puzzles; general-knowledge mix |
+
+Quizzes have a topic (`category`) and are **private** or **public**. Private quizzes are seen and hosted only by their owner; public ones appear in everyone's library, where they can be filtered by shelf (official, community, mine), topic and popularity. Copies and imports start private; guest quizzes are always public; only admins can file a quiz under «Агула».
+
+### Ranks and the leaderboard
+
+`/leaderboard` ranks signed-in players by XP, all time or over the last 30 days. Ranks follow the level and are named after Naadam wrestling titles: Шинэхэн (1), Начин (3), Харцага (5), Заан (8), Гарьд (11), Арслан (15), Аварга (20).
+
 ### Agula quiz library
 
 The seeded quizzes (`apps/api/src/database/sample-quizzes.ts`) are written from Agula's own documents in `raw-sources/`: 20 quizzes with 373 questions. Every answer's explanation cites the clause it comes from.
