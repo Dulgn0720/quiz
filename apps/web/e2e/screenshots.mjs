@@ -201,7 +201,7 @@ const quiz = await fetch(`${API}/api/quizzes`, {
 const game = await fetch(`${API}/api/games`, {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ quizId: quiz.id, visibility: 'public' }),
+  body: JSON.stringify({ quizId: quiz.id, visibility: 'public', powerUps: true }),
 }).then((r) => r.json());
 if (!game.pin) throw new Error(`Could not create a game: ${JSON.stringify(game)}`);
 
@@ -229,6 +229,16 @@ await shot(players[0], 'game-player-lobby');
 await checkOverflow(players[0], 'player lobby');
 await shot(host, 'game-host-lobby');
 
+// Everyone cheers: enough reactions fill the hype meter on the projector.
+for (const p of players) {
+  for (let i = 0; i < 5; i++) {
+    await p.getByRole('button', { name: / илгээх$/ }).nth(i % 3).click().catch(() => {});
+    await p.waitForTimeout(60);
+  }
+}
+await host.waitForTimeout(500);
+await shot(host, 'game-host-hype');
+
 await host.getByRole('button', { name: 'Тоглоом эхлүүлэх' }).click();
 await host.waitForTimeout(600);
 await shot(host, 'game-host-countdown');
@@ -243,6 +253,13 @@ for (let step = 0; step < 60; step++) {
     await shot(host, `game-host-question-${question}`);
     await shot(players[0], `game-player-question-${question}`);
     await checkOverflow(players[0], `player question ${question}`);
+    if (question === 1) {
+      // Bold plays both power-ups on the first question.
+      await players[0].getByRole('button', { name: /50\/50/ }).click();
+      await players[0].getByRole('button', { name: /Оноо ×2/ }).click();
+      await players[0].waitForTimeout(700);
+      await shot(players[0], 'game-player-power-ups');
+    }
     for (const p of players) {
       const f = p.locator('form').first();
       if (await f.locator('#typed-answer').count()) {
@@ -255,7 +272,7 @@ for (let step = 0; step < 60; step++) {
       } else if ((await f.locator('button').count()) === 1 || (await f.getByRole('button', { name: 'Илгээх' }).count())) {
         await f.getByRole('button', { name: 'Илгээх' }).click();
       } else {
-        await f.locator('button').nth(p === players[1] ? 1 : 0).click();
+        await f.locator('button:enabled').nth(p === players[1] ? 1 : 0).click();
       }
     }
     await players[0].waitForTimeout(300);
@@ -288,6 +305,97 @@ await host.waitForTimeout(6000); // podium reveals 3rd, 2nd, 1st, then the award
 await shot(host, 'game-host-podium', true);
 await shot(players[0], 'game-player-podium', true);
 await checkOverflow(players[0], 'player podium');
+
+for (const p of [host, ...players]) await p.context().close();
+
+// ---- Trainings: an admin assigns one, an employee takes it, report and certificate ----
+{
+  const post = (path, body, token) =>
+    fetch(`${API}/api${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      body: JSON.stringify(body),
+    }).then((r) => r.json());
+  const get = (path, token) => fetch(`${API}/api${path}`, { headers: { Authorization: `Bearer ${token}` } }).then((r) => r.json());
+  const account = (email, displayName) =>
+    post('/auth/register', { email, password: 'qa-password-123', displayName }).then((r) =>
+      r.token ? r : post('/auth/login', { email, password: 'qa-password-123' }),
+    );
+  const admin = await account('qa-admin@example.com', 'HR админ');
+  const staff = await account(`qa-staff${Date.now()}@example.com`, 'Ану Батболд');
+  const training = await post(
+    '/trainings',
+    { quizId: quiz.id, title: 'Мэдээллийн аюулгүй байдлын сургалт', passPercent: 60, dueDate: '2026-12-31' },
+    admin.token,
+  );
+  if (!training.id) throw new Error(`Could not create a training: ${JSON.stringify(training)}`);
+
+  const asStaff = await newPage(DESKTOP, 'light', 'trainings');
+  await asStaff.context().addInitScript((token) => localStorage.setItem('quiz-pro:token', token), staff.token);
+  await asStaff.goto(`${WEB}/trainings`, { waitUntil: 'networkidle' });
+  await shot(asStaff, 'trainings-list');
+  await asStaff.goto(`${WEB}/trainings/${training.id}`, { waitUntil: 'networkidle' });
+  await shot(asStaff, 'training-intro');
+  await asStaff.getByRole('button', { name: /Эхлэх/ }).click();
+  await asStaff.waitForTimeout(500);
+  await shot(asStaff, 'training-question');
+  for (let i = 0; i < 10; i++) {
+    const f = asStaff.locator('form').first();
+    if (!(await f.count())) break;
+    if (await f.locator('#typed-answer').count()) {
+      await f.locator('#typed-answer').fill('40');
+      await f.getByRole('button', { name: 'Илгээх' }).click();
+    } else if (await f.locator('[aria-pressed]').count()) {
+      await f.locator('[aria-pressed]').first().click();
+      await f.getByRole('button', { name: 'Илгээх' }).click();
+    } else if (await f.getByRole('button', { name: 'Илгээх' }).count()) {
+      await f.getByRole('button', { name: 'Илгээх' }).click();
+    } else {
+      await f.locator('button:enabled').nth(1).click();
+    }
+    await asStaff.waitForTimeout(800);
+  }
+  await asStaff.getByText(/Зөв хариулт: \d/).waitFor({ timeout: 8000 });
+  await asStaff.waitForTimeout(800);
+  await shot(asStaff, 'training-result', true);
+  await checkOverflow(asStaff, 'training result');
+
+  // A passing attempt for the certificate: the quiz above has known answers.
+  const detail = await get(`/trainings/${training.id}`, staff.token);
+  const key = {
+    single: { type: 'single', optionIds: ['b'] },
+    true_false: { type: 'true_false', value: true },
+    multiple: { type: 'multiple', optionIds: ['a', 'b'] },
+    type_answer: { type: 'type_answer', text: '40' },
+    ordering: { type: 'ordering', itemIds: ['1', '2', '3', '4'] },
+  };
+  const pass = await post(
+    `/trainings/${training.id}/attempts`,
+    { answers: detail.questions.map((q) => ({ questionId: q.id, answer: key[q.type] })) },
+    staff.token,
+  );
+  if (!pass.certificateId) throw new Error(`No certificate: ${JSON.stringify(pass)}`);
+  await asStaff.goto(`${WEB}/certificates/${pass.certificateId}`, { waitUntil: 'networkidle' });
+  await asStaff.waitForTimeout(1500);
+  await shot(asStaff, 'training-certificate');
+  await asStaff.context().close();
+
+  const asAdmin = await newPage(DESKTOP, 'light', 'training-report');
+  await asAdmin.context().addInitScript((token) => localStorage.setItem('quiz-pro:token', token), admin.token);
+  await asAdmin.goto(`${WEB}/trainings`, { waitUntil: 'networkidle' });
+  await shot(asAdmin, 'trainings-admin');
+  await asAdmin.goto(`${WEB}/trainings/${training.id}/report`, { waitUntil: 'networkidle' });
+  await asAdmin.waitForTimeout(1000);
+  await shot(asAdmin, 'training-report', true);
+  await asAdmin.context().close();
+
+  const phone = await newPage(PHONE, 'dark', 'trainings-phone');
+  await phone.context().addInitScript((token) => localStorage.setItem('quiz-pro:token', token), staff.token);
+  await phone.goto(`${WEB}/trainings`, { waitUntil: 'networkidle' });
+  await shot(phone, 'trainings-phone', true);
+  await checkOverflow(phone, 'trainings phone');
+  await phone.context().close();
+}
 
 await browser.close();
 console.log(`\n${shots.length} screenshots in ${OUT}`);

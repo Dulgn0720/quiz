@@ -52,7 +52,7 @@ jobs:
           cd apps/api && node dist/database/seed.js
       - name: Start API and web
         run: |
-          (cd apps/api && UPLOAD_DIR=$RUNNER_TEMP/uploads node dist/main.js > $RUNNER_TEMP/api.log 2>&1 &)
+          (cd apps/api && UPLOAD_DIR=$RUNNER_TEMP/uploads ADMIN_EMAILS=qa-admin@example.com node dist/main.js > $RUNNER_TEMP/api.log 2>&1 &)
           (cd apps/web && pnpm exec vite preview --port 5173 --strictPort > $RUNNER_TEMP/web.log 2>&1 &)
           for i in $(seq 1 60); do curl -sf localhost:3000/api/health && curl -sf localhost:5173 >/dev/null && break; sleep 1; done
       - name: Install Chromium
