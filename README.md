@@ -178,6 +178,10 @@ Server → client: `room:state` (room settings and player list), `game:phase` (w
 - **Mascot «Агу»:** an SVG snow leopard in an Agula scarf. It waves in the lobby, counts down, cheers or comforts after each answer (with a different line each time), celebrates on the podium and keeps empty pages friendly.
 - **Live reactions:** players tap 👏 😂 😮 🔥 ❤️ 🎉 on their phones and the emojis float up the projector screen with their avatar.
 - **Streaks:** three or more correct answers in a row light up an "on fire" banner.
+- **Lobby fun:** players can tap Агу while they wait (every tenth tap gets a celebration), and both screens rotate "Did you know?" tips about the scoring rules.
+- **Reveal commentary:** on the projector, Агу reacts to how the room did on each question.
+- **Special awards:** after the podium, the big screen hands out ⚡ Quickest, 🔥 Streak champion and 🎯 Sharpshooter.
+- **Practice mode** (`/practice/<quiz id>`, the 🎯 button on every quiz): play any quiz alone on a phone with the same timer and scoring, see the explanation after each answer, earn up to three stars and beat your personal best (kept in the browser).
 - **Languages:** Mongolian (default) and English everywhere, switchable in the header.
 
 ## Accounts and progression

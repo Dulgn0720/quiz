@@ -47,6 +47,14 @@ export const router = createRouter({
       // The host screen is shown on a projector: an immersive stage with its own header.
       meta: { fullscreen: true },
     },
+    {
+      path: '/practice/:id',
+      name: 'practice',
+      component: () => import('@/views/PracticeView.vue'),
+      props: true,
+      // Played on a phone like a live game, so it gets the same immersive screen.
+      meta: { fullscreen: true },
+    },
     { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('@/views/NotFoundView.vue') },
   ],
   scrollBehavior: () => ({ top: 0 }),

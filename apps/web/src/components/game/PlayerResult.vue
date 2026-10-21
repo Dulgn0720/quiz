@@ -5,7 +5,7 @@ import { useI18n } from 'vue-i18n';
 import Mascot, { type MascotMood } from '@/components/Mascot.vue';
 
 /** The player's own outcome after a question is revealed, cheered on by the mascot. */
-const props = defineProps<{ result: PlayerAnswerResult; seed?: number }>();
+const props = defineProps<{ result: PlayerAnswerResult; seed?: number; solo?: boolean }>();
 const { tm, rt } = useI18n();
 
 const onFire = computed(() => props.result.correct && props.result.streak >= 3);
@@ -59,7 +59,9 @@ const message = computed(() => {
       </p>
       <p v-else-if="result.streak >= 2" class="font-bold">{{ $t('game.reveal.streak', { n: result.streak }) }}</p>
       <p v-if="result.eliminated" class="rounded-full bg-white/20 px-3 py-1 font-bold">{{ $t('game.reveal.eliminated') }}</p>
-      <p class="mt-2 text-lg font-bold">{{ $t('game.reveal.rank', { n: result.rank, score: result.score }) }}</p>
+      <p class="mt-2 text-lg font-bold">
+        {{ solo ? $t('practice.total', { score: result.score }) : $t('game.reveal.rank', { n: result.rank, score: result.score }) }}
+      </p>
     </div>
   </div>
 </template>

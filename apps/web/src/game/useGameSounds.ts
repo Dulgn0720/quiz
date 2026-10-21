@@ -10,6 +10,7 @@ import { sound } from './sound';
 export function useGameSounds() {
   const game = useGameStore();
   const confetti = useConfetti();
+  let podiumTimer: ReturnType<typeof setTimeout> | undefined;
 
   watch(
     () => {
@@ -38,7 +39,7 @@ export function useGameSounds() {
           sound.music(null);
           if (host) sound.play('reveal');
           else if (p.you?.correct) {
-            sound.play('correct');
+            sound.play(p.you.streak >= 3 ? 'streak' : 'correct');
             confetti.burst({ count: 60, y: 0.4 });
           } else sound.play('wrong');
           break;
@@ -48,10 +49,15 @@ export function useGameSounds() {
           if (host && p.phase === 'round_summary') sound.music('lobby');
           break;
         case 'podium': {
+          // Drumroll while third and second place appear, fanfare for the winner.
           sound.music(null);
-          sound.play('fanfare');
+          sound.play('drumroll');
           const rank = p.you?.rank;
-          if (host || (rank !== undefined && rank <= 3)) confetti.celebrate();
+          clearTimeout(podiumTimer);
+          podiumTimer = setTimeout(() => {
+            sound.play('fanfare');
+            if (host || (rank !== undefined && rank <= 3)) confetti.celebrate();
+          }, 2100);
           break;
         }
       }
@@ -73,5 +79,8 @@ export function useGameSounds() {
     (value) => value && sound.play('answer'),
   );
 
-  onBeforeUnmount(() => sound.music(null));
+  onBeforeUnmount(() => {
+    clearTimeout(podiumTimer);
+    sound.music(null);
+  });
 }

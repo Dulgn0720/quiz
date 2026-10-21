@@ -175,6 +175,14 @@ function onImported(quiz: QuizDetail): void {
           >
             ▶ {{ t('quizList.host') }}
           </button>
+          <RouterLink
+            v-if="quiz.questionCount > 0"
+            :to="{ name: 'practice', params: { id: quiz.id } }"
+            class="btn-secondary"
+            :title="t('practice.cardHint')"
+          >
+            🎯 {{ t('practice.cta') }}
+          </RouterLink>
           <RouterLink v-if="canEdit(quiz)" :to="{ name: 'quiz-edit', params: { id: quiz.id } }" class="btn-ghost">
             {{ t('common.edit') }}
           </RouterLink>

@@ -17,6 +17,8 @@ import LevelBar from '@/components/LevelBar.vue';
 import LockedAnswer from '@/components/game/LockedAnswer.vue';
 import ReactionBar from '@/components/game/ReactionBar.vue';
 import Mascot from '@/components/Mascot.vue';
+import TapMascot from '@/components/game/TapMascot.vue';
+import TipCarousel from '@/components/game/TipCarousel.vue';
 import RoundSummaryPanel from '@/components/game/RoundSummaryPanel.vue';
 import SoundToggles from '@/components/SoundToggles.vue';
 import { useGameSounds } from '@/game/useGameSounds';
@@ -114,18 +116,18 @@ function leave(): void {
       <Transition name="phase" mode="out-in">
       <div :key="phaseKey" class="flex flex-1 flex-col">
         <div v-if="phase.phase === 'lobby'" class="flex flex-1 flex-col items-center justify-center gap-6 text-center">
-          <div class="relative">
-            <Mascot mood="wave" :size="140" />
+          <TapMascot>
             <span class="absolute -right-4 bottom-2 grid h-14 w-14 animate-pop place-items-center rounded-full bg-white/10 text-4xl ring-2 ring-brand-400" aria-hidden="true">
               {{ me.avatar }}
             </span>
-          </div>
+          </TapMascot>
           <div>
             <h1 class="text-3xl font-bold">{{ t('game.player.youAreIn') }}</h1>
             <p class="mt-2 font-semibold text-slate-300">{{ t('game.player.waitingForHost') }}</p>
           </div>
           <PlayerChips v-if="game.room" :players="game.room.players" :highlight-id="myId" />
           <ReactionBar />
+          <TipCarousel />
         </div>
 
         <CountdownCard v-else-if="phase.phase === 'countdown'" :countdown="phase" />

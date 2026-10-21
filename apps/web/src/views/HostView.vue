@@ -15,6 +15,9 @@ import RoundSummaryPanel from '@/components/game/RoundSummaryPanel.vue';
 import ShareRoom from '@/components/game/ShareRoom.vue';
 import ReactionLayer from '@/components/game/ReactionLayer.vue';
 import Mascot from '@/components/Mascot.vue';
+import AwardsPanel from '@/components/game/AwardsPanel.vue';
+import RevealMascot from '@/components/game/RevealMascot.vue';
+import TipCarousel from '@/components/game/TipCarousel.vue';
 import BrandMark from '@/components/BrandMark.vue';
 import SoundToggles from '@/components/SoundToggles.vue';
 import { shortTitle } from '@/brand/topics';
@@ -143,6 +146,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
             <Mascot mood="wave" :size="150" :say="t('mascot.lobbyHost')" />
           </div>
           <PlayerChips :players="players" kickable size="lg" @kick="kick" />
+          <TipCarousel v-if="players.length" size="lg" />
         </div>
 
         <CountdownCard v-else-if="phase.phase === 'countdown'" :countdown="phase" />
@@ -160,6 +164,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
             <RevealedAnswer :question="phase.question" :answer="phase.reveal.answer" size="lg" :choices="false" />
           </div>
           <aside class="flex flex-col gap-4">
+            <RevealMascot :reveal="phase.reveal" :seed="phase.question.globalIndex" />
             <RevealChart v-if="!('options' in phase.question)" :question="phase.question" :reveal="phase.reveal" />
             <p class="rounded-2xl bg-white/5 px-4 py-3 text-center text-lg font-bold text-slate-200 ring-1 ring-white/10">
               {{ t('game.reveal.answeredCount', { answered: phase.reveal.answeredCount, total: phase.reveal.playerCount }) }}
@@ -187,6 +192,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
             <Mascot mood="celebrate" :size="110" class="-scale-x-100" />
           </div>
           <PodiumPanel :results="phase.results" />
+          <AwardsPanel :results="phase.results" />
           <ResultsTable :results="phase.results" size="lg" />
         </div>
         </Transition>

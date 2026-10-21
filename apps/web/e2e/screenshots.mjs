@@ -109,6 +109,36 @@ for (const [device, options] of [
   await page.context().close();
 }
 
+// ---- Solo practice on a phone ----
+{
+  const page = await newPage(PHONE, 'dark', 'practice');
+  await page.goto(`${WEB}/practice/agula-yos-zuin-durem`, { waitUntil: 'networkidle' });
+  await shot(page, 'practice-intro');
+  await checkOverflow(page, 'practice intro');
+  await page.getByRole('button', { name: /Эхлэх/ }).click();
+  await page.waitForTimeout(3600); // get-ready countdown
+  await shot(page, 'practice-question');
+  await checkOverflow(page, 'practice question');
+  const form = page.locator('form');
+  const textbox = form.getByRole('textbox');
+  if (await textbox.count()) {
+    await textbox.fill('туршилт');
+    await textbox.press('Enter');
+  } else {
+    // Ordering can be sent as is; choice questions need a tile first.
+    const submit = form.getByRole('button', { name: /Илгээх/ });
+    if ((await submit.count()) && (await submit.isEnabled())) await submit.click();
+    else {
+      await form.getByRole('button').first().click();
+      if (await submit.count()) await submit.click();
+    }
+  }
+  await page.getByRole('button', { name: /Дараагийн асуулт|Дүнгээ харах/ }).waitFor({ timeout: 5000 });
+  await shot(page, 'practice-reveal', true);
+  await checkOverflow(page, 'practice reveal');
+  await page.context().close();
+}
+
 // ---- A live game: host on a projector, three players on phones ----
 const quiz = await fetch(`${API}/api/quizzes`, {
   method: 'POST',
@@ -253,7 +283,7 @@ for (let step = 0; step < 60; step++) {
     await host.waitForTimeout(700);
   }
 }
-await host.waitForTimeout(4000); // podium reveals 3rd, 2nd, then 1st
+await host.waitForTimeout(6000); // podium reveals 3rd, 2nd, 1st, then the awards
 await shot(host, 'game-host-podium', true);
 await shot(players[0], 'game-player-podium', true);
 await checkOverflow(players[0], 'player podium');

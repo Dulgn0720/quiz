@@ -149,6 +149,14 @@ onMounted(async () => {
               <button type="button" class="btn-primary px-4" :disabled="quiz.questionCount === 0" @click="hosting = quiz">
                 ▶ {{ $t('quizList.host') }}
               </button>
+              <RouterLink
+                v-if="quiz.questionCount > 0"
+                :to="{ name: 'practice', params: { id: quiz.id } }"
+                class="btn-secondary px-3"
+                :title="$t('practice.cardHint')"
+              >
+                🎯 {{ $t('practice.cta') }}
+              </RouterLink>
               <RouterLink :to="{ name: 'quiz-edit', params: { id: quiz.id } }" class="btn-ghost px-3">
                 {{ $t('home.preview') }}
               </RouterLink>

@@ -19,7 +19,11 @@ export type SoundEffect =
   | 'whoosh'
   | 'fanfare'
   | 'timeUp'
-  | 'pop';
+  | 'pop'
+  | 'streak'
+  | 'drumroll'
+  | 'boing'
+  | 'sparkle';
 
 export type MusicTrack = 'lobby' | 'question';
 
@@ -119,6 +123,25 @@ class SoundEngine {
         break;
       case 'timeUp':
         this.tone(300, t, 0.25, 'square', 0.12);
+        break;
+      case 'streak':
+        // A bright rising run: the "on fire" moment.
+        [C5, E5, G5, C6, C6 + 4].forEach((n, i) => this.tone(NOTE(n), t + i * 0.06, 0.12, 'square', 0.12));
+        this.tone(NOTE(C6 + 7), t + 0.3, 0.3, 'triangle', 0.25);
+        break;
+      case 'drumroll':
+        // Soft snare-like taps that speed up for about two seconds.
+        for (let i = 0, at = 0; at < 1.9; i++) {
+          this.slide(220, 180, t + at, 0.05, 'triangle', 0.06 + Math.min(0.14, i * 0.004));
+          at += Math.max(0.035, 0.11 - i * 0.003);
+        }
+        break;
+      case 'boing':
+        this.slide(180, 520, t, 0.12, 'sine', 0.22);
+        this.slide(520, 300, t + 0.12, 0.14, 'sine', 0.14);
+        break;
+      case 'sparkle':
+        [C6, G5 + 12, C6 + 12].forEach((n, i) => this.tone(NOTE(n), t + i * 0.05, 0.1, 'sine', 0.1));
         break;
       case 'fanfare':
         [C5, E5, G5, C6].forEach((n, i) => this.tone(NOTE(n), t + i * 0.14, i === 3 ? 0.7 : 0.16, 'triangle', 0.3));
