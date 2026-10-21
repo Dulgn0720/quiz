@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { QuestionReveal } from '@quiz/shared';
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Mascot, { type MascotMood } from '@/components/Mascot.vue';
+import { useEmojiRain } from '@/composables/useEmojiRain';
 
 /** The mascot comments on how the room did, on the host screen after each reveal. */
 const props = defineProps<{ reveal: QuestionReveal; seed: number }>();
@@ -29,8 +30,14 @@ const tier = computed<'none' | 'all' | 'most' | 'half' | 'few' | 'unknown'>(() =
 });
 
 const mood = computed<MascotMood>(
-  () => ({ none: 'surprised', all: 'celebrate', most: 'happy', half: 'thinking', few: 'sad', unknown: 'happy' })[tier.value] as MascotMood,
+  () => ({ none: 'sleepy', all: 'cool', most: 'happy', half: 'thinking', few: 'dizzy', unknown: 'happy' })[tier.value] as MascotMood,
 );
+
+// A perfect question deserves a party on the big screen.
+const { rain } = useEmojiRain();
+onMounted(() => {
+  if (tier.value === 'all') rain(['🎉', '⭐', '👏', '🥳']);
+});
 
 const line = computed(() => {
   const list = tm(`game.revealComments.${tier.value}`) as unknown[];

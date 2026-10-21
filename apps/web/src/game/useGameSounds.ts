@@ -1,5 +1,6 @@
 import { onBeforeUnmount, watch } from 'vue';
 import { useConfetti } from '@/composables/useConfetti';
+import { useEmojiRain } from '@/composables/useEmojiRain';
 import { useGameStore } from '@/stores/game';
 import { sound } from './sound';
 
@@ -10,6 +11,7 @@ import { sound } from './sound';
 export function useGameSounds() {
   const game = useGameStore();
   const confetti = useConfetti();
+  const { rain } = useEmojiRain();
   let podiumTimer: ReturnType<typeof setTimeout> | undefined;
 
   watch(
@@ -40,6 +42,7 @@ export function useGameSounds() {
           if (host) sound.play('reveal');
           else if (p.you?.correct) {
             sound.play(p.you.streak >= 3 ? 'streak' : 'correct');
+            if (p.you.streak >= 5) rain('🔥', 28);
             confetti.burst({ count: 60, y: 0.4 });
           } else sound.play('wrong');
           break;
@@ -57,6 +60,8 @@ export function useGameSounds() {
           podiumTimer = setTimeout(() => {
             sound.play('fanfare');
             if (host || (rank !== undefined && rank <= 3)) confetti.celebrate();
+            if (host) rain(['🏆', '🎉', '⭐', '🥇']);
+            else if (rank === 1) rain(['👑', '🏆', '🎉']);
           }, 2100);
           break;
         }

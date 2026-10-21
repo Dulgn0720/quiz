@@ -94,6 +94,20 @@ function onKey(event: KeyboardEvent): void {
     void togglePause();
   }
 }
+// An empty lobby for a while sends the mascot to sleep, until someone joins.
+const lobbySleepy = ref(false);
+let sleepTimer: ReturnType<typeof setTimeout> | undefined;
+watch(
+  () => players.value.length === 0 && phase.value?.phase === 'lobby',
+  (empty) => {
+    clearTimeout(sleepTimer);
+    lobbySleepy.value = false;
+    if (empty) sleepTimer = setTimeout(() => (lobbySleepy.value = true), 25_000);
+  },
+  { immediate: true },
+);
+onBeforeUnmount(() => clearTimeout(sleepTimer));
+
 onMounted(() => window.addEventListener('keydown', onKey));
 onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
 </script>
@@ -143,7 +157,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
             </h2>
           </div>
           <div v-if="players.length === 0" class="flex justify-center">
-            <Mascot mood="wave" :size="150" :say="t('mascot.lobbyHost')" />
+            <Mascot :mood="lobbySleepy ? 'sleepy' : 'wave'" :size="150" :say="lobbySleepy ? t('mascot.lobbySleepy') : t('mascot.lobbyHost')" />
           </div>
           <TipCarousel v-if="players.length" size="lg" />
           <PlayerChips :players="players" kickable size="lg" @kick="kick" />

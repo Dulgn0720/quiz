@@ -2,6 +2,7 @@
 import { useRoute } from 'vue-router';
 import AppHeader from '@/components/AppHeader.vue';
 import ConfettiLayer from '@/components/ConfettiLayer.vue';
+import EmojiRainLayer from '@/components/EmojiRainLayer.vue';
 import ToastHost from '@/components/ToastHost.vue';
 
 const route = useRoute();
@@ -19,5 +20,6 @@ const route = useRoute();
     </main>
     <ToastHost />
     <ConfettiLayer />
+    <EmojiRainLayer />
   </div>
 </template>

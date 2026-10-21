@@ -2,6 +2,8 @@
 import type { QuestionPublic, QuestionReveal } from '@quiz/shared';
 import { computed } from 'vue';
 import { tileStyle } from '@/game/answers';
+import Mascot, { type MascotMood } from '@/components/Mascot.vue';
+import { useCountdown } from '@/game/useCountdown';
 import GameTimer from './GameTimer.vue';
 import QuestionHeader from './QuestionHeader.vue';
 
@@ -16,6 +18,17 @@ const props = defineProps<{
 const correctIds = computed(() =>
   props.reveal && 'optionIds' in props.reveal.answer ? new Set(props.reveal.answer.optionIds) : new Set<string>(),
 );
+// The mascot watches the clock with the room: calm at first, nervous in the last seconds, happy when everyone has answered.
+const { seconds } = useCountdown(
+  () => props.question.endsAt,
+  () => props.question.pausedRemainingMs,
+);
+const watcherMood = computed<MascotMood>(() => {
+  if (props.question.pausedRemainingMs !== undefined) return 'sleepy';
+  if (props.total && props.answered === props.total) return 'happy';
+  return seconds.value <= 5 ? 'nervous' : 'thinking';
+});
+
 const trueFalseAnswer = computed(() =>
   props.reveal?.answer.type === 'true_false' ? props.reveal.answer.value : undefined,
 );
@@ -47,6 +60,7 @@ const trueFalseAnswer = computed(() =>
         alt=""
         class="max-h-[38vh] max-w-full rounded-2xl object-contain shadow"
       />
+      <Mascot v-if="!reveal && total !== undefined" :mood="watcherMood" :size="96" class="hidden sm:inline-flex" />
       <div v-if="!reveal && total !== undefined" class="text-center" aria-live="polite">
         <p class="text-5xl font-black tabular-nums">{{ answered }}</p>
         <p class="text-sm font-bold text-slate-500 dark:text-slate-400">{{ $t('game.question.answers', { total }) }}</p>

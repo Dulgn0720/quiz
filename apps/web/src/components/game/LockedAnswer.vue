@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { AnswerPayload, QuestionPublic } from '@quiz/shared';
 import { computed } from 'vue';
+import Mascot from '@/components/Mascot.vue';
 import { tileStyle } from '@/game/answers';
 
 /** Echoes what the player chose, so they know the tap registered on the right answer. */
@@ -21,7 +22,7 @@ const items = computed(() => {
 
 <template>
   <div class="card flex animate-pop flex-col items-center px-6 py-10 text-center" role="status">
-    <p class="text-5xl" aria-hidden="true">⏳</p>
+    <Mascot mood="cool" :size="96" />
     <p class="mt-3 font-display text-xl font-bold">{{ $t('game.player.answerLocked') }}</p>
     <p class="mt-1 font-semibold text-slate-400">{{ $t('game.player.waitingForOthers') }}</p>
 

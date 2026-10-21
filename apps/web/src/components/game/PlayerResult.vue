@@ -11,7 +11,7 @@ const { tm, rt } = useI18n();
 const onFire = computed(() => props.result.correct && props.result.streak >= 3);
 
 const mood = computed<MascotMood>(() => {
-  if (!props.result.answered) return 'surprised';
+  if (!props.result.answered) return 'sleepy';
   if (!props.result.correct) return 'sad';
   return onFire.value ? 'celebrate' : 'happy';
 });

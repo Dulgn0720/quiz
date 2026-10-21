@@ -176,7 +176,7 @@ function leave(): void {
 
         <div v-else-if="phase.phase === 'podium'" class="flex flex-col gap-8">
           <div class="flex flex-col items-center">
-            <Mascot :mood="phase.you && phase.you.rank <= 3 ? 'celebrate' : 'happy'" :size="120" />
+            <Mascot :mood="!phase.you ? 'happy' : phase.you.rank === 1 ? 'cool' : phase.you.rank <= 3 ? 'celebrate' : 'love'" :size="120" />
             <h1 class="text-center text-3xl font-bold">{{ t('game.podium.title') }}</h1>
           </div>
           <PodiumPanel :results="phase.results" :highlight-id="myId" />
