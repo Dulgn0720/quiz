@@ -8,6 +8,7 @@ const modes = [
   { key: 'live', icon: '🎮', to: '/quizzes', gradient: 'from-brand-500 via-orange-500 to-amber-400' },
   { key: 'survival', icon: '💀', to: '/survival', gradient: 'from-rose-500 via-pink-600 to-fuchsia-600' },
   { key: 'practice', icon: '🎯', to: '/quizzes', gradient: 'from-sky-500 via-blue-600 to-indigo-600' },
+  { key: 'word', icon: '🔤', to: '/word', gradient: 'from-lime-500 via-emerald-500 to-green-700' },
   { key: 'daily', icon: '📅', to: '#daily', gradient: 'from-emerald-500 via-teal-500 to-cyan-600' },
   { key: 'trainings', icon: '🎓', to: '/trainings', gradient: 'from-violet-500 via-purple-600 to-indigo-700' },
 ] as const;
@@ -22,8 +23,8 @@ function target(mode: (typeof modes)[number]) {
   <section class="mt-14 sm:mt-16" :aria-label="$t('modes.title')">
     <h2 class="text-2xl font-bold sm:text-3xl">{{ $t('modes.title') }}</h2>
     <p class="mt-1 text-ink-600 dark:text-ink-300">{{ $t('modes.subtitle') }}</p>
-    <ul class="mt-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5">
-      <li v-for="(m, i) in modes" :key="m.key" :class="m.key === 'live' ? 'col-span-2 lg:col-span-1' : ''">
+    <ul class="mt-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
+      <li v-for="(m, i) in modes" :key="m.key">
         <component
           :is="m.to.startsWith('#') ? 'a' : 'RouterLink'"
           v-bind="m.to.startsWith('#') ? { href: m.to } : { to: target(m) }"

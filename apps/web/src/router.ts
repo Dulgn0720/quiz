@@ -72,6 +72,12 @@ export const router = createRouter({
       // A phone game like practice: the immersive screen with its own header.
       meta: { fullscreen: true },
     },
+    {
+      path: '/word',
+      name: 'word-game',
+      component: () => import('@/views/WordGameView.vue'),
+      meta: { fullscreen: true },
+    },
     { path: '/trainings', name: 'trainings', component: () => import('@/views/TrainingsView.vue'), meta: { requiresAuth: true } },
     {
       path: '/trainings/:id',

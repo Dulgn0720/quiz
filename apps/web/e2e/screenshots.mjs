@@ -153,6 +153,24 @@ for (const [device, options] of [
   await page.context().close();
 }
 
+// ---- «Үг таах» on a phone: three guesses, then the hint ----
+{
+  const page = await newPage(PHONE, 'dark', 'word-game');
+  await page.goto(`${WEB}/word`, { waitUntil: 'networkidle' });
+  await shot(page, 'word-game-empty');
+  for (const guess of ['гэрэл', 'намар', 'ширээ']) {
+    for (const letter of guess) await page.getByRole('button', { name: letter, exact: true }).click();
+    await page.getByRole('button', { name: /Шалгах/ }).click();
+    await page.waitForTimeout(900);
+  }
+  await shot(page, 'word-game-guesses');
+  await checkOverflow(page, 'word game');
+  const hint = page.getByRole('button', { name: /Сэжүүр/ });
+  if (await hint.isVisible().catch(() => false)) await hint.click();
+  await shot(page, 'word-game-hint');
+  await page.context().close();
+}
+
 // ---- A live game: host on a projector, three players on phones ----
 const quiz = await fetch(`${API}/api/quizzes`, {
   method: 'POST',
@@ -205,6 +223,15 @@ const quiz = await fetch(`${API}/api/quizzes`, {
               { id: '3', text: 'Шийдвэр гаргах' },
               { id: '4', text: 'Төлбөр олгох' },
             ],
+          },
+          {
+            type: 'estimate',
+            prompt: 'Ардын хувьсгал хэдэн онд ялсан бэ?',
+            answer: 1921,
+            min: 1900,
+            max: 1950,
+            tolerance: 2,
+            unit: 'он',
           },
         ],
       },
@@ -275,7 +302,10 @@ for (let step = 0; step < 60; step++) {
     }
     for (const p of players) {
       const f = p.locator('form').first();
-      if (await f.locator('#typed-answer').count()) {
+      if (await f.locator('input[type=range]').count()) {
+        await f.locator('input[type=range]').fill(String([1921, 1918, 1935][players.indexOf(p)]));
+        await f.getByRole('button', { name: 'Илгээх' }).click();
+      } else if (await f.locator('#typed-answer').count()) {
         await f.locator('#typed-answer').fill(p === players[2] ? '45' : '40');
         await f.getByRole('button', { name: 'Илгээх' }).click();
       } else if (await f.locator('[aria-pressed]').count()) {
