@@ -72,6 +72,11 @@ const nextLabel = computed(() => {
 });
 
 const next = () => run(() => game.command('host:next'));
+
+/** Opens the player's join page for this room in a new tab, to play along or try the game alone. */
+function joinHere(): void {
+  window.open(`${import.meta.env.BASE_URL}join/${props.pin}`, '_blank', 'noopener');
+}
 const skip = () => run(() => game.command('host:skip'));
 const start = () => run(() => game.command('host:start'));
 const togglePause = () => run(() => game.setPaused(!room.value?.paused));
@@ -209,8 +214,12 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
               {{ t('game.lobby.players', { n: players.length }, players.length) }}
             </h2>
           </div>
-          <div v-if="players.length === 0" class="flex justify-center">
+          <div v-if="players.length === 0" class="flex flex-col items-center gap-4">
             <Mascot :mood="lobbySleepy ? 'sleepy' : 'wave'" :size="150" :say="lobbySleepy ? t('mascot.lobbySleepy') : t('mascot.lobbyHost')" />
+            <p class="max-w-xl text-center text-lg text-slate-300">{{ t('game.lobby.howToPlay') }}</p>
+          </div>
+          <div class="flex justify-center">
+            <button type="button" class="btn-secondary" @click="joinHere">📱 {{ t('game.lobby.joinHere') }}</button>
           </div>
           <TipCarousel v-if="players.length" size="lg" />
           <PlayerChips :players="players" kickable size="lg" @kick="kick" />
