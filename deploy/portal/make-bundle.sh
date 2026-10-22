@@ -37,7 +37,8 @@ cp deploy/portal/docker-compose.portal.yml deploy/portal/Caddyfile deploy/portal
   deploy/portal/README.md deploy/portal/install.sh "$DIR/deploy/portal/"
 chmod +x "$DIR/deploy/portal/install.sh"
 printf 'QUIZ_VERSION=%s\nQUIZ_PATH=%s\n' "$VERSION" "$QUIZ_PATH" > "$DIR/deploy/portal/release.env"
-docker save "agula-quiz-api:${VERSION}" "agula-quiz-web:${VERSION}" postgres:16-alpine redis:7-alpine caddy:2-alpine \
+# --platform: Docker Desktop's image store keeps several CPUs per tag; save only the server's.
+docker save --platform "$PLATFORM" "agula-quiz-api:${VERSION}" "agula-quiz-web:${VERSION}" postgres:16-alpine redis:7-alpine caddy:2-alpine \
   | gzip > "$DIR/deploy/portal/images.tar.gz"
 ln -s deploy/portal/install.sh "$DIR/install.sh"
 cat > "$DIR/INSTALL.txt" <<TXT
@@ -55,4 +56,8 @@ Agula Quiz ${VERSION} — суулгах заавар
 Дэлгэрэнгүй: deploy/portal/README.md
 TXT
 tar -C "$STAGE" -czf "$OUT" agula-quiz
+# Put this computer's own database images back, so local `docker compose up` keeps running natively.
+for image in postgres:16-alpine redis:7-alpine caddy:2-alpine; do
+  docker pull -q "$image" >/dev/null || true
+done
 echo "✔ ${OUT} ($(du -h "$OUT" | cut -f1)) is ready. Copy it to the server; see INSTALL.txt inside."
