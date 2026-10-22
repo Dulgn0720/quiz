@@ -44,8 +44,8 @@ services:
       DATABASE_URL: postgresql://quiz:${POSTGRES_PASSWORD}@postgres:5432/quiz?schema=public
       REDIS_URL: redis://redis:6379
       CORS_ORIGINS: https://${PORTAL_HOST:?set PORTAL_HOST in deploy/portal/.env}
-      PUBLIC_API_URL: https://${PORTAL_HOST}${QUIZ_PATH:-/quiz}
-      PUBLIC_WEB_URL: https://${PORTAL_HOST}${QUIZ_PATH:-/quiz}
+      PUBLIC_API_URL: https://${PORTAL_HOST}${QUIZ_PATH-/quiz}
+      PUBLIC_WEB_URL: https://${PORTAL_HOST}${QUIZ_PATH-/quiz}
       UPLOAD_DIR: /data/uploads
       TRUST_PROXY: 'true'
       JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in deploy/portal/.env}
@@ -75,8 +75,8 @@ services:
       dockerfile: apps/web/Dockerfile
       args:
         # The app is built for its place on the portal: pages under /quiz/, API at /quiz/api.
-        VITE_BASE_PATH: ${QUIZ_PATH:-/quiz}/
-        VITE_API_URL: ${QUIZ_PATH:-/quiz}
+        VITE_BASE_PATH: ${QUIZ_PATH-/quiz}/
+        VITE_API_URL: ${QUIZ_PATH-/quiz}
     restart: unless-stopped
     depends_on:
       - api

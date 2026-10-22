@@ -46,6 +46,17 @@ To join from phones on the same Wi-Fi, pass your computer's local IP (on a Mac: 
 LAN_HOST=192.168.1.23 docker compose up --build
 ```
 
+To play with people on other networks, share the app through a free tunnel (no account needed) and open the address it prints, on the host computer too, so the QR code and join links use it:
+
+```bash
+brew install cloudflared            # once (Windows: winget install Cloudflare.cloudflared)
+docker compose up --build -d
+cloudflared tunnel --url http://localhost:5173
+# → https://<random-words>.trycloudflare.com
+```
+
+Everything (pages, API, live games) is served from port 5173, so one tunnel is enough. The address changes each time the tunnel starts; for password-reset links to use it, start with `PUBLIC_URL=https://<that address> docker compose up -d`.
+
 ## Local development
 
 Requirements: Node.js 20+ and pnpm 10 (`corepack enable`).
