@@ -26,7 +26,7 @@ describe('keyboardStates', () => {
 
 describe('words', () => {
   it('are unique five-letter Mongolian words with a hint', () => {
-    expect(WORDS.length).toBeGreaterThanOrEqual(40);
+    expect(WORDS.length).toBeGreaterThan(250);
     expect(new Set(WORDS.map((w) => w.word)).size).toBe(WORDS.length);
     for (const { word, hint } of WORDS) {
       expect([...word]).toHaveLength(WORD_LENGTH);

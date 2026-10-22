@@ -149,19 +149,19 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
 const tile: Record<LetterState, string> = {
   hit: 'bg-emerald-500 text-white ring-emerald-400',
   near: 'bg-amber-400 text-ink-950 ring-amber-300',
-  miss: 'bg-slate-600 text-white/90 ring-slate-500',
+  miss: 'bg-slate-800 text-white/60 ring-slate-700',
 };
 const keyTone: Record<LetterState, string> = {
   hit: 'bg-emerald-500 text-white',
   near: 'bg-amber-400 text-ink-950',
-  miss: 'bg-slate-700 text-white/40',
+  miss: 'bg-black/50 text-white/20',
 };
 </script>
 
 <template>
   <div class="dark stage min-h-dvh">
     <section class="mx-auto flex min-h-dvh max-w-lg flex-col px-3 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-4">
-      <header class="sticky top-0 z-10 -mx-3 mb-3 flex items-center gap-3 bg-ink-950/70 px-3 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-xl sm:-mx-4 sm:px-4">
+      <header class="sticky top-0 z-10 -mx-3 mb-2 flex items-center gap-3 bg-ink-950/70 px-3 pb-2 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-xl sm:-mx-4 sm:px-4">
         <span class="chip shrink-0 whitespace-nowrap bg-emerald-500/15 px-3 py-1 text-emerald-300 ring-1 ring-emerald-400/30">🔤 {{ t('wordGame.title') }}</span>
         <span class="mr-auto truncate text-sm font-bold text-slate-400">
           {{ mode === 'daily' ? t('wordGame.daily', { day: today }) : t('wordGame.free') }}
@@ -171,42 +171,52 @@ const keyTone: Record<LetterState, string> = {
         <RouterLink to="/" class="btn-icon" :aria-label="t('survival.home')">✕</RouterLink>
       </header>
 
-      <div class="flex items-center gap-3">
-        <Mascot :mood="mood" :size="64" />
-        <p class="flex-1 text-sm font-semibold text-slate-300">{{ t('wordGame.rules', { n: MAX_GUESSES }) }}</p>
-      </div>
+      <details class="group mb-2 text-sm text-slate-300">
+        <summary class="flex cursor-pointer list-none items-center gap-2 font-bold text-slate-400 hover:text-white">
+          <Mascot :mood="mood" :size="32" /> {{ t('wordGame.howTo') }}
+          <span class="transition group-open:rotate-180" aria-hidden="true">▾</span>
+        </summary>
+        <p class="mt-1 font-semibold">{{ t('wordGame.rules', { n: MAX_GUESSES }) }}</p>
+      </details>
 
-      <!-- Board -->
-      <div class="mx-auto mt-4 grid w-full max-w-[20rem] gap-1.5" role="grid" :aria-label="t('wordGame.board')">
-        <div
-          v-for="(row, r) in rows"
-          :key="r"
-          class="grid grid-cols-5 gap-1.5"
-          :class="r === guesses.length && shake ? 'shake' : ''"
-          role="row"
-        >
-          <span
-            v-for="(letter, i) in row.letters"
-            :key="i"
-            role="gridcell"
-            class="tile flex aspect-square items-center justify-center rounded-xl font-display text-3xl font-bold uppercase ring-2"
-            :class="[
-              row.done ? `flip ${tile[row.states[i]!]}` : letter ? 'pop bg-white/10 ring-white/40' : 'bg-white/[0.04] ring-white/10',
-            ]"
-            :style="row.done ? { animationDelay: `${i * 120}ms` } : undefined"
+      <!-- Board: sized so the board and keyboard fit on one phone screen. -->
+      <div class="relative flex flex-1 flex-col items-center justify-center">
+        <div class="board grid w-full gap-1.5" role="grid" :aria-label="t('wordGame.board')">
+          <div
+            v-for="(row, r) in rows"
+            :key="r"
+            class="grid grid-cols-5 gap-1.5"
+            :class="r === guesses.length && shake ? 'shake' : ''"
+            role="row"
           >
-            {{ letter }}
-            <span v-if="row.done" class="sr-only">{{ t(`wordGame.state.${row.states[i]}`) }}</span>
-          </span>
+            <span
+              v-for="(letter, i) in row.letters"
+              :key="i"
+              role="gridcell"
+              class="tile flex aspect-square items-center justify-center rounded-xl font-display text-[clamp(1.25rem,6vw,1.9rem)] font-bold uppercase ring-2"
+              :class="[
+                row.done ? `flip ${tile[row.states[i]!]}` : letter ? 'pop bg-white/10 ring-white/50' : 'bg-white/[0.03] ring-white/10',
+              ]"
+              :style="row.done ? { animationDelay: `${i * 120}ms` } : undefined"
+            >
+              {{ letter }}
+              <span v-if="row.done" class="sr-only">{{ t(`wordGame.state.${row.states[i]}`) }}</span>
+            </span>
+          </div>
         </div>
+        <p
+          v-if="message"
+          class="absolute top-2 animate-pop rounded-full bg-white px-4 py-1.5 font-bold text-ink-950 shadow-xl"
+          aria-live="assertive"
+        >
+          {{ message }}
+        </p>
       </div>
-
-      <p class="mt-2 h-6 text-center font-bold text-amber-200" aria-live="assertive">{{ message }}</p>
 
       <!-- Hint -->
-      <div v-if="hintReady" class="text-center">
-        <button v-if="!showHint" type="button" class="btn-secondary px-4 py-1.5 text-sm" @click="showHint = true">💡 {{ t('wordGame.showHint') }}</button>
-        <p v-else class="mx-auto max-w-sm rounded-2xl bg-sky-500/10 px-4 py-2 text-sky-100 ring-1 ring-sky-400/20">💡 {{ target.hint }}</p>
+      <div v-if="hintReady" class="mt-2 text-center">
+        <button v-if="!showHint" type="button" class="btn-secondary px-4 py-1 text-sm" @click="showHint = true">💡 {{ t('wordGame.showHint') }}</button>
+        <p v-else class="mx-auto max-w-sm rounded-2xl bg-sky-500/10 px-4 py-1.5 text-sm text-sky-100 ring-1 ring-sky-400/20">💡 {{ target.hint }}</p>
       </div>
 
       <!-- Result -->
@@ -246,13 +256,13 @@ const keyTone: Record<LetterState, string> = {
       </div>
 
       <!-- Keyboard -->
-      <div v-else class="mt-auto space-y-1.5 pt-4" role="group" :aria-label="t('wordGame.keyboard')">
+      <div v-else class="space-y-1.5 pt-3" role="group" :aria-label="t('wordGame.keyboard')">
         <div v-for="(row, r) in KEYBOARD_ROWS" :key="r" class="flex justify-center gap-1">
           <button
             v-for="key in row"
             :key="key"
             type="button"
-            class="h-12 min-w-0 flex-1 rounded-lg text-lg font-bold uppercase transition active:scale-90 sm:h-14"
+            class="h-11 min-w-0 flex-1 rounded-lg text-lg font-bold uppercase transition active:scale-90 sm:h-12"
             :class="keys.get(key) ? keyTone[keys.get(key)!] : 'bg-white/15 text-white hover:bg-white/25'"
             @click="press(key)"
           >
@@ -260,8 +270,8 @@ const keyTone: Record<LetterState, string> = {
           </button>
         </div>
         <div class="flex gap-1.5">
-          <button type="button" class="btn-secondary h-12 flex-1 sm:h-14" :aria-label="t('wordGame.delete')" @click="press('back')">⌫</button>
-          <button type="button" class="btn-primary h-12 flex-[2] sm:h-14" @click="press('enter')">{{ t('wordGame.check') }} ↵</button>
+          <button type="button" class="btn-secondary h-11 flex-1 sm:h-12" :aria-label="t('wordGame.delete')" @click="press('back')">⌫</button>
+          <button type="button" class="btn-primary h-11 flex-[2] sm:h-12" @click="press('enter')">{{ t('wordGame.check') }} ↵</button>
         </div>
       </div>
     </section>
@@ -269,6 +279,10 @@ const keyTone: Record<LetterState, string> = {
 </template>
 
 <style scoped>
+/* Six rows of square tiles; the height left after header, hint and keyboard (about 22rem) sets the width. */
+.board {
+  max-width: min(20rem, calc((100dvh - 22rem) * 5 / 6));
+}
 .pop {
   animation: pop 0.12s ease-out;
 }

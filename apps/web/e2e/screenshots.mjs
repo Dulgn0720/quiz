@@ -412,6 +412,7 @@ for (const p of [host, ...players]) await p.context().close();
     multiple: { type: 'multiple', optionIds: ['a', 'b'] },
     type_answer: { type: 'type_answer', text: '40' },
     ordering: { type: 'ordering', itemIds: ['1', '2', '3', '4'] },
+    estimate: { type: 'estimate', value: 1921 },
   };
   const pass = await post(
     `/trainings/${training.id}/attempts`,
