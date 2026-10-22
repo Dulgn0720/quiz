@@ -194,7 +194,7 @@ function onImported(quiz: QuizDetail): void {
       <p class="mt-2">{{ search.trim() ? t('quizList.noResults', { query: search.trim() }) : t('quizList.empty') }}</p>
     </div>
 
-    <ul class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <ul class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
       <li v-for="quiz in items" :key="quiz.id" class="card group flex flex-col overflow-hidden transition duration-300 hover:-translate-y-1 hover:shadow-xl">
         <div class="relative h-24 bg-gradient-to-br p-4" :class="quizTheme(quiz.title).gradient">
           <span class="absolute -bottom-3 right-4 text-6xl drop-shadow-lg transition duration-300 group-hover:-rotate-6 group-hover:scale-110" aria-hidden="true">
@@ -204,6 +204,7 @@ function onImported(quiz: QuizDetail): void {
             <span v-if="quiz.isSample" class="chip bg-black/25 text-white backdrop-blur">{{ t('quizList.sample') }}</span>
             <span v-if="quiz.visibility === 'private'" class="chip bg-black/40 text-white backdrop-blur">🔒 {{ t('quizList.private') }}</span>
             <span class="chip bg-black/25 text-white backdrop-blur">{{ t(`categories.${quiz.category}.name`) }}</span>
+            <span v-if="quiz.playCount >= 3" class="chip bg-black/25 text-white backdrop-blur" :title="t('quizList.plays', { n: quiz.playCount })">🔥 {{ quiz.playCount }}</span>
           </div>
         </div>
         <div class="flex flex-1 flex-col p-5">
@@ -225,10 +226,10 @@ function onImported(quiz: QuizDetail): void {
           <template v-if="quiz.playCount > 0">{{ t('quizList.plays', { n: quiz.playCount }) }} · </template>
           {{ t('quizList.updated', { date: formatDate(quiz.updatedAt) }) }}
         </p>
-        <div class="mt-auto flex flex-wrap gap-1 border-t border-slate-100 pt-3 dark:border-white/10">
+        <div class="mt-auto flex items-center gap-1.5 border-t border-slate-100 pt-3 dark:border-white/10">
           <button
             type="button"
-            class="btn-primary"
+            class="btn-primary px-4 py-2 text-sm"
             :disabled="quiz.questionCount === 0"
             :title="quiz.questionCount === 0 ? t('quizList.hostEmpty') : undefined"
             @click="hosting = quiz"
@@ -238,16 +239,20 @@ function onImported(quiz: QuizDetail): void {
           <RouterLink
             v-if="quiz.questionCount > 0"
             :to="{ name: 'practice', params: { id: quiz.id } }"
-            class="btn-secondary"
+            class="btn-secondary px-3 py-2 text-sm"
             :title="t('practice.cardHint')"
           >
             🎯 {{ t('practice.cta') }}
           </RouterLink>
-          <RouterLink v-if="canEdit(quiz)" :to="{ name: 'quiz-edit', params: { id: quiz.id } }" class="btn-ghost">
-            {{ t('common.edit') }}
+          <RouterLink
+            :to="{ name: 'quiz-edit', params: { id: quiz.id } }"
+            class="btn-icon ml-auto"
+            :title="canEdit(quiz) ? t('common.edit') : t('home.preview')"
+            :aria-label="canEdit(quiz) ? t('common.edit') : t('home.preview')"
+          >
+            {{ canEdit(quiz) ? '✏️' : '👁️' }}
           </RouterLink>
-          <RouterLink v-else :to="{ name: 'quiz-edit', params: { id: quiz.id } }" class="btn-ghost">{{ t('home.preview') }}</RouterLink>
-          <details class="relative ml-auto">
+          <details class="relative">
             <summary class="btn-icon cursor-pointer list-none text-xl [&::-webkit-details-marker]:hidden" :aria-label="t('quizList.more')" :title="t('quizList.more')">
               ⋯
             </summary>

@@ -140,6 +140,19 @@ for (const [device, options] of [
   await page.context().close();
 }
 
+// ---- Survival on a phone ----
+{
+  const page = await newPage(PHONE, 'dark', 'survival');
+  await page.goto(`${WEB}/survival`, { waitUntil: 'networkidle' });
+  await shot(page, 'survival-intro');
+  await page.getByRole('button', { name: /Эхлэх/ }).click();
+  await page.locator('form').first().waitFor({ timeout: 10000 });
+  await page.waitForTimeout(600);
+  await shot(page, 'survival-question');
+  await checkOverflow(page, 'survival question');
+  await page.context().close();
+}
+
 // ---- A live game: host on a projector, three players on phones ----
 const quiz = await fetch(`${API}/api/quizzes`, {
   method: 'POST',

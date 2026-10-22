@@ -10,3 +10,4 @@ export * from './progression';
 export * from './auth';
 export * from './daily';
 export * from './training';
+export * from './survival';

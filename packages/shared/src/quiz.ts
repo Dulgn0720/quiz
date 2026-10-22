@@ -14,7 +14,7 @@ export type QuestionType = (typeof QUESTION_TYPES)[number];
 export const ROUND_TYPES = ['normal', 'speed', 'double', 'elimination'] as const;
 
 /** Topic shelves for the quiz library. */
-export const QUIZ_CATEGORIES = ['agula', 'insurance', 'mongolia', 'world', 'fun', 'other'] as const;
+export const QUIZ_CATEGORIES = ['agula', 'insurance', 'mongolia', 'world', 'entertainment', 'fun', 'other'] as const;
 export type QuizCategory = (typeof QUIZ_CATEGORIES)[number];
 
 /**

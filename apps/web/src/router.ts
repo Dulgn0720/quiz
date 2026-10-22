@@ -65,6 +65,13 @@ export const router = createRouter({
       // Played on a phone like a live game, so it gets the same immersive screen.
       meta: { fullscreen: true },
     },
+    {
+      path: '/survival',
+      name: 'survival',
+      component: () => import('@/views/SurvivalView.vue'),
+      // A phone game like practice: the immersive screen with its own header.
+      meta: { fullscreen: true },
+    },
     { path: '/trainings', name: 'trainings', component: () => import('@/views/TrainingsView.vue'), meta: { requiresAuth: true } },
     {
       path: '/trainings/:id',

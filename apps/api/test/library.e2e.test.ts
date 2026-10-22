@@ -1,4 +1,4 @@
-import type { AuthResponse, DailyAnswerResponse, DailyQuestion, Paginated, QuizDetail, QuizSummary } from '@quiz/shared';
+import type { AuthResponse, DailyAnswerResponse, DailyQuestion, Paginated, QuizDetail, QuizSummary, SurvivalBatch } from '@quiz/shared';
 import { spawn, type ChildProcess } from 'node:child_process';
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -172,5 +172,19 @@ describe('daily question', () => {
     expect(after.body.result?.answer).toBe(options[0]);
     const me = await api<{ xp: number }>('/me', { token: auth.token });
     expect(me.body.xp).toBe(first.body.result.xp);
+  });
+});
+
+describe('survival', () => {
+  it('serves random official questions with answers and skips ones already played', async () => {
+    const first = await api<SurvivalBatch>('/survival');
+    expect(first.status).toBe(200);
+    expect(first.body.questions.length).toBeGreaterThan(10);
+    const ids = first.body.questions.map((q) => q.question.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(first.body.questions[0]!.quizTitle).toBeTruthy();
+
+    const next = await api<SurvivalBatch>(`/survival?exclude=${ids.join(',')}`);
+    expect(next.body.questions.some((q) => ids.includes(q.question.id))).toBe(false);
   });
 });

@@ -7,6 +7,21 @@ export interface QuizTheme {
 
 // First match wins, so specific topics come before broad ones ("мэдээллийн аюулгүй ажиллагаа" is security, not safety).
 const THEMES: { match: RegExp; theme: QuizTheme }[] = [
+  // Entertainment and newer library quizzes (before the broad topics below).
+  { match: /хүүхэлдэйн|анимэ/i, theme: { icon: '🧸', gradient: 'from-pink-400 via-fuchsia-500 to-violet-600' } },
+  { match: /кино/i, theme: { icon: '🎬', gradient: 'from-slate-700 via-rose-600 to-amber-500' } },
+  { match: /монгол урлаг/i, theme: { icon: '🎻', gradient: 'from-amber-400 via-rose-500 to-indigo-700' } },
+  { match: /хөгжим/i, theme: { icon: '🎵', gradient: 'from-violet-500 via-fuchsia-500 to-pink-500' } },
+  { match: /видео тоглоом/i, theme: { icon: '🕹️', gradient: 'from-indigo-600 via-purple-600 to-pink-500' } },
+  { match: /хөлбөмбөг/i, theme: { icon: '⚽', gradient: 'from-green-500 via-emerald-600 to-teal-800' } },
+  { match: /emoji/i, theme: { icon: '😎', gradient: 'from-yellow-300 via-amber-400 to-orange-500' } },
+  { match: /хүний бие/i, theme: { icon: '🧬', gradient: 'from-rose-400 via-red-500 to-pink-700' } },
+  { match: /шинэ бүтээл/i, theme: { icon: '💡', gradient: 'from-yellow-400 via-amber-500 to-orange-700' } },
+  { match: /нийслэл/i, theme: { icon: '🗺️', gradient: 'from-teal-400 via-sky-500 to-indigo-600' } },
+  { match: /аль онд/i, theme: { icon: '⏳', gradient: 'from-amber-300 via-orange-500 to-rose-700' } },
+  { match: /уран зохиол/i, theme: { icon: '📚', gradient: 'from-emerald-500 via-teal-600 to-indigo-700' } },
+  { match: /аюулгүй амьдрал/i, theme: { icon: '🦺', gradient: 'from-orange-400 via-amber-500 to-lime-600' } },
+  { match: /сансар/i, theme: { icon: '🚀', gradient: 'from-indigo-700 via-violet-700 to-slate-900' } },
   // Library quizzes (general knowledge, Mongolia, insurance, fun).
   { match: /байгаль/i, theme: { icon: '🏔️', gradient: 'from-cyan-400 via-sky-500 to-blue-700' } },
   { match: /газар зүй/i, theme: { icon: '🌍', gradient: 'from-sky-400 via-blue-500 to-indigo-600' } },

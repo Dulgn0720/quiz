@@ -94,7 +94,7 @@ export function contentToCreateData(content: QuizContent) {
   } satisfies Prisma.QuizCreateInput;
 }
 
-function rowToQuestion(row: QuestionRow): SavedQuestion {
+export function rowToQuestion(row: QuestionRow): SavedQuestion {
   // `data` was validated by questionSchema before it was written.
   const data = row.data as Record<string, unknown>;
   return {

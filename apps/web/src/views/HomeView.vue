@@ -5,9 +5,10 @@ import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { quizzesApi } from '@/api/quizzes';
 import { trainingsApi } from '@/api/trainings';
-import { quizTheme, shortTitle } from '@/brand/topics';
 import HostGameDialog from '@/components/game/HostGameDialog.vue';
 import DailyCard from '@/components/DailyCard.vue';
+import GameModes from '@/components/home/GameModes.vue';
+import QuizShelf from '@/components/home/QuizShelf.vue';
 import Mascot from '@/components/Mascot.vue';
 import { useAuthStore } from '@/stores/auth';
 
@@ -23,15 +24,10 @@ const hosting = ref<QuizSummary | null>(null);
 
 const totalQuestions = computed(() => quizzes.value.reduce((n, q) => n + q.questionCount, 0));
 
-/** A taste of every shelf: take quizzes round-robin across categories. */
-const featured = computed(() => {
-  const byCategory = QUIZ_CATEGORIES.map((c) => quizzes.value.filter((q) => q.category === c)).filter((l) => l.length);
-  const picked: QuizSummary[] = [];
-  for (let i = 0; picked.length < 6 && byCategory.some((l) => l.length > i); i++) {
-    for (const list of byCategory) if (list[i] && picked.length < 6) picked.push(list[i]!);
-  }
-  return picked;
-});
+/** One shelf per topic, in the library's topic order. */
+const shelves = computed(() =>
+  QUIZ_CATEGORIES.map((c) => ({ category: c, quizzes: quizzes.value.filter((q) => q.category === c) })).filter((s) => s.quizzes.length),
+);
 const categoryCounts = computed(() =>
   QUIZ_CATEGORIES.map((c) => ({ code: c, count: quizzes.value.filter((q) => q.category === c).length })).filter((c) => c.count > 0),
 );
@@ -62,8 +58,14 @@ watch(
 
 onMounted(async () => {
   try {
-    const res = await quizzesApi.list({ scope: 'official', page: 1, pageSize: 50 });
-    quizzes.value = res.items;
+    // The API pages by 50; the official library fits in a few pages.
+    const all: QuizSummary[] = [];
+    for (let page = 1; page <= 4; page++) {
+      const res = await quizzesApi.list({ scope: 'official', page, pageSize: 50 });
+      all.push(...res.items);
+      if (all.length >= res.total || res.items.length === 0) break;
+    }
+    quizzes.value = all;
   } catch {
     // The home page still works without the list.
   } finally {
@@ -155,8 +157,11 @@ onMounted(async () => {
       <span class="btn-primary">{{ $t('trainings.homeOpen') }} →</span>
     </RouterLink>
 
+    <!-- Ways to play -->
+    <GameModes />
+
     <!-- Daily question -->
-    <DailyCard class="mt-12" />
+    <DailyCard id="daily" class="mt-12 scroll-mt-24" />
 
     <!-- Company quizzes -->
     <section class="mt-16 sm:mt-20">
@@ -180,46 +185,10 @@ onMounted(async () => {
         </RouterLink>
       </nav>
 
-      <ul v-if="!loaded" class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-hidden="true">
-        <li v-for="i in 6" :key="i" class="card h-48 animate-pulse" />
-      </ul>
-      <ul v-else class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <li
-          v-for="(quiz, i) in featured"
-          :key="quiz.id"
-          class="card group flex animate-rise flex-col overflow-hidden transition duration-300 hover:-translate-y-1 hover:shadow-xl"
-          :style="{ animationDelay: `${Math.min(i, 8) * 50}ms` }"
-        >
-          <div class="relative h-28 bg-gradient-to-br p-5" :class="quizTheme(quiz.title).gradient">
-            <span class="absolute -bottom-4 right-4 text-7xl drop-shadow-lg transition duration-300 group-hover:-rotate-6 group-hover:scale-110" aria-hidden="true">
-              {{ quizTheme(quiz.title).icon }}
-            </span>
-            <span class="chip bg-black/25 text-white backdrop-blur">
-              {{ $t('quizList.questions', { n: quiz.questionCount }, quiz.questionCount) }}
-            </span>
-          </div>
-          <div class="flex flex-1 flex-col p-5">
-            <h3 class="font-display text-base font-bold leading-snug">{{ shortTitle(quiz.title) }}</h3>
-            <p v-if="quiz.description" class="mt-1.5 line-clamp-2 text-sm text-ink-600 dark:text-ink-300">{{ quiz.description }}</p>
-            <div class="mt-auto flex items-center gap-2 pt-4">
-              <button type="button" class="btn-primary px-4" :disabled="quiz.questionCount === 0" @click="hosting = quiz">
-                ▶ {{ $t('quizList.host') }}
-              </button>
-              <RouterLink
-                v-if="quiz.questionCount > 0"
-                :to="{ name: 'practice', params: { id: quiz.id } }"
-                class="btn-secondary px-3"
-                :title="$t('practice.cardHint')"
-              >
-                🎯 {{ $t('practice.cta') }}
-              </RouterLink>
-              <RouterLink :to="{ name: 'quiz-edit', params: { id: quiz.id } }" class="btn-ghost px-3">
-                {{ $t('home.preview') }}
-              </RouterLink>
-            </div>
-          </div>
-        </li>
-      </ul>
+      <div v-if="!loaded" class="mt-8 flex gap-4 overflow-hidden" aria-hidden="true">
+        <div v-for="i in 4" :key="i" class="card h-56 w-72 shrink-0 animate-pulse" />
+      </div>
+      <QuizShelf v-for="shelf in shelves" v-else :key="shelf.category" :category="shelf.category" :quizzes="shelf.quizzes" @host="hosting = $event" />
       <p v-if="loaded && quizzes.length === 0" class="mt-8 text-ink-500">{{ $t('quizList.empty') }}</p>
     </section>
 
