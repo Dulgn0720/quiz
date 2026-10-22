@@ -79,6 +79,8 @@ export function isAnswerCorrect(question: Question, answer: AnswerPayload): bool
         answer.itemIds.length === question.items.length &&
         question.items.every((item, i) => answer.itemIds[i] === item.id)
       );
+    case 'estimate':
+      return answer.type === 'estimate' && Math.abs(answer.value - question.answer) <= question.tolerance + 1e-9;
   }
 }
 

@@ -101,6 +101,7 @@ function downloadTemplate(): void {
           { type: 'true_false', prompt: 'The Earth is round.', correct: true },
           { type: 'type_answer', prompt: 'Capital of Mongolia?', acceptedAnswers: ['Ulaanbaatar', 'Улаанбаатар'] },
           { type: 'ordering', prompt: 'Smallest first', items: [{ id: 'a', text: '1' }, { id: 'b', text: '2' }, { id: 'c', text: '3' }] },
+          { type: 'estimate', prompt: 'Year of the People’s Revolution?', answer: 1921, min: 1900, max: 1950, tolerance: 2, unit: 'он' },
         ],
       },
     ],

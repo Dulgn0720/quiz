@@ -8,6 +8,7 @@ export const QUESTION_TYPES = [
   'type_answer',
   'ordering',
   'image',
+  'estimate',
 ] as const;
 export type QuestionType = (typeof QUESTION_TYPES)[number];
 
@@ -45,6 +46,7 @@ export const VALIDATION_CODES = {
   singleCorrectRequired: 'single_correct_required',
   correctRequired: 'correct_required',
   imageRequired: 'image_required',
+  estimateRange: 'estimate_range',
 } as const;
 
 /** Accepts absolute http(s) URLs and root-relative paths (e.g. `/uploads/abc.png`). */
@@ -132,6 +134,24 @@ const orderingQuestionSchema = z.object({
   items: z.array(orderingItemSchema).min(LIMITS.orderingItemsMin).max(LIMITS.orderingItemsMax),
 });
 
+/**
+ * «Тооцоолох»: players pick a number on a slider; guesses within `tolerance`
+ * of the answer count as right.
+ */
+const estimateQuestionSchema = z.object({
+  type: z.literal('estimate'),
+  ...questionBase,
+  answer: z.number().finite(),
+  min: z.number().finite(),
+  max: z.number().finite(),
+  /** Slider step, e.g. 1 for whole numbers. */
+  step: z.number().positive().finite().default(1),
+  /** How far off a guess may be and still count as right. */
+  tolerance: z.number().min(0).finite().default(0),
+  /** Shown after the number, e.g. «км», «он», «%». */
+  unit: optional(z.string().trim().max(LIMITS.estimateUnitMax)),
+});
+
 function checkUniqueIds(ids: string[], path: string, ctx: z.RefinementCtx) {
   const seen = new Set<string>();
   ids.forEach((id, i) => {
@@ -150,8 +170,15 @@ export const questionSchema = z
     trueFalseQuestionSchema,
     typeAnswerQuestionSchema,
     orderingQuestionSchema,
+    estimateQuestionSchema,
   ])
   .superRefine((q, ctx) => {
+    if (q.type === 'estimate') {
+      if (!(q.min < q.max) || q.answer < q.min || q.answer > q.max || q.tolerance > q.max - q.min) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: VALIDATION_CODES.estimateRange, path: ['answer'] });
+      }
+      return;
+    }
     if (q.type === 'ordering') {
       checkUniqueIds(
         q.items.map((i) => i.id),

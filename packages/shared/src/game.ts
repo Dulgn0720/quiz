@@ -107,6 +107,7 @@ export const answerPayloadSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('true_false'), value: z.boolean() }),
   z.object({ type: z.literal('type_answer'), text: z.string().max(LIMITS.acceptedAnswerMax * 2) }),
   z.object({ type: z.literal('ordering'), itemIds: idList }),
+  z.object({ type: z.literal('estimate'), value: z.number().finite() }),
 ]);
 export type AnswerPayload = z.output<typeof answerPayloadSchema>;
 
@@ -247,13 +248,15 @@ export type QuestionPublic = QuestionPublicBase &
     | { type: 'type_answer' }
     /** Items arrive shuffled. */
     | { type: 'ordering'; items: OrderingItem[] }
+    | { type: 'estimate'; min: number; max: number; step: number; unit?: string }
   );
 
 export type RevealedAnswer =
   | { type: 'single' | 'multiple' | 'image'; optionIds: string[] }
   | { type: 'true_false'; value: boolean }
   | { type: 'type_answer'; acceptedAnswers: string[] }
-  | { type: 'ordering'; itemIds: string[] };
+  | { type: 'ordering'; itemIds: string[] }
+  | { type: 'estimate'; value: number; tolerance: number; unit?: string };
 
 export interface QuestionReveal {
   type: QuestionType;
@@ -266,6 +269,8 @@ export interface QuestionReveal {
   answeredCount: number;
   playerCount: number;
   explanation?: string;
+  /** Estimate questions: every guess, for the spread chart. */
+  guesses?: number[];
 }
 
 export interface PlayerAnswerResult {

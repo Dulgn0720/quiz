@@ -64,6 +64,16 @@ function questionToRow(question: Question, position: number) {
     case 'ordering':
       data = { items: question.items };
       break;
+    case 'estimate':
+      data = {
+        answer: question.answer,
+        min: question.min,
+        max: question.max,
+        step: question.step,
+        tolerance: question.tolerance,
+        ...(question.unit ? { unit: question.unit } : {}),
+      };
+      break;
   }
   return { ...common, data };
 }

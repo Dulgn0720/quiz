@@ -278,6 +278,8 @@ export class TrainingsService {
         return { ...base, options: q.options, correctCount: q.correct.length };
       case 'ordering':
         return { ...base, items: shuffleAwayFromIdentity(q.items, `${seed}:${q.id}`) };
+      case 'estimate':
+        return { ...base, min: q.min, max: q.max, step: q.step, unit: q.unit };
       case 'true_false':
       case 'type_answer':
         return base;

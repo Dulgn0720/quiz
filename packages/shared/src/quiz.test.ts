@@ -121,3 +121,14 @@ describe('questionSchema', () => {
     ).toBe(false);
   });
 });
+
+describe('estimate question schema', () => {
+  const base = { type: 'estimate', prompt: 'Year?', answer: 1206, min: 1100, max: 1300 };
+  it('fills step and tolerance and checks the range', () => {
+    const ok = questionSchema.safeParse(base);
+    expect(ok.success && ok.data).toMatchObject({ step: 1, tolerance: 0 });
+    expect(questionSchema.safeParse({ ...base, answer: 1400 }).success).toBe(false);
+    expect(questionSchema.safeParse({ ...base, min: 1300, max: 1100 }).success).toBe(false);
+    expect(questionSchema.safeParse({ ...base, tolerance: 500 }).success).toBe(false);
+  });
+});

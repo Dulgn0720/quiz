@@ -2,6 +2,7 @@
 import type { QuestionPublic, RevealedAnswer } from '@quiz/shared';
 import { computed } from 'vue';
 import { tileStyle } from '@/game/answers';
+import { formatNumber } from '@/game/numbers';
 
 /**
  * The correct answer spelled out. Players always see it (that's the lesson);
@@ -38,6 +39,21 @@ const correctOptions = computed(() => {
       :class="lg ? 'text-6xl sm:text-7xl' : 'text-3xl'"
     >
       {{ answer.acceptedAnswers.join(' · ') }}
+    </p>
+  </div>
+
+  <div v-else-if="answer.type === 'estimate'" class="text-center">
+    <p class="font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400" :class="lg ? 'text-base' : 'text-sm'">
+      {{ $t('game.reveal.correctAnswer') }}
+    </p>
+    <p
+      class="mt-1 font-display font-bold tabular-nums text-emerald-700 dark:text-emerald-300"
+      :class="lg ? 'text-6xl sm:text-7xl' : 'text-4xl'"
+    >
+      {{ formatNumber(answer.value) }}<span v-if="answer.unit" class="ml-2 text-[0.5em]">{{ answer.unit }}</span>
+    </p>
+    <p v-if="answer.tolerance" class="mt-1 font-semibold text-slate-500 dark:text-slate-400">
+      {{ $t('game.reveal.tolerance', { n: formatNumber(answer.tolerance) }) }}
     </p>
   </div>
 

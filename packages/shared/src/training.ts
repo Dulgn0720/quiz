@@ -66,6 +66,11 @@ export interface TrainingQuestion {
   correctCount?: number;
   /** Ordering items, shuffled. */
   items?: OrderingItem[];
+  /** Estimate questions: the slider. */
+  min?: number;
+  max?: number;
+  step?: number;
+  unit?: string;
 }
 
 export interface TrainingDetail extends TrainingSummary {

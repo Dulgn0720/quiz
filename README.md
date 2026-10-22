@@ -5,7 +5,7 @@ A real-time multiplayer quiz platform in the style of Kahoot / Quizizz. See [`do
 **Status:** all six phases of the spec are implemented:
 
 1. pnpm monorepo, docker-compose, PostgreSQL schema (Prisma), shared types
-2. Quiz builder: rounds, six question types, images, JSON/CSV import/export, sample quizzes
+2. Quiz builder: rounds, seven question types, images, JSON/CSV import/export, sample quizzes
 3. Real-time engine: rooms, lobby, join by link/PIN/QR, server-authoritative gameplay and scoring, leaderboards, podium
 4. UI polish: dark mode, sound effects and music, confetti, transitions, Mongolian/English
 5. Optional accounts, XP and levels, badges, game history, public room browser
@@ -90,7 +90,7 @@ Useful scripts (from the repo root):
 ## Quiz builder
 
 - A **quiz** has 1–20 **rounds**; each round has its own name, type (normal, speed, double points, elimination), time per question, points multiplier and shuffle options.
-- Question types: single choice, multiple choice, true/false, type-the-answer, ordering and image questions. Every question can have an image; choice answers can have images too.
+- Question types: single choice, multiple choice, true/false, type-the-answer, ordering, image and estimate («Тооцоолох») questions. In an estimate question players pick a number on a slider; guesses within the question's tolerance count as right, and the big screen shows every guess on a number line. Every question can have an image; choice answers can have images too.
 - Images are uploaded to the API (`POST /api/media/images`, PNG/JPEG/WebP/GIF up to 5 MB, verified by file signature) and served from `/uploads`.
 - Sample quizzes are read-only; duplicate one to edit it.
 
@@ -142,7 +142,7 @@ No personal data or credentials from the documents are used. Re-seeding updates 
 
   `round, round_type, time_per_question, points_multiplier, shuffle_questions, shuffle_answers, type, prompt, image_url, time_limit, base_points, option_1 … option_6, correct, case_sensitive, explanation`
 
-  Only `type` and `prompt` are required. `correct` holds 1-based option numbers or letters separated by `|` (`1|3`, `A|C`) for choice questions, `true`/`false` for true/false, and accepted answers separated by `|` for type-the-answer. For ordering questions, list the options in the correct order and leave `correct` empty. Option images are not supported in CSV. The import dialog has a downloadable template.
+  Only `type` and `prompt` are required. `correct` holds 1-based option numbers or letters separated by `|` (`1|3`, `A|C`) for choice questions, `true`/`false` for true/false, and accepted answers separated by `|` for type-the-answer. For ordering questions, list the options in the correct order and leave `correct` empty. For estimate questions, `correct` is the number and the options are `min`, `max`, `step`, `tolerance` and an optional unit. Option images are not supported in CSV. The import dialog has a downloadable template.
 
 ## Production
 

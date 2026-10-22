@@ -838,6 +838,8 @@ export class GameEngine {
         };
       case 'ordering':
         return { ...base, type: 'ordering', items: shuffleAwayFromIdentity(question.items, seed) };
+      case 'estimate':
+        return { ...base, type: 'estimate', min: question.min, max: question.max, step: question.step, unit: question.unit };
       case 'true_false':
       case 'type_answer':
         return { ...base, type: question.type };
@@ -850,6 +852,7 @@ export class GameEngine {
     const records = s.answers.filter((a) => a.globalIndex === current.globalIndex);
     const distribution: Record<string, number> = {};
     let answer: RevealedAnswer;
+    let guesses: number[] | undefined;
     switch (question.type) {
       case 'single':
       case 'multiple':
@@ -872,8 +875,12 @@ export class GameEngine {
       case 'ordering':
         answer = { type: 'ordering', itemIds: question.items.map((i) => i.id) };
         break;
+      case 'estimate':
+        answer = { type: 'estimate', value: question.answer, tolerance: question.tolerance, unit: question.unit };
+        guesses = records.flatMap((r) => (r.answer.type === 'estimate' ? [r.answer.value] : []));
+        break;
     }
-    if (question.type === 'type_answer' || question.type === 'ordering') {
+    if (question.type === 'type_answer' || question.type === 'ordering' || question.type === 'estimate') {
       distribution.correct = records.filter((r) => r.correct).length;
       distribution.incorrect = records.length - distribution.correct;
     }
@@ -885,6 +892,7 @@ export class GameEngine {
       answeredCount: records.length,
       playerCount: eligible.length,
       explanation: question.explanation,
+      guesses,
     };
   }
 
@@ -981,5 +989,8 @@ function isWellFormed(question: SavedQuestion, answer: AnswerPayload): boolean {
     return ids.size === question.items.length && question.items.every((item) => ids.has(item.id));
   }
   if (answer.type === 'type_answer') return normalizeTypedAnswer(answer.text).length > 0;
+  if (answer.type === 'estimate' && question.type === 'estimate') {
+    return answer.value >= question.min && answer.value <= question.max;
+  }
   return true;
 }

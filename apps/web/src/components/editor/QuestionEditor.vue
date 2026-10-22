@@ -26,6 +26,7 @@ const typeIcons: Record<QuestionType, string> = {
   type_answer: '⌨',
   ordering: '⇅',
   image: '🖼',
+  estimate: '🎚',
 };
 
 function setType(type: QuestionType): void {
@@ -174,6 +175,38 @@ function removeAcceptedAnswer(index: number): void {
     </fieldset>
 
     <OrderingItemsEditor v-else-if="question.type === 'ordering'" :question="question" :path="path" />
+
+    <fieldset v-else-if="question.type === 'estimate'" class="space-y-3">
+      <legend class="label">{{ t('question.estimate.legend') }}</legend>
+      <p class="text-sm text-slate-500 dark:text-slate-400">{{ t('question.estimate.help') }}</p>
+      <div class="grid gap-3 sm:grid-cols-3">
+        <label class="block">
+          <span class="label">{{ t('question.estimate.answer') }}</span>
+          <input v-model.number="question.estimate.answer" type="number" class="input" :class="{ 'input-error': err('answer') }" :disabled="readOnly" />
+        </label>
+        <label class="block">
+          <span class="label">{{ t('question.estimate.min') }}</span>
+          <input v-model.number="question.estimate.min" type="number" class="input" :disabled="readOnly" />
+        </label>
+        <label class="block">
+          <span class="label">{{ t('question.estimate.max') }}</span>
+          <input v-model.number="question.estimate.max" type="number" class="input" :disabled="readOnly" />
+        </label>
+        <label class="block">
+          <span class="label">{{ t('question.estimate.tolerance') }}</span>
+          <input v-model.number="question.estimate.tolerance" type="number" min="0" class="input" :disabled="readOnly" />
+        </label>
+        <label class="block">
+          <span class="label">{{ t('question.estimate.step') }}</span>
+          <input v-model.number="question.estimate.step" type="number" min="0" step="any" class="input" :disabled="readOnly" />
+        </label>
+        <label class="block">
+          <span class="label">{{ t('question.estimate.unit') }}</span>
+          <input v-model="question.estimate.unit" class="input" maxlength="20" :placeholder="t('question.estimate.unitPlaceholder')" :disabled="readOnly" />
+        </label>
+      </div>
+      <p v-if="err('answer')" class="field-error">{{ err('answer') }}</p>
+    </fieldset>
 
     <div class="grid gap-4 sm:grid-cols-2">
       <label class="block">

@@ -18,6 +18,7 @@ enum QuestionType {
   type_answer
   ordering
   image
+  estimate
 }
 
 enum RoundType {

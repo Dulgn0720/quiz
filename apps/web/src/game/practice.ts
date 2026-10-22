@@ -73,6 +73,8 @@ export function practiceQuestion(item: PracticeItem, total: number, endsAt: numb
     case 'true_false':
     case 'type_answer':
       return { ...base, type: question.type };
+    case 'estimate':
+      return { ...base, type: 'estimate', min: question.min, max: question.max, step: question.step, unit: question.unit };
   }
 }
 
@@ -88,6 +90,8 @@ export function practiceAnswer(question: SavedQuestion): RevealedAnswer {
       return { type: 'type_answer', acceptedAnswers: question.acceptedAnswers };
     case 'ordering':
       return { type: 'ordering', itemIds: question.items.map((i) => i.id) };
+    case 'estimate':
+      return { type: 'estimate', value: question.answer, tolerance: question.tolerance, unit: question.unit };
   }
 }
 

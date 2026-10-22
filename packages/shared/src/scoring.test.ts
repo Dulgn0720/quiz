@@ -143,3 +143,15 @@ describe('competitionRanks', () => {
     expect(competitionRanks([])).toEqual([]);
   });
 });
+
+describe('estimate questions', () => {
+  const q = { type: 'estimate', prompt: 'How far?', basePoints: 1000, answer: 384, min: 0, max: 1000, step: 1, tolerance: 20 } as const;
+
+  it('counts guesses within the tolerance as right', () => {
+    expect(isAnswerCorrect(q, { type: 'estimate', value: 384 })).toBe(true);
+    expect(isAnswerCorrect(q, { type: 'estimate', value: 404 })).toBe(true);
+    expect(isAnswerCorrect(q, { type: 'estimate', value: 364 })).toBe(true);
+    expect(isAnswerCorrect(q, { type: 'estimate', value: 405 })).toBe(false);
+    expect(isAnswerCorrect(q, { type: 'true_false', value: true })).toBe(false);
+  });
+});

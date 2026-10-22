@@ -2,6 +2,7 @@
 import type { AnswerPayload, OrderingItem, QuestionPublic } from '@quiz/shared';
 import { computed, ref, watch } from 'vue';
 import { tileStyle } from '@/game/answers';
+import { formatNumber } from '@/game/numbers';
 
 /** Answer input on the player's phone, for every question type. */
 const props = defineProps<{ question: QuestionPublic; disabled?: boolean; hidden?: string[] }>();
@@ -10,6 +11,7 @@ const emit = defineEmits<{ submit: [answer: AnswerPayload] }>();
 const selected = ref<string[]>([]);
 const text = ref('');
 const order = ref<OrderingItem[]>([]);
+const guess = ref(0);
 
 watch(
   () => props.question.globalIndex,
@@ -17,6 +19,7 @@ watch(
     selected.value = [];
     text.value = '';
     order.value = props.question.type === 'ordering' ? [...props.question.items] : [];
+    if (props.question.type === 'estimate') guess.value = snap((props.question.min + props.question.max) / 2);
   },
   { immediate: true },
 );
@@ -49,6 +52,22 @@ function move(index: number, delta: -1 | 1): void {
   const next = [...order.value];
   [next[index], next[target]] = [next[target]!, next[index]!];
   order.value = next;
+}
+
+/** Rounds to the slider's step and keeps the value inside its range. */
+function snap(value: number): number {
+  const q = props.question;
+  if (q.type !== 'estimate') return value;
+  const stepped = Math.round((value - q.min) / q.step) * q.step + q.min;
+  return Math.min(q.max, Math.max(q.min, Number(stepped.toFixed(6))));
+}
+
+function nudge(direction: -1 | 1): void {
+  if (props.question.type === 'estimate') guess.value = snap(guess.value + direction * props.question.step);
+}
+
+function submitGuess(): void {
+  emit('submit', { type: 'estimate', value: snap(guess.value) });
 }
 
 function submitOrder(): void {
@@ -124,6 +143,34 @@ function submitOrder(): void {
       </button>
     </div>
 
+    <div v-else-if="question.type === 'estimate'" class="flex flex-col gap-5">
+      <p class="text-center text-base font-bold text-slate-600 dark:text-slate-300">{{ $t('game.question.estimateHint') }}</p>
+      <output class="estimate-value mx-auto font-display text-6xl font-bold tabular-nums" aria-live="polite">
+        {{ formatNumber(guess) }}<span v-if="question.unit" class="ml-2 text-2xl text-slate-400">{{ question.unit }}</span>
+      </output>
+      <div class="flex items-center gap-3">
+        <button type="button" class="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-white/10 text-3xl font-black transition active:scale-90 disabled:opacity-30" :disabled="disabled || guess <= question.min" :aria-label="$t('game.question.less')" @click="nudge(-1)">−</button>
+        <input
+          v-model.number="guess"
+          type="range"
+          class="estimate-range h-3 flex-1 cursor-pointer"
+          :min="question.min"
+          :max="question.max"
+          :step="question.step"
+          :disabled="disabled"
+          :aria-label="$t('game.question.estimateHint')"
+        />
+        <button type="button" class="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-white/10 text-3xl font-black transition active:scale-90 disabled:opacity-30" :disabled="disabled || guess >= question.max" :aria-label="$t('game.question.more')" @click="nudge(1)">+</button>
+      </div>
+      <div class="-mt-3 flex justify-between px-16 text-sm font-bold tabular-nums text-slate-400">
+        <span>{{ formatNumber(question.min) }}</span>
+        <span>{{ formatNumber(question.max) }}</span>
+      </div>
+      <button type="button" class="btn-primary py-4 text-lg" :disabled="disabled" @click="submitGuess">
+        {{ $t('game.question.submit') }}
+      </button>
+    </div>
+
     <div v-else-if="question.type === 'ordering'" class="flex flex-col gap-3">
       <p class="text-center text-base font-bold text-slate-600 dark:text-slate-300">{{ $t('game.question.orderHint') }}</p>
       <TransitionGroup tag="ol" class="flex flex-col gap-2" move-class="transition-transform duration-200">
@@ -142,6 +189,12 @@ function submitOrder(): void {
 </template>
 
 <style scoped>
+.estimate-range {
+  accent-color: #f57c14;
+}
+.estimate-value {
+  text-shadow: 0 0 30px rgb(245 124 20 / 0.45);
+}
 /* Options removed by 50/50 crumple away but keep their place in the grid. */
 .fifty-gone {
   animation: fifty-poof 0.55s cubic-bezier(0.5, 0, 0.75, 0) forwards;

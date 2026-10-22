@@ -124,7 +124,8 @@ export const CSV_COLUMNS = [
   /**
    * single/multiple/image: 1-based option numbers separated by `|` (e.g. `1|3`);
    * true_false: `true`/`false`; type_answer: accepted answers separated by `|`;
-   * ordering: empty (options are listed in the correct order).
+   * ordering: empty (options are listed in the correct order);
+   * estimate: the answer, with option_1..option_5 = min, max, step, tolerance, unit.
    */
   'correct',
   'case_sensitive',
@@ -172,6 +173,10 @@ export function quizToCsv(quiz: QuizContent): string {
         case 'ordering':
           options = q.items.map((item) => item.text);
           break;
+        case 'estimate':
+          cells.correct = String(q.answer);
+          options = [String(q.min), String(q.max), String(q.step), String(q.tolerance), q.unit ?? ''];
+          break;
       }
       options.forEach((text, i) => {
         cells[OPTION_COLUMNS[i] as CsvColumn] = text;
@@ -195,6 +200,8 @@ const TYPE_ALIASES: Record<string, QuestionType> = {
   sort: 'ordering',
   choice: 'single',
   multi: 'multiple',
+  number: 'estimate',
+  slider: 'estimate',
 };
 
 function parseQuestionType(raw: string): QuestionType | undefined {
@@ -344,6 +351,26 @@ export function parseQuizCsv(text: string, opts: { title: string; language?: Loc
           items: options.map((o, i) => ({ id: `i${i + 1}`, text: o.text })),
         };
         break;
+      case 'estimate': {
+        const cell = (i: number) => get(OPTION_COLUMNS[i] as CsvColumn);
+        const answer = parseNumber(correctRaw);
+        const min = parseNumber(cell(0));
+        const max = parseNumber(cell(1));
+        if (answer === undefined || min === undefined || max === undefined) {
+          return fail('Estimate questions need a number answer and min, max in option_1, option_2');
+        }
+        question = {
+          type,
+          ...base,
+          answer,
+          min,
+          max,
+          step: parseNumber(cell(2)),
+          tolerance: parseNumber(cell(3)),
+          unit: cell(4) || undefined,
+        };
+        break;
+      }
     }
     rowOf.set(`${rounds.length - 1}.${round.questions.length}`, rowNumber);
     round.questions.push(question);

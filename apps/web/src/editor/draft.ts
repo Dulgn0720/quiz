@@ -49,6 +49,8 @@ export interface DraftQuestion {
   acceptedAnswers: string[];
   caseSensitive: boolean;
   items: DraftItem[];
+  /** Estimate questions; empty string when an input is cleared. */
+  estimate: { answer: number | ''; min: number | ''; max: number | ''; step: number | ''; tolerance: number | ''; unit: string };
 }
 
 export interface DraftRound {
@@ -99,6 +101,7 @@ export function createQuestion(type: QuestionType = 'single'): DraftQuestion {
     acceptedAnswers: [''],
     caseSensitive: false,
     items: Array.from({ length: 4 }, () => createItem()),
+    estimate: { answer: '', min: 0, max: 100, step: 1, tolerance: 5, unit: '' },
   };
 }
 
@@ -154,6 +157,16 @@ export function questionToDraft(question: Question): DraftQuestion {
       break;
     case 'ordering':
       draft.items = question.items.map((i) => ({ ...i }));
+      break;
+    case 'estimate':
+      draft.estimate = {
+        answer: question.answer,
+        min: question.min,
+        max: question.max,
+        step: question.step,
+        tolerance: question.tolerance,
+        unit: question.unit ?? '',
+      };
       break;
   }
   return draft;
@@ -214,6 +227,17 @@ export function draftQuestionToInput(q: DraftQuestion): QuestionInput {
       return { type: q.type, ...base, acceptedAnswers: q.acceptedAnswers, caseSensitive: q.caseSensitive };
     case 'ordering':
       return { type: q.type, ...base, items: q.items };
+    case 'estimate':
+      return {
+        type: q.type,
+        ...base,
+        answer: requiredNumber(q.estimate.answer),
+        min: requiredNumber(q.estimate.min),
+        max: requiredNumber(q.estimate.max),
+        step: requiredNumber(q.estimate.step),
+        tolerance: requiredNumber(q.estimate.tolerance),
+        unit: optionalText(q.estimate.unit),
+      };
   }
 }
 

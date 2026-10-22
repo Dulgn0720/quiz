@@ -4,6 +4,7 @@ import { computed } from 'vue';
 import { tileStyle } from '@/game/answers';
 import Mascot, { type MascotMood } from '@/components/Mascot.vue';
 import { useCountdown } from '@/game/useCountdown';
+import EstimateLine from './EstimateLine.vue';
 import GameTimer from './GameTimer.vue';
 import QuestionHeader from './QuestionHeader.vue';
 
@@ -28,6 +29,8 @@ const watcherMood = computed<MascotMood>(() => {
   if (props.total && props.answered === props.total) return 'happy';
   return seconds.value <= 5 ? 'nervous' : 'thinking';
 });
+
+const estimateAnswer = computed(() => (props.reveal?.answer.type === 'estimate' ? props.reveal.answer : undefined));
 
 const trueFalseAnswer = computed(() =>
   props.reveal?.answer.type === 'true_false' ? props.reveal.answer.value : undefined,
@@ -115,5 +118,19 @@ const trueFalseAnswer = computed(() =>
     <p v-else-if="question.type === 'type_answer' && !reveal" class="text-center text-xl font-bold text-slate-500 dark:text-slate-400">
       ⌨️ {{ $t('game.question.typeOnDevice') }}
     </p>
+
+    <template v-else-if="question.type === 'estimate'">
+      <p v-if="!reveal" class="text-center text-xl font-bold text-slate-500 dark:text-slate-400">
+        🎚 {{ $t('game.question.estimateOnDevice') }}
+      </p>
+      <EstimateLine
+        :min="question.min"
+        :max="question.max"
+        :unit="question.unit"
+        :answer="estimateAnswer?.value"
+        :tolerance="estimateAnswer?.tolerance"
+        :guesses="reveal?.guesses"
+      />
+    </template>
   </div>
 </template>

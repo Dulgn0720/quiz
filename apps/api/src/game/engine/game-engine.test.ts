@@ -138,7 +138,7 @@ function quiz(): GameSnapshot['quiz'] {
 let time: FakeTime;
 let output: RecordingOutput;
 
-function makeEngine(settings: Partial<GameSettings> = {}): GameEngine {
+function makeEngine(settings: Partial<GameSettings> = {}, rounds?: SavedRound[]): GameEngine {
   let n = 0;
   const snapshot = createGameSnapshot({
     gameId: 'game-1',
@@ -146,7 +146,7 @@ function makeEngine(settings: Partial<GameSettings> = {}): GameEngine {
     hostToken: 'host-secret',
     seed: 'seed-1',
     now: time.now,
-    quiz: quiz(),
+    quiz: rounds ? { ...quiz(), rounds } : quiz(),
     settings: { visibility: 'private', perPlayerShuffle: true, ...settings },
   });
   return new GameEngine(snapshot, {
@@ -652,5 +652,48 @@ describe('power-ups', () => {
     expect(engine.usePowerUp(a, currentIndex(engine), 'double')).toEqual({ ok: false, error: 'power_up_unavailable' });
     const q = phaseOf(a);
     expect(q.phase === 'question' && q.powerUps).toBeUndefined();
+  });
+});
+
+describe('estimate questions', () => {
+  const rounds: SavedRound[] = [
+    {
+      id: 'r1',
+      name: 'Numbers',
+      type: 'normal',
+      timePerQuestion: 20,
+      pointsMultiplier: 1,
+      shuffleQuestions: false,
+      shuffleAnswers: false,
+      questions: [
+        { id: 'e1', type: 'estimate', prompt: 'Year?', basePoints: 1000, answer: 1921, min: 1900, max: 1950, step: 1, tolerance: 2, unit: 'он' },
+      ],
+    },
+  ];
+
+  it('hides the answer, rejects out-of-range guesses and counts close ones as right', () => {
+    const engine = makeEngine({}, rounds);
+    const a = joinConnected(engine, 'Anu');
+    const b = joinConnected(engine, 'Bat');
+    startToQuestion(engine);
+    const index = currentIndex(engine);
+
+    const open = phaseOf(a);
+    if (open.phase !== 'question') throw new Error(open.phase);
+    expect(open.question).toMatchObject({ type: 'estimate', min: 1900, max: 1950, step: 1, unit: 'он' });
+    expect(JSON.stringify(open)).not.toContain('1921');
+
+    expect(engine.submitAnswer(a, index, { type: 'estimate', value: 2000 }).ok).toBe(false);
+    expect(engine.submitAnswer(a, index, { type: 'estimate', value: 1923 }).ok).toBe(true);
+    expect(engine.submitAnswer(b, index, { type: 'estimate', value: 1930 }).ok).toBe(true);
+    time.advance(GAME_TIMINGS.allAnsweredRevealDelayMs + 10);
+
+    const host = phaseOf('host');
+    if (host.phase !== 'reveal') throw new Error(host.phase);
+    expect(host.reveal.answer).toEqual({ type: 'estimate', value: 1921, tolerance: 2, unit: 'он' });
+    expect([...host.reveal.guesses!].sort()).toEqual([1923, 1930]);
+    expect(host.reveal.distribution).toMatchObject({ correct: 1, incorrect: 1 });
+    expect(phaseOf(a)).toMatchObject({ phase: 'reveal', you: { correct: true } });
+    expect(phaseOf(b)).toMatchObject({ phase: 'reveal', you: { correct: false } });
   });
 });

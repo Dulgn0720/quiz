@@ -7,6 +7,7 @@ export const PIN_LENGTH = 6;
 
 /** Hard limits enforced by validation on both the client and the server. */
 export const LIMITS = {
+  estimateUnitMax: 20,
   idMax: 64,
   titleMax: 120,
   descriptionMax: 1000,
