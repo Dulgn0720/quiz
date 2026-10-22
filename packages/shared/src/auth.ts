@@ -1,0 +1,156 @@
+import { z } from 'zod';
+import { AVATARS, type GameStatus } from './game';
+import type { BadgeCode, LevelProgress } from './progression';
+
+/** Accounts are optional: guests can play without one. */
+
+export const AUTH_LIMITS = {
+  passwordMin: 8,
+  passwordMax: 128,
+  displayNameMax: 40,
+  departmentMax: 40,
+  emailMax: 254,
+} as const;
+
+const email = z.string().trim().toLowerCase().email().max(AUTH_LIMITS.emailMax);
+const displayName = z
+  .string()
+  .transform((s) => s.normalize('NFKC').replace(/\s+/g, ' ').trim())
+  .pipe(z.string().min(1).max(AUTH_LIMITS.displayNameMax));
+
+export const registerSchema = z.object({
+  email,
+  password: z.string().min(AUTH_LIMITS.passwordMin).max(AUTH_LIMITS.passwordMax),
+  displayName,
+});
+export type RegisterRequest = z.input<typeof registerSchema>;
+
+export const loginSchema = z.object({
+  email,
+  password: z.string().min(1).max(AUTH_LIMITS.passwordMax),
+});
+export type LoginRequest = z.input<typeof loginSchema>;
+
+export const forgotPasswordSchema = z.object({ email });
+export type ForgotPasswordRequest = z.input<typeof forgotPasswordSchema>;
+
+export const resetPasswordSchema = z.object({
+  token: z.string().trim().min(20).max(200),
+  password: z.string().min(AUTH_LIMITS.passwordMin).max(AUTH_LIMITS.passwordMax),
+});
+export type ResetPasswordRequest = z.input<typeof resetPasswordSchema>;
+
+const department = z
+  .string()
+  .transform((s) => s.normalize('NFKC').replace(/\s+/g, ' ').trim())
+  .pipe(z.string().max(AUTH_LIMITS.departmentMax));
+
+export const updateProfileSchema = z.object({
+  displayName: displayName.optional(),
+  avatar: z.enum(AVATARS).nullable().optional(),
+  /** Empty string clears it. */
+  department: department.optional(),
+});
+
+/** Sign-in from the employee portal with a short-lived token it signed (see deploy/portal/README.md). */
+export const portalSignInSchema = z.object({ token: z.string().trim().min(20).max(4000) });
+export type PortalSignInRequest = z.input<typeof portalSignInSchema>;
+
+/** What the portal's token must carry. */
+export const portalClaimsSchema = z.object({
+  email,
+  name: displayName.optional(),
+  department: department.optional(),
+});
+export type UpdateProfileRequest = z.input<typeof updateProfileSchema>;
+
+export interface UserPublic {
+  id: string;
+  email: string;
+  displayName: string;
+  avatar?: string;
+  department?: string;
+  xp: number;
+  level: number;
+  /** Listed in the server's ADMIN_EMAILS. */
+  isAdmin: boolean;
+  createdAt: string;
+}
+
+/** Public server settings the web app adapts to. */
+export interface AppSettings {
+  /** Only admins may create, edit, import or delete quizzes. */
+  restrictQuizEditing: boolean;
+  /** The employee portal can sign people in (PORTAL_SSO_SECRET is set). */
+  portalSignIn: boolean;
+}
+
+export interface AuthResponse {
+  token: string;
+  user: UserPublic;
+}
+
+export interface EarnedBadge {
+  code: BadgeCode;
+  icon: string;
+  awardedAt: string;
+}
+
+export interface UserProfile extends UserPublic {
+  progress: LevelProgress;
+  badges: EarnedBadge[];
+  stats: {
+    gamesPlayed: number;
+    wins: number;
+    podiums: number;
+    gamesHosted: number;
+    quizzesCreated: number;
+    bestScore: number;
+  };
+}
+
+export interface GameHistoryEntry {
+  gameId: string;
+  quizTitle: string;
+  status: GameStatus;
+  playedAt: string;
+  score: number;
+  rank: number | null;
+  playerCount: number;
+  correctCount: number;
+  answerCount: number;
+  xpEarned: number;
+}
+
+/** Sent to a signed-in player after a game: what it did for their progression. */
+export interface PlayerProgressUpdate {
+  xpEarned: number;
+  xp: number;
+  level: number;
+  previousLevel: number;
+  progress: LevelProgress;
+  newBadges: { code: BadgeCode; icon: string }[];
+}
+
+export const TOP_PLAYER_PERIODS = ['all', 'month'] as const;
+export type TopPlayerPeriod = (typeof TOP_PLAYER_PERIODS)[number];
+
+/** A row of the global leaderboard (`GET /api/leaderboard`). */
+export interface TopPlayer {
+  rank: number;
+  displayName: string;
+  avatar?: string;
+  level: number;
+  /** All-time XP, or XP earned in the period for `month`. */
+  xp: number;
+  gamesPlayed: number;
+  wins: number;
+  isYou: boolean;
+}
+
+export interface TopPlayersResponse {
+  period: TopPlayerPeriod;
+  players: TopPlayer[];
+  /** The signed-in player's own row, also when outside the top list. */
+  you?: TopPlayer;
+}

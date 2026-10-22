@@ -1,0 +1,37 @@
+{
+  "name": "@quiz/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "vue-tsc --noEmit",
+    "test": "vitest run",
+    "screenshots": "node e2e/screenshots.mjs"
+  },
+  "dependencies": {
+    "@quiz/shared": "workspace:*",
+    "pinia": "^2.3.0",
+    "qrcode": "^1.5.4",
+    "socket.io-client": "^4.8.1",
+    "vue": "^3.5.13",
+    "vue-i18n": "^10.0.5",
+    "vue-router": "^4.5.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/qrcode": "^1.5.5",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "autoprefixer": "^10.4.20",
+    "playwright": "^1.49.1",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.7",
+    "vitest": "^2.1.8",
+    "vue-tsc": "^2.2.0"
+  }
+}

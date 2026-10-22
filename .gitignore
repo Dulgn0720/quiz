@@ -1,1 +1,17 @@
 .DS_Store
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+.env
+.env.*.local
+!.env.example
+apps/api/uploads/
+.vite/
+*.log
+
+# Database backups written by the production backup service
+deploy/backups/
+deploy/portal/backups/
+deploy/portal/.env
+agula-quiz-*.tar.gz

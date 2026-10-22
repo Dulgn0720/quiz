@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="mn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quiz Pro</title>
+  <meta name="description" content="Динамик quiz систем: ямар ч өгөгдөл, санамсаргүй холих, тойрог, оноо, түвшин">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="bg-glow" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <button class="brand" data-go="home" type="button">
+      <span class="brand-mark">Q</span><span>Quiz<b>Pro</b></span>
+    </button>
+    <nav class="topnav">
+      <button type="button" data-go="data">Өгөгдөл</button>
+      <button type="button" data-go="board">Тэргүүлэгчид</button>
+      <button type="button" id="themeToggle" class="icon-btn" aria-label="Өнгөний горим солих">🌓</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- HOME -->
+    <section id="screen-home" class="screen">
+      <div class="grid-2">
+        <div class="card player-card">
+          <label class="field">
+            <span>Тоглогчийн нэр</span>
+            <input id="playerName" maxlength="24" placeholder="Нэрээ бичнэ үү" autocomplete="nickname">
+          </label>
+          <div class="level-row">
+            <div class="level-badge" id="levelBadge">1</div>
+            <div class="level-info">
+              <div class="level-title" id="levelTitle">Шинэхэн</div>
+              <div class="xp-bar"><div class="xp-fill" id="xpFill"></div></div>
+              <div class="muted small" id="xpText">0 / 500 XP</div>
+            </div>
+          </div>
+          <div class="stat-row">
+            <div><b id="statGames">0</b><span>тоглолт</span></div>
+            <div><b id="statBest">0</b><span>шилдэг оноо</span></div>
+            <div><b id="statAcc">0%</b><span>дундаж нарийвчлал</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <label class="field">
+            <span>Асуултын сан</span>
+            <select id="setSelect"></select>
+          </label>
+          <div class="chips" id="setSummary"></div>
+          <div class="field">
+            <span>Ангилал <small class="muted">(сонгохгүй бол бүгд)</small></span>
+            <div class="chips selectable" id="categoryChips"></div>
+          </div>
+        </div>
+      </div>
+
+      <form class="card settings" id="settingsForm">
+        <h2>Тохиргоо</h2>
+        <div class="settings-grid">
+          <label class="field"><span>Хүндрэл</span>
+            <select name="difficulty">
+              <option value="progressive">Шат ахих (хялбар → хэцүү)</option>
+              <option value="mixed">Холимог</option>
+              <option value="1">Зөвхөн хялбар</option>
+              <option value="2">Зөвхөн дунд</option>
+              <option value="3">Зөвхөн хэцүү</option>
+            </select>
+          </label>
+          <label class="field"><span>Тойргийн тоо</span><input name="rounds" type="number" min="1" max="20" value="3"></label>
+          <label class="field"><span>Тойрог бүрт асуулт</span><input name="perRound" type="number" min="1" max="100" value="5"></label>
+          <label class="field"><span>Хугацаа (сек, 0 = хязгааргүй)</span><input name="timePerQuestion" type="number" min="0" max="600" value="20"></label>
+          <label class="field"><span>Тойрог давах босго</span>
+            <select name="passThreshold">
+              <option value="0">Байхгүй</option>
+              <option value="0.5">50%</option>
+              <option value="0.6">60%</option>
+              <option value="0.7">70%</option>
+              <option value="0.8">80%</option>
+            </select>
+          </label>
+          <label class="field"><span>Seed <small class="muted">(ижил дараалал давтах)</small></span><input name="seed" placeholder="санамсаргүй"></label>
+        </div>
+        <div class="toggles">
+          <label class="toggle"><input type="checkbox" name="shuffleQuestions" checked><span></span>Асуултыг холих</label>
+          <label class="toggle"><input type="checkbox" name="shuffleOptions" checked><span></span>Сонголтыг холих</label>
+          <label class="toggle"><input type="checkbox" name="lifelines" checked><span></span>Тусламж (50/50, алгасах, +15с)</label>
+        </div>
+        <div class="start-row">
+          <div class="muted" id="poolInfo"></div>
+          <button class="btn primary big" type="submit">Эхлэх ▶</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- QUIZ -->
+    <section id="screen-quiz" class="screen hidden">
+      <div class="hud">
+        <div class="hud-item"><span>Тойрог</span><b id="hudRound">1/3</b></div>
+        <div class="hud-item"><span>Асуулт</span><b id="hudQ">1/15</b></div>
+        <div class="hud-item"><span>Оноо</span><b id="hudScore">0</b></div>
+        <div class="hud-item streak" id="hudStreakWrap"><span>Цуврал</span><b id="hudStreak">0</b></div>
+      </div>
+      <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+
+      <div class="card question-card" id="questionCard">
+        <div class="q-head">
+          <div class="chips">
+            <span class="chip" id="qCategory"></span>
+            <span class="chip diff" id="qDifficulty"></span>
+            <span class="chip ghost" id="qType"></span>
+          </div>
+          <div class="timer" id="timer">
+            <svg viewBox="0 0 44 44" aria-hidden="true"><circle class="track" cx="22" cy="22" r="19"/><circle class="ring" id="timerRing" cx="22" cy="22" r="19"/></svg>
+            <span id="timerText">20</span>
+          </div>
+        </div>
+        <h2 class="q-text" id="qText"></h2>
+        <div class="options" id="options"></div>
+        <form class="text-answer hidden" id="textForm" autocomplete="off">
+          <input id="textInput" placeholder="Хариултаа бичнэ үү…">
+          <button class="btn primary" type="submit">Хариулах</button>
+        </form>
+        <button class="btn primary hidden" id="submitMulti" type="button">Хариулах</button>
+
+        <div class="feedback hidden" id="feedback" role="status" aria-live="polite">
+          <div class="fb-title" id="fbTitle"></div>
+          <div class="fb-points" id="fbPoints"></div>
+          <div class="fb-expl" id="fbExpl"></div>
+          <button class="btn primary" id="nextBtn" type="button">Дараах ↵</button>
+        </div>
+      </div>
+
+      <div class="lifelines" id="lifelines">
+        <button type="button" class="btn ghost" id="llFifty">50/50 <small></small></button>
+        <button type="button" class="btn ghost" id="llTime">+15с <small></small></button>
+        <button type="button" class="btn ghost" id="llSkip">Алгасах <small></small></button>
+        <button type="button" class="btn ghost danger" id="quitBtn">Дуусгах</button>
+      </div>
+      <p class="muted small center">Гарын товч: 1–9 сонгох · Enter хариулах/дараах</p>
+    </section>
+
+    <!-- ROUND END -->
+    <section id="screen-round" class="screen hidden">
+      <div class="card center round-card">
+        <div class="eyebrow" id="roundEyebrow">Тойрог 1 дууслаа</div>
+        <h2 id="roundTitle">Сайн байна!</h2>
+        <div class="big-stats">
+          <div><b id="rCorrect">0/0</b><span>зөв</span></div>
+          <div><b id="rPoints">0</b><span>оноо</span></div>
+          <div><b id="rAcc">0%</b><span>нарийвчлал</span></div>
+        </div>
+        <div class="bonus hidden" id="rBonus"></div>
+        <p class="muted" id="rNext"></p>
+        <button class="btn primary big" id="nextRoundBtn" type="button">Дараагийн тойрог ▶</button>
+      </div>
+    </section>
+
+    <!-- RESULTS -->
+    <section id="screen-results" class="screen hidden">
+      <div class="card center results-card">
+        <div class="eyebrow" id="resStatus">Дууслаа</div>
+        <div class="grade" id="resGrade">A</div>
+        <div class="res-score"><b id="resScore">0</b> оноо</div>
+        <div class="big-stats">
+          <div><b id="resCorrect">0/0</b><span>зөв</span></div>
+          <div><b id="resAcc">0%</b><span>нарийвчлал</span></div>
+          <div><b id="resStreak">0</b><span>шилдэг цуврал</span></div>
+          <div><b id="resTime">0с</b><span>дундаж хугацаа</span></div>
+        </div>
+        <div class="xp-gain" id="resXp"></div>
+        <div class="rounds-table" id="resRounds"></div>
+        <div class="btn-row">
+          <button class="btn primary" id="againBtn" type="button">Дахин тоглох</button>
+          <button class="btn ghost" id="reviewBtn" type="button">Хариултаа харах</button>
+          <button class="btn ghost" data-go="home" type="button">Нүүр</button>
+        </div>
+      </div>
+      <div class="review hidden" id="review"></div>
+    </section>
+
+    <!-- DATA -->
+    <section id="screen-data" class="screen hidden">
+      <div class="card">
+        <h2>Асуултын сан</h2>
+        <p class="muted">JSON эсвэл CSV хэлбэрээр ямар ч өгөгдөл оруулна. Excel/Google Sheets-ээс CSV-ээр гаргаж болно.</p>
+        <div class="set-list" id="setList"></div>
+      </div>
+      <div class="card">
+        <div class="row-between">
+          <h2 id="editorTitle">Шинэ сан</h2>
+          <div class="btn-row">
+            <button class="btn ghost" id="tplJson" type="button">JSON загвар</button>
+            <button class="btn ghost" id="tplCsv" type="button">CSV загвар</button>
+            <label class="btn ghost file-btn">Файл оруулах<input type="file" id="fileInput" accept=".json,.csv,.txt,application/json,text/csv"></label>
+          </div>
+        </div>
+        <label class="field"><span>Сангийн нэр</span><input id="setName" maxlength="60" placeholder="Жишээ: Түүхийн шалгалт"></label>
+        <textarea id="dataInput" spellcheck="false" placeholder='[{"question": "…", "options": ["…"], "answer": "…"}]'></textarea>
+        <div class="validation" id="validation"></div>
+        <div class="btn-row">
+          <button class="btn ghost" id="validateBtn" type="button">Шалгах</button>
+          <button class="btn primary" id="saveSetBtn" type="button">Хадгалах</button>
+          <button class="btn ghost" id="newSetBtn" type="button">Шинэ</button>
+        </div>
+        <details class="format-help">
+          <summary>Өгөгдлийн формат</summary>
+          <ul>
+            <li><code>question</code> — асуулт (заавал)</li>
+            <li><code>options</code> — сонголтууд. CSV-д <code>a|b|c</code> гэж тусгаарлана</li>
+            <li><code>answer</code> — зөв хариулт: сонголтын текст, индекс (0-ээс), үсэг (A, B…), олон бол массив / <code>a|b</code>, үнэн/худал бол <code>true</code>/<code>false</code>, бичгээр бол хүлээн авах хариултууд</li>
+            <li><code>type</code> — <code>single</code>, <code>multiple</code>, <code>boolean</code>, <code>text</code> (заахгүй бол автоматаар таньна)</li>
+            <li><code>difficulty</code> — 1–3 эсвэл easy/medium/hard, хялбар/дунд/хэцүү</li>
+            <li><code>category</code>, <code>explanation</code>, <code>time</code> (сек), <code>points</code> — заавал биш</li>
+          </ul>
+        </details>
+      </div>
+    </section>
+
+    <!-- LEADERBOARD -->
+    <section id="screen-board" class="screen hidden">
+      <div class="card">
+        <div class="row-between">
+          <h2>Тэргүүлэгчид</h2>
+          <button class="btn ghost danger" id="clearBoard" type="button">Цэвэрлэх</button>
+        </div>
+        <ol class="board" id="board"></ol>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast hidden" id="toast" role="status"></div>
+  <div class="confetti" id="confetti" aria-hidden="true"></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

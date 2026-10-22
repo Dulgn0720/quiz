@@ -1,0 +1,202 @@
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import type { Prisma } from '@prisma/client';
+import {
+  LIMITS,
+  parseQuizCsv,
+  parseQuizJson,
+  quizToCsv,
+  quizToExportJson,
+  type ApiErrorBody,
+  type ExportFormat,
+  type ImportQuizRequest,
+  type Paginated,
+  type QuizCategory,
+  type QuizContent,
+  type QuizScope,
+  type QuizSort,
+  type QuizDetail,
+  type QuizSummary,
+} from '@quiz/shared';
+import { ProgressionService } from '../account/progression.service';
+import { AccessPolicy } from '../auth/access-policy';
+import { PrismaService } from '../prisma/prisma.service';
+import {
+  QUIZ_SUMMARY_INCLUDE,
+  QUIZ_WITH_CONTENT,
+  contentToCreateData,
+  toQuizContent,
+  toQuizDetail,
+  toQuizSummary,
+} from './quiz.mapper';
+
+export interface ListQuizzesParams {
+  search?: string;
+  /** Only quizzes owned by `userId` (same as scope `mine`). */
+  mine?: boolean;
+  scope?: QuizScope;
+  category?: QuizCategory;
+  sort?: QuizSort;
+  userId?: string;
+  page: number;
+  pageSize: number;
+}
+
+export interface QuizFile {
+  filename: string;
+  contentType: string;
+  body: string;
+}
+
+/**
+ * Quizzes created while signed in belong to that account: only the owner may
+ * edit or delete them (everyone may play and duplicate them). Quizzes made
+ * by guests have no owner and stay editable by anyone. With RESTRICT_QUIZ_EDITING
+ * only admins (ADMIN_EMAILS) may create or change quizzes, and admins may change any.
+ */
+@Injectable()
+export class QuizzesService {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly progression: ProgressionService,
+    private readonly access: AccessPolicy,
+  ) {}
+
+  async list({ search, mine, scope, category, sort, userId, page, pageSize }: ListQuizzesParams): Promise<Paginated<QuizSummary>> {
+    const shelf = mine ? 'mine' : (scope ?? 'all');
+    const visible: Prisma.QuizWhereInput = {
+      OR: [{ visibility: 'public' }, { ownerId: null }, ...(userId ? [{ ownerId: userId }] : [])],
+    };
+    const shelves: Record<QuizScope, Prisma.QuizWhereInput> = {
+      all: visible,
+      official: { isSample: true },
+      community: { isSample: false, OR: [{ visibility: 'public' }, { ownerId: null }] },
+      mine: { ownerId: userId ?? '-' },
+    };
+    const where: Prisma.QuizWhereInput = {
+      AND: [
+        shelves[shelf],
+        search
+          ? {
+              OR: [
+                { title: { contains: search, mode: 'insensitive' } },
+                { description: { contains: search, mode: 'insensitive' } },
+              ],
+            }
+          : {},
+        category ? { category } : {},
+      ],
+    };
+    const orderBy: Prisma.QuizOrderByWithRelationInput[] =
+      sort === 'popular'
+        ? [{ games: { _count: 'desc' } }, { updatedAt: 'desc' }]
+        : [{ isSample: 'asc' }, { updatedAt: 'desc' }];
+    const [total, rows] = await this.prisma.$transaction([
+      this.prisma.quiz.count({ where }),
+      this.prisma.quiz.findMany({
+        where,
+        orderBy,
+        include: QUIZ_SUMMARY_INCLUDE,
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+    ]);
+    return { items: rows.map(toQuizSummary), total, page, pageSize };
+  }
+
+  /** Private quizzes are only found by their owner (and admins). */
+  async get(id: string, userId?: string): Promise<QuizDetail> {
+    const row = await this.prisma.quiz.findUnique({ where: { id }, include: QUIZ_WITH_CONTENT });
+    if (!row) throw new NotFoundException('Quiz not found');
+    if (row.visibility === 'private' && row.ownerId && row.ownerId !== userId && !(await this.access.isAdmin(userId))) {
+      throw new NotFoundException('Quiz not found');
+    }
+    return toQuizDetail(row);
+  }
+
+  /** Also the path for duplicating and importing, so the editing policy applies to those too. */
+  async create(content: QuizContent, ownerId?: string): Promise<QuizDetail> {
+    await this.access.assertCanEditQuizzes(ownerId);
+    const row = await this.prisma.quiz.create({
+      data: { ...contentToCreateData(await this.normalize(content, ownerId ?? null, ownerId)), ownerId: ownerId ?? null },
+      include: QUIZ_WITH_CONTENT,
+    });
+    if (ownerId) await this.progression.refreshBadges(ownerId).catch(() => undefined);
+    return toQuizDetail(row);
+  }
+
+  /** Replaces the quiz's content. Rounds and questions are rewritten, so their ids change. */
+  async update(id: string, content: QuizContent, userId?: string): Promise<QuizDetail> {
+    const row = await this.prisma.$transaction(async (tx) => {
+      const ownerId = await this.assertEditable(tx, id, userId);
+      await tx.round.deleteMany({ where: { quizId: id } });
+      return tx.quiz.update({
+        where: { id },
+        data: contentToCreateData(await this.normalize(content, ownerId, userId)),
+        include: QUIZ_WITH_CONTENT,
+      });
+    });
+    return toQuizDetail(row);
+  }
+
+  async remove(id: string, userId?: string): Promise<void> {
+    await this.assertEditable(this.prisma, id, userId);
+    await this.prisma.quiz.delete({ where: { id } });
+  }
+
+  /** Copies start private, so the new owner can rework them before sharing. */
+  async duplicate(id: string, userId?: string): Promise<QuizDetail> {
+    const content = toQuizContent(await this.get(id, userId));
+    const suffix = ' (copy)';
+    const title = content.title.slice(0, LIMITS.titleMax - suffix.length) + suffix;
+    return this.create({ ...content, title, visibility: 'private' }, userId);
+  }
+
+  async export(id: string, format: ExportFormat, userId?: string): Promise<QuizFile> {
+    const content = toQuizContent(await this.get(id, userId));
+    const base = content.title.replace(/[\\/:*?"<>|\u0000-\u001f]+/g, ' ').trim() || 'quiz';
+    return format === 'csv'
+      ? { filename: `${base}.csv`, contentType: 'text/csv; charset=utf-8', body: quizToCsv(content) }
+      : {
+          filename: `${base}.json`,
+          contentType: 'application/json; charset=utf-8',
+          body: quizToExportJson(content),
+        };
+  }
+
+  async import({ format, content, title }: ImportQuizRequest, userId?: string): Promise<QuizDetail> {
+    const result =
+      format === 'csv'
+        ? parseQuizCsv(content, { title: title?.trim() || 'Imported quiz' })
+        : parseQuizJson(content);
+    if (!result.ok) {
+      const body: ApiErrorBody = { statusCode: 400, message: 'Import failed', issues: result.issues };
+      throw new BadRequestException(body);
+    }
+    return this.create(result.quiz, userId);
+  }
+
+  /**
+   * A guest's quiz has nobody who could see it while private, so it is always public.
+   * The «Агула» shelf is reserved for admins.
+   */
+  private async normalize(content: QuizContent, ownerId: string | null, userId?: string): Promise<QuizContent> {
+    const visibility = ownerId ? content.visibility : 'public';
+    const category = content.category === 'agula' && !(await this.access.isAdmin(userId)) ? 'other' : content.category;
+    return { ...content, visibility, category };
+  }
+
+  /** Returns the quiz's owner id (null for guest quizzes). */
+  private async assertEditable(db: Prisma.TransactionClient, id: string, userId?: string): Promise<string | null> {
+    const quiz = await db.quiz.findUnique({ where: { id }, select: { isSample: true, ownerId: true } });
+    if (!quiz) throw new NotFoundException('Quiz not found');
+    if (quiz.isSample) {
+      throw new ForbiddenException('Sample quizzes are read-only. Duplicate it to make changes.');
+    }
+    await this.access.assertCanEditQuizzes(userId);
+    // Admins may change any quiz except the read-only samples.
+    if (quiz.ownerId && quiz.ownerId !== userId && !(await this.access.isAdmin(userId))) {
+      throw new ForbiddenException('Only the owner can change this quiz. Duplicate it to make your own copy.');
+    }
+    return quiz.ownerId;
+  }
+}

@@ -1,0 +1,19 @@
+# One domain for everything; Caddy gets and renews the HTTPS certificate automatically.
+{$DOMAIN} {
+	encode zstd gzip
+
+	# API, live games (WebSocket) and uploaded images.
+	@api path /api/* /socket.io/* /uploads/*
+	reverse_proxy @api api:3000
+
+	# Everything else is the web app.
+	reverse_proxy web:80
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		# Pages may be framed only by this site and the sites in FRAME_ANCESTORS (e.g. the employee portal).
+		Content-Security-Policy "frame-ancestors 'self' {$FRAME_ANCESTORS}"
+	}
+}
