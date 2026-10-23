@@ -279,6 +279,18 @@ for (const p of players) {
 await host.waitForTimeout(500);
 await shot(host, 'game-host-hype');
 
+// Chat: one player types, another taps a quick phrase; the comments show on the big screen.
+await players[0].getByRole('button', { name: 'Сэтгэгдэл бичих' }).click();
+await players[0].locator('#chat-input').fill('Сайн уу, бүгдээрээ! Амжилт 🍀');
+await players[0].getByRole('button', { name: 'Илгээх', exact: true }).click();
+await players[1].getByRole('button', { name: 'Сэтгэгдэл бичих' }).click();
+await players[1].getByRole('button', { name: /Дараагийнх/ }).click();
+await players[0].waitForTimeout(600);
+await shot(players[0], 'game-player-chat');
+await checkOverflow(players[0], 'player chat');
+await shot(host, 'game-host-chat');
+for (const p of players.slice(0, 2)) await p.getByRole('button', { name: 'Хаах', exact: true }).click();
+
 await host.getByRole('button', { name: 'Тоглоом эхлүүлэх' }).click();
 await host.waitForTimeout(600);
 await shot(host, 'game-host-countdown');

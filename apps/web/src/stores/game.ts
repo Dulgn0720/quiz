@@ -1,7 +1,9 @@
 import {
   AVATARS,
+  CHAT,
   GAME_ERRORS,
   type AnswerPayload,
+  type ChatEvent,
   type Avatar,
   type ClientToServerEvents,
   type GameErrorCode,
@@ -59,6 +61,9 @@ export const useGameStore = defineStore('game', () => {
   /** Emoji reactions floating on the host screen; each lives a few seconds. */
   const reactions = ref<(ReactionEvent & { id: number; x: number })[]>([]);
   let reactionId = 0;
+  /** Latest chat messages, oldest first. */
+  const chat = ref<ChatEvent[]>([]);
+  const chatEnabled = ref(true);
   /** XP, level and badges earned in this game (signed-in players, after the podium). */
   const progress = shallowRef<PlayerProgressUpdate | null>(null);
   const me = ref<{ playerId: string; nickname: string; avatar: string } | null>(null);
@@ -87,6 +92,8 @@ export const useGameStore = defineStore('game', () => {
     submitted.value = null;
     progress.value = null;
     answerCount.value = { answered: 0, total: 0 };
+    chat.value = [];
+    chatEnabled.value = true;
   }
 
   function connect(): GameSocket {
@@ -114,6 +121,12 @@ export const useGameStore = defineStore('game', () => {
       // Keep the screen readable when a whole room reacts at once.
       reactions.value = [...reactions.value.slice(-39), item];
       setTimeout(() => (reactions.value = reactions.value.filter((r) => r.id !== item.id)), 3500);
+    });
+    s.on('game:chat', (message) => {
+      chat.value = [...chat.value.slice(-(CHAT.keep - 1)), message];
+    });
+    s.on('game:chat-enabled', (enabled) => {
+      chatEnabled.value = enabled;
     });
     s.on('player:progress', (update) => {
       progress.value = update;
@@ -266,6 +279,9 @@ export const useGameStore = defineStore('game', () => {
     socket?.emit('player:react', { emoji });
   }
 
+  const sendChat = (text: string) => call('player:chat', { text });
+  const setChatEnabled = (enabled: boolean) => call('host:chat', { enabled });
+
   function leave(): void {
     if (role.value === 'player') {
       socket?.emit('room:leave');
@@ -287,6 +303,10 @@ export const useGameStore = defineStore('game', () => {
     answerCount,
     reactions,
     react,
+    chat,
+    chatEnabled,
+    sendChat,
+    setChatEnabled,
     usePowerUp,
     progress,
     me,

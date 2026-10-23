@@ -1,4 +1,4 @@
-import type { AuthResponse, ClientToServerEvents, CreateGameResponse, QuizDetail, ReactionEvent, ServerToClientEvents } from '@quiz/shared';
+import type { AuthResponse, ChatEvent, ClientToServerEvents, CreateGameResponse, QuizDetail, ReactionEvent, ServerToClientEvents } from '@quiz/shared';
 import { spawn, type ChildProcess } from 'node:child_process';
 import { createHmac } from 'node:crypto';
 import { mkdtempSync } from 'node:fs';
@@ -7,7 +7,7 @@ import { join, resolve } from 'node:path';
 import { io, type Socket } from 'socket.io-client';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-/** Password reset (link read from the log, as admins do without SMTP), portal sign-in and live reactions. */
+/** Password reset (link read from the log, as admins do without SMTP), portal sign-in, live reactions and chat. */
 
 const PORT = 5500 + Math.floor(Math.random() * 400);
 const BASE = `http://127.0.0.1:${PORT}`;
@@ -108,6 +108,48 @@ describe('reactions', () => {
       await new Promise((r) => setTimeout(r, 800));
       expect(seen.length).toBe(5);
       expect(seen[0]).toMatchObject({ emoji: '🔥', avatar: '🦊' });
+    } finally {
+      host.disconnect();
+      player.disconnect();
+    }
+  });
+});
+
+describe('chat', () => {
+  it('reaches everyone, hides links, is rate limited, and the host can turn it off', async () => {
+    const quiz = await api<QuizDetail>('/quizzes', {
+      method: 'POST',
+      body: JSON.stringify({ title: 'Chat', rounds: [{ name: 'R', questions: [{ type: 'true_false', prompt: 'Ok?', correct: true }] }] }),
+    });
+    const game = await api<CreateGameResponse>('/games', { method: 'POST', body: JSON.stringify({ quizId: quiz.body.id }) });
+    const host: Socket<ServerToClientEvents, ClientToServerEvents> = io(BASE, { transports: ['websocket'], forceNew: true });
+    const player: Socket<ServerToClientEvents, ClientToServerEvents> = io(BASE, { transports: ['websocket'], forceNew: true });
+    const hostSaw: ChatEvent[] = [];
+    const playerSaw: ChatEvent[] = [];
+    const enabled: boolean[] = [];
+    host.on('game:chat', (m) => hostSaw.push(m));
+    player.on('game:chat', (m) => playerSaw.push(m));
+    player.on('game:chat-enabled', (on) => enabled.push(on));
+    try {
+      await host.timeout(5000).emitWithAck('host:join', { pin: game.body.pin, hostToken: game.body.hostToken });
+      const joined = await player.timeout(5000).emitWithAck('room:join', { pin: game.body.pin, nickname: 'Чатлагч', avatar: '🦊' });
+      expect(joined.ok).toBe(true);
+
+      expect(await player.timeout(5000).emitWithAck('player:chat', { text: '  Сайн уу   https://evil.example ' })).toEqual({ ok: true });
+      expect(await player.timeout(5000).emitWithAck('player:chat', { text: '   ' })).toEqual({ ok: false, error: 'invalid_payload' });
+      expect(await player.timeout(5000).emitWithAck('player:chat', { text: 'Хоёр' })).toEqual({ ok: true });
+      expect(await player.timeout(5000).emitWithAck('player:chat', { text: 'Гурав' })).toEqual({ ok: true });
+      expect(await player.timeout(5000).emitWithAck('player:chat', { text: 'Дөрөв' })).toEqual({ ok: false, error: 'rate_limited' });
+      await new Promise((r) => setTimeout(r, 300));
+      expect(hostSaw.map((m) => m.text)).toEqual(['Сайн уу 🔗', 'Хоёр', 'Гурав']);
+      expect(playerSaw).toHaveLength(3);
+      expect(hostSaw[0]).toMatchObject({ nickname: 'Чатлагч', avatar: '🦊' });
+
+      // Players cannot switch chat; the host can, and everyone hears about it.
+      expect(await player.timeout(5000).emitWithAck('host:chat', { enabled: false })).toEqual({ ok: false, error: 'unauthorized' });
+      expect(await host.timeout(5000).emitWithAck('host:chat', { enabled: false })).toEqual({ ok: true });
+      await new Promise((r) => setTimeout(r, 300));
+      expect(enabled).toEqual([true, false]);
     } finally {
       host.disconnect();
       player.disconnect();

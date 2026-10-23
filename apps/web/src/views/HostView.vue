@@ -13,6 +13,7 @@ import RevealChart from '@/components/game/RevealChart.vue';
 import RevealedAnswer from '@/components/game/RevealedAnswer.vue';
 import RoundSummaryPanel from '@/components/game/RoundSummaryPanel.vue';
 import ShareRoom from '@/components/game/ShareRoom.vue';
+import ChatFeed from '@/components/game/ChatFeed.vue';
 import ReactionLayer from '@/components/game/ReactionLayer.vue';
 import HypeMeter from '@/components/game/HypeMeter.vue';
 import Mascot from '@/components/Mascot.vue';
@@ -173,6 +174,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
   <div class="dark stage min-h-dvh">
   <ReactionLayer />
   <HypeMeter />
+  <ChatFeed />
   <section class="mx-auto flex min-h-dvh max-w-6xl flex-col px-4 pb-28 pt-5">
     <ConnectionBanner />
 
@@ -201,6 +203,16 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
             <span class="tabular-nums">{{ players.length }}</span>
           </span>
         </template>
+        <button
+          type="button"
+          class="btn-icon"
+          :aria-pressed="game.chatEnabled"
+          :aria-label="game.chatEnabled ? t('game.chat.disable') : t('game.chat.enable')"
+          :title="game.chatEnabled ? t('game.chat.disable') : t('game.chat.enable')"
+          @click="game.setChatEnabled(!game.chatEnabled)"
+        >
+          <span :class="game.chatEnabled ? '' : 'opacity-40 grayscale'" aria-hidden="true">💬</span>
+        </button>
         <SoundToggles music />
       </header>
 

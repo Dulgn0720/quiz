@@ -11,6 +11,8 @@ import {
   type OnGatewayInit,
 } from '@nestjs/websockets';
 import {
+  CHAT,
+  chatMessageSchema,
   GAME_ERRORS,
   hostJoinSchema,
   joinRoomSchema,
@@ -32,6 +34,7 @@ type Ack = { ok: true } | { ok: false; error: GameErrorCode };
 const kickSchema = z.object({ playerId: z.string().min(1).max(64) });
 const lockSchema = z.object({ locked: z.boolean() });
 const pauseSchema = z.object({ paused: z.boolean() });
+const chatToggleSchema = z.object({ enabled: z.boolean() });
 
 const failure = (error: GameErrorCode): Ack => ({ ok: false, error });
 const toAck = (result: EngineResult): Ack => (result.ok ? { ok: true } : failure(result.error));
@@ -52,6 +55,11 @@ export class GameGateway
   private readonly connections = new Map<string, Set<string>>();
   /** Recent reaction times per player, for a small token bucket (5 per 4 s). */
   private readonly reactionTimes = new Map<string, number[]>();
+  /** Recent chat times per player (CHAT.burst per CHAT.windowMs). */
+  private readonly chatTimes = new Map<string, number[]>();
+  /** Rooms whose host turned chat off. In memory: after a restart chat is back on. */
+  private readonly chatOff = new Set<string>();
+  private chatSeq = 0;
   private readonly trustProxy: boolean;
 
   constructor(
@@ -76,7 +84,10 @@ export class GameGateway
 
   handleDisconnect(socket: GameSocket): void {
     const { pin, playerId } = socket.data;
-    if (pin && playerId) this.reactionTimes.delete(this.key(pin, playerId));
+    if (pin && playerId) {
+      this.reactionTimes.delete(this.key(pin, playerId));
+      this.chatTimes.delete(this.key(pin, playerId));
+    }
     this.detach(socket);
   }
 
@@ -99,6 +110,7 @@ export class GameGateway
     socket.data = { userId: socket.data.userId, pin, role: 'host' };
     socket.emit('room:state', engine.roomState());
     socket.emit('game:phase', engine.view({ kind: 'host' }));
+    socket.emit('game:chat-enabled', !this.chatOff.has(pin));
     return { ok: true };
   }
 
@@ -125,6 +137,7 @@ export class GameGateway
     this.attach(engine, player.id, socket.id);
     socket.emit('room:state', engine.roomState());
     socket.emit('game:phase', engine.view({ kind: 'player', playerId: player.id }));
+    socket.emit('game:chat-enabled', !this.chatOff.has(pin));
     return {
       ok: true as const,
       playerId: player.id,
@@ -179,6 +192,45 @@ export class GameGateway
     const player = engine.snapshot.players.find((p) => p.id === playerId);
     if (!player) return;
     this.broadcaster.reaction(pin, { emoji: parsed.data.emoji, playerId, avatar: player.avatar });
+  }
+
+  @SubscribeMessage('player:chat')
+  chat(@ConnectedSocket() socket: GameSocket, @MessageBody() body: unknown): Ack {
+    const { pin, role, playerId } = socket.data;
+    const engine = pin ? this.games.get(pin) : undefined;
+    if (!engine || !pin || role !== 'player' || !playerId) return failure(GAME_ERRORS.notJoined);
+    if (this.chatOff.has(pin)) return failure(GAME_ERRORS.chatOff);
+    const parsed = chatMessageSchema.safeParse(body);
+    if (!parsed.success) return failure(GAME_ERRORS.invalidPayload);
+    const now = Date.now();
+    const key = this.key(pin, playerId);
+    const recent = (this.chatTimes.get(key) ?? []).filter((t) => now - t < CHAT.windowMs);
+    if (recent.length >= CHAT.burst) return failure(GAME_ERRORS.rateLimited);
+    recent.push(now);
+    this.chatTimes.set(key, recent);
+    const player = engine.snapshot.players.find((p) => p.id === playerId);
+    if (!player) return failure(GAME_ERRORS.notJoined);
+    this.broadcaster.chat(pin, {
+      id: `${now.toString(36)}-${++this.chatSeq}`,
+      playerId,
+      nickname: player.nickname,
+      avatar: player.avatar,
+      text: parsed.data.text,
+      at: now,
+    });
+    return { ok: true };
+  }
+
+  @SubscribeMessage('host:chat')
+  setChat(@ConnectedSocket() socket: GameSocket, @MessageBody() body: unknown): Ack {
+    return this.asHost(socket, (engine) => {
+      const parsed = chatToggleSchema.safeParse(body);
+      if (!parsed.success) return failure(GAME_ERRORS.invalidPayload);
+      if (parsed.data.enabled) this.chatOff.delete(engine.pin);
+      else this.chatOff.add(engine.pin);
+      this.broadcaster.chatEnabled(engine.pin, parsed.data.enabled);
+      return { ok: true };
+    });
   }
 
   @SubscribeMessage('host:kick')

@@ -64,6 +64,7 @@ export const GAME_ERRORS = {
   notJoined: 'not_joined',
   teamRequired: 'team_required',
   powerUpUnavailable: 'power_up_unavailable',
+  chatOff: 'chat_off',
 } as const;
 export type GameErrorCode = (typeof GAME_ERRORS)[keyof typeof GAME_ERRORS];
 
@@ -401,6 +402,43 @@ export interface ReactionEvent {
   avatar: string;
 }
 
+/** Chat: short comments from phones, shown on the big screen and to everyone in the room. */
+export const CHAT = {
+  maxLength: 80,
+  /** Per player: at most this many messages in the window. */
+  burst: 3,
+  windowMs: 10_000,
+  /** Messages a client keeps on screen. */
+  keep: 30,
+} as const;
+
+/** One-tap phrases for players who don't want to type on a phone mid-game. */
+export const CHAT_QUICK = ['Гоё асуулт! 👍', 'Аа, мэдэж байсан даа 😅', 'Хэтэрхий хурдан ⏱️', 'Дараагийнх! 🔥', 'Хаха 😂', 'Ёстой мэдсэнгүй 🙈'] as const;
+
+const URL_PATTERN = /(https?:\/\/|www\.)\S+/gi;
+
+/** Trims, collapses whitespace and hides links (no spam or phishing on the big screen). */
+export function cleanChatText(text: string): string {
+  return text.replace(URL_PATTERN, '🔗').replace(/\s+/g, ' ').trim().slice(0, CHAT.maxLength);
+}
+
+export const chatMessageSchema = z.object({
+  text: z
+    .string()
+    .max(CHAT.maxLength * 2)
+    .transform(cleanChatText)
+    .pipe(z.string().min(1)),
+});
+
+export interface ChatEvent {
+  id: string;
+  playerId: string;
+  nickname: string;
+  avatar: string;
+  text: string;
+  at: number;
+}
+
 export interface ClientToServerEvents {
   /** Clock sync: the server answers with its epoch ms so clients can correct timers. */
   'clock:sync': (ack: (serverNow: number) => void) => void;
@@ -425,6 +463,9 @@ export interface ClientToServerEvents {
   'player:power-up': (payload: z.input<typeof powerUpRequestSchema>, ack: CommandAck) => void;
   /** Fire-and-forget; rate limited per player. */
   'player:react': (payload: { emoji: Reaction }) => void;
+  'player:chat': (payload: { text: string }, ack: CommandAck) => void;
+  /** Turns chat on or off for the room. */
+  'host:chat': (payload: { enabled: boolean }, ack?: CommandAck) => void;
 }
 
 export interface ServerToClientEvents {
@@ -436,6 +477,9 @@ export interface ServerToClientEvents {
   'game:answer-count': (payload: { answered: number; total: number }) => void;
   /** A player's emoji reaction, shown floating on the host screen. */
   'game:reaction': (payload: ReactionEvent) => void;
+  'game:chat': (payload: ChatEvent) => void;
+  /** Whether players may chat; sent on join and when the host changes it. */
+  'game:chat-enabled': (enabled: boolean) => void;
   /** Signed-in players, after the game is saved: XP, level and new badges. */
   'player:progress': (payload: PlayerProgressUpdate) => void;
 }

@@ -210,7 +210,7 @@ Client → server (each takes an acknowledgement callback returning `{ ok: true 
 | `host:kick` · `host:lock` · `host:pause` | `{ playerId }` · `{ locked }` · `{ paused }` | host |
 | `host:start` · `host:next` · `host:skip` · `host:end` | — | host |
 
-Server → client: `room:state` (room settings and player list), `game:phase` (what this client should show now, personalized: shuffled options, your answer, your result and rank), `game:answer-count`, `game:reaction` (to the host screen), `room:kicked`, `room:closed`, and `player:progress` (XP, level and new badges, for signed-in players after the game).
+Server → client: `room:state` (room settings and player list), `game:phase` (what this client should show now, personalized: shuffled options, your answer, your result and rank), `game:answer-count`, `game:reaction` (to the host screen), `game:chat` and `game:chat-enabled` (to everyone in the room), `room:kicked`, `room:closed`, and `player:progress` (XP, level and new badges, for signed-in players after the game).
 
 ## Look and feel
 
@@ -219,6 +219,7 @@ Server → client: `room:state` (room settings and player list), `game:phase` (w
 - **Motion:** confetti for correct answers and the podium, animated leaderboard overtakes, page and phase transitions. Everything respects `prefers-reduced-motion`.
 - **Mascot «Агу»:** an SVG snow leopard in an Agula scarf. It waves in the lobby, counts down, cheers or comforts after each answer (with a different line each time), celebrates on the podium and keeps empty pages friendly.
 - **Live reactions:** players tap 👏 😂 😮 🔥 ❤️ 🎉 on their phones and the emojis float up the projector screen with their avatar.
+- **Chat:** players write short comments (up to 80 characters) or tap a quick phrase from the 💬 button. Comments appear on the big screen for 15 seconds and in everyone's chat. Links are hidden, each player can send 3 messages per 10 seconds, and the host can turn chat off with the 💬 button.
 - **Streaks:** three or more correct answers in a row light up an "on fire" banner.
 - **Lobby fun:** players can tap Агу while they wait (every tenth tap gets a celebration), and both screens rotate "Did you know?" tips about the scoring rules.
 - **Reveal commentary:** on the projector, Агу reacts to how the room did on each question.

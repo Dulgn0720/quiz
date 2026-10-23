@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type {
+  ChatEvent,
   ClientToServerEvents,
   PhasePayload,
   PlayerProgressUpdate,
@@ -52,6 +53,14 @@ export class GameBroadcaster {
 
   reaction(pin: string, payload: ReactionEvent): void {
     this.server?.to(rooms.host(pin)).emit('game:reaction', payload);
+  }
+
+  chat(pin: string, payload: ChatEvent): void {
+    this.server?.to(rooms.game(pin)).emit('game:chat', payload);
+  }
+
+  chatEnabled(pin: string, enabled: boolean): void {
+    this.server?.to(rooms.game(pin)).emit('game:chat-enabled', enabled);
   }
 
   progress(pin: string, playerId: string, payload: PlayerProgressUpdate): void {

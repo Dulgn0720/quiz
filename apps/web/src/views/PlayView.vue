@@ -17,6 +17,7 @@ import RevealedAnswer from '@/components/game/RevealedAnswer.vue';
 import LevelBar from '@/components/LevelBar.vue';
 import RankUpCelebration from '@/components/RankUpCelebration.vue';
 import LockedAnswer from '@/components/game/LockedAnswer.vue';
+import ChatButton from '@/components/game/ChatButton.vue';
 import ReactionBar from '@/components/game/ReactionBar.vue';
 import TeamRace from '@/components/game/TeamRace.vue';
 import Mascot from '@/components/Mascot.vue';
@@ -121,6 +122,7 @@ function leave(): void {
         >
           <span class="sr-only">{{ t('game.player.score') }}: </span>{{ myScore }}
         </span>
+        <ChatButton :my-id="myId" />
         <SoundToggles />
         <button type="button" class="btn-icon" :aria-label="t('game.player.leave')" @click="leave">✕</button>
       </header>
