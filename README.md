@@ -96,7 +96,7 @@ Useful scripts (from the repo root):
 
 ### Library quizzes beyond Agula
 
-`apps/api/src/database/general-quizzes.ts` adds 42 official quizzes (756 questions) for parties, onboarding and fun — insurance, Mongolia, world knowledge, film, music and games, and fun, each with a normal, a speed and a double-points round. Every question was written and then fact-checked and language-edited by an independent reviewer; [docs/library-quiz-review.md](docs/library-quiz-review.md) lists every question with its answer for a final human check.
+`apps/api/src/database/general-quizzes.ts` adds 51 official quizzes (918 questions) for parties, onboarding and fun — insurance, Mongolia, world knowledge, film, music and games, and fun, each with a normal, a speed and a double-points round. Every question was written and then fact-checked and language-edited by an independent reviewer; [docs/library-quiz-review.md](docs/library-quiz-review.md) lists every question with its answer for a final human check.
 
 | Shelf | Quizzes |
 | --- | --- |
