@@ -74,10 +74,12 @@ async function send(message: string): Promise<void> {
       </span>
     </button>
 
+    <!-- To <body>: the header's backdrop blur would otherwise trap this fixed sheet inside it. -->
+    <Teleport to="body">
     <Transition name="sheet">
       <section
         v-if="open"
-        class="fixed inset-x-0 bottom-0 z-40 mx-auto flex max-h-[70dvh] max-w-xl flex-col rounded-t-3xl bg-ink-900/95 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 text-left shadow-2xl ring-1 ring-white/10 backdrop-blur-xl"
+        class="dark fixed inset-x-0 bottom-0 z-40 mx-auto flex max-h-[70dvh] max-w-xl flex-col rounded-t-3xl bg-ink-900/95 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 text-left text-white shadow-2xl ring-1 ring-white/10 backdrop-blur-xl"
         :aria-label="t('game.chat.title')"
       >
         <div class="flex items-center">
@@ -129,6 +131,7 @@ async function send(message: string): Promise<void> {
         </form>
       </section>
     </Transition>
+    </Teleport>
   </div>
 </template>
 
